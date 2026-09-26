@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Select, Modal, Form, Input, Button, Tooltip } from 'antd';
 import {
+    Rocket,
     LayoutDashboard,
     Package,
     Receipt,
@@ -20,7 +21,8 @@ import { useSession } from '../auth/SessionProvider';
 import { getFamilyRoleDescription, APP_ADMIN_DESCRIPTION } from '../../utils/roleDescriptions';
 
 const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard, moduleKey: 'DASHBOARD' as const },
+    { name: 'Starter Guide', href: '/', icon: Rocket, moduleKey: null, badge: 'Start Here' },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, moduleKey: 'DASHBOARD' as const },
     { name: 'Assets', href: '/assets', icon: Package, moduleKey: 'ASSET' as const },
     { name: 'Maintenance & Debt', href: '/maintenance', icon: Wrench, moduleKey: 'ASSET' as const },
     { name: 'Finances', href: '/expenses', icon: Receipt, moduleKey: 'TRANSACTION' as const },
@@ -192,16 +194,24 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
                     <NavLink
                         key={item.name}
                         to={item.href}
+                        end={item.href === '/'}
                         onClick={() => onClose?.()}
                         className={({ isActive }) => cn(
-                            "group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                            "group flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors",
                             isActive
                                 ? "bg-secondary text-secondary-foreground font-semibold shadow-xs"
                                 : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
                         )}
                     >
-                        <item.icon size={16} className="shrink-0" />
-                        <span className="truncate">{item.name}</span>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <item.icon size={16} className="shrink-0" />
+                            <span className="truncate">{item.name}</span>
+                        </div>
+                        {'badge' in item && item.badge && (
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                {item.badge}
+                            </span>
+                        )}
                     </NavLink>
                 ))}
             </nav>

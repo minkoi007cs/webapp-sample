@@ -25,6 +25,7 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage').then((module) => 
 const AdminPanel = lazy(() => import('./pages/AdminPanel').then((module) => ({ default: module.AdminPanel })));
 const GoUsPortal = lazy(() => import('./pages/GoUsPortal').then((module) => ({ default: module.GoUsPortal })));
 const Documents = lazy(() => import('./pages/Documents').then((module) => ({ default: module.Documents })));
+const SetupGuide = lazy(() => import('./pages/SetupGuide').then((module) => ({ default: module.SetupGuide })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +111,8 @@ function AppShell() {
 
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<HomePage />} />
+                <Route path="guide" element={<SetupGuide />} />
+                <Route path="dashboard" element={<ProtectedPage moduleKey="DASHBOARD"><Dashboard /></ProtectedPage>} />
                 <Route path="assets" element={<ProtectedPage moduleKey="ASSET"><AssetList /></ProtectedPage>} />
                 <Route path="maintenance" element={<ProtectedPage moduleKey="ASSET"><MaintenanceList /></ProtectedPage>} />
                 <Route path="expenses" element={<ProtectedPage moduleKey="TRANSACTION"><ExpenseList /></ProtectedPage>} />
@@ -141,21 +144,13 @@ const PageFallback = () => (
 );
 
 function HomePage() {
-  const { isLoading, canAccess, activeFamilyId } = useSession();
+  const { isLoading } = useSession();
 
   if (isLoading) {
     return <RouteLoading />;
   }
 
-  if (activeFamilyId && canAccess('DASHBOARD', 'view')) {
-    return <Dashboard />;
-  }
-
-  if (canAccess('ADMIN', 'view')) {
-    return <AdminPanel />;
-  }
-
-  return <Settings />;
+  return <SetupGuide />;
 }
 
 function ProtectedPage({
