@@ -1,0 +1,407 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    
+    /* Shadcn UI Zinc / Slate Color Tokens */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+
+    /* Legacy helper variables mapped to shadcn */
+    --surface-cream: #ffffff;
+    --surface-blush: #f8fafc;
+    --surface-mint: #f0fdf4;
+    --surface-butter: #fefce8;
+    --surface-sky: #f0f9ff;
+    --line-soft: hsl(240 5.9% 90%);
+    --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+    --body-overlay: transparent;
+    --body-text: hsl(240 10% 3.9%);
+    --glass-bg: rgba(255, 255, 255, 0.9);
+    --soft-panel-bg: #ffffff;
+    --soft-panel-border: hsl(240 5.9% 90%);
+    --soft-panel-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+    --chip-bg: hsl(240 4.8% 95.9%);
+    --chip-border: hsl(240 5.9% 90%);
+    --chip-text: hsl(240 5.9% 10%);
+  }
+
+  :root[data-theme='dark'] {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+
+    /* Legacy helper variables mapped to shadcn dark */
+    --surface-cream: #09090b;
+    --surface-blush: #18181b;
+    --surface-mint: #052e16;
+    --surface-butter: #422006;
+    --surface-sky: #082f49;
+    --line-soft: hsl(240 3.7% 15.9%);
+    --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.3);
+    --body-overlay: transparent;
+    --body-text: hsl(0 0% 98%);
+    --glass-bg: rgba(9, 9, 11, 0.85);
+    --soft-panel-bg: #121215;
+    --soft-panel-border: hsl(240 3.7% 15.9%);
+    --soft-panel-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3);
+    --chip-bg: hsl(240 3.7% 15.9%);
+    --chip-border: hsl(240 3.7% 20%);
+    --chip-text: hsl(0 0% 98%);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased min-h-screen;
+    font-family: var(--font-family);
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Modern clean UI card containers */
+.glass-card {
+  @apply bg-card text-card-foreground border border-border shadow-sm rounded-lg backdrop-blur-sm;
+}
+
+.page-shell {
+  @apply min-h-screen bg-background text-foreground;
+}
+
+.soft-panel {
+  @apply bg-card text-card-foreground border border-border shadow-sm rounded-lg;
+}
+
+.cute-chip {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground border border-border text-xs font-medium;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2;
+}
+
+/* Ant Design Component Overrides for Shadcn UI look & feel */
+.ant-typography,
+.ant-btn,
+.ant-input,
+.ant-select,
+.ant-table,
+.ant-modal,
+.ant-form,
+.ant-tag {
+  font-family: var(--font-family) !important;
+}
+
+.ant-btn {
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+.ant-btn-primary {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: transparent !important;
+}
+
+.ant-btn-primary:hover {
+  opacity: 0.9 !important;
+  background-color: hsl(var(--primary)) !important;
+}
+
+.ant-btn-default,
+.ant-btn-variant-outlined {
+  border-color: hsl(var(--input)) !important;
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.ant-btn-default:hover,
+.ant-btn-variant-outlined:hover {
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+  border-color: hsl(var(--input)) !important;
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-input-number-affix-wrapper,
+.ant-picker,
+.ant-select-selector {
+  border-radius: 6px !important;
+  border-color: hsl(var(--input)) !important;
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  font-size: 14px !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+.ant-input:focus,
+.ant-input-affix-wrapper-focused,
+.ant-input-number-focused,
+.ant-picker-focused,
+.ant-select-focused .ant-select-selector {
+  border-color: hsl(var(--ring)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2) !important;
+}
+
+.ant-select-selector {
+  min-height: 36px !important;
+  display: flex;
+  align-items: center;
+}
+
+.ant-card {
+  border-radius: 8px !important;
+  border: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  font-weight: 600 !important;
+  min-height: 48px !important;
+}
+
+.ant-card-body {
+  padding: 16px !important;
+}
+
+/* Shadcn style Ant Table */
+.ant-table-wrapper .ant-table {
+  background: transparent !important;
+  border-radius: 8px !important;
+}
+
+.ant-table-wrapper .ant-table-container {
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: hsl(var(--muted) / 0.6) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  padding: 10px 14px !important;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  padding: 12px 14px !important;
+  font-size: 14px !important;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: hsl(var(--muted) / 0.5) !important;
+}
+
+/* Modal styling */
+.ant-modal .ant-modal-content {
+  border-radius: 12px !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+  padding: 20px !important;
+}
+
+.ant-modal .ant-modal-header {
+  background: transparent !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid hsl(var(--border) / 0.6);
+}
+
+.ant-modal .ant-modal-title {
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Tags & Badges */
+.ant-tag {
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  padding: 1px 8px !important;
+  border: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--secondary)) !important;
+  color: hsl(var(--secondary-foreground)) !important;
+}
+
+.ant-tag-success {
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.ant-tag-error {
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+  border-color: #fecaca !important;
+}
+
+.ant-tag-warning {
+  background: #fffbeb !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+
+:root[data-theme='dark'] .ant-tag-success {
+  background: rgba(22, 101, 52, 0.2) !important;
+  color: #86efac !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+:root[data-theme='dark'] .ant-tag-error {
+  background: rgba(153, 27, 27, 0.2) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+:root[data-theme='dark'] .ant-tag-warning {
+  background: rgba(146, 64, 14, 0.2) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Radio button tabs */
+.ant-radio-button-wrapper {
+  border-color: hsl(var(--input)) !important;
+  background: hsl(var(--background)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  font-weight: 500 !important;
+}
+
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+/* Pagination */
+.ant-pagination .ant-pagination-item {
+  border-radius: 6px !important;
+  border-color: hsl(var(--border)) !important;
+  background: hsl(var(--background)) !important;
+  font-weight: 500 !important;
+}
+
+.ant-pagination .ant-pagination-item-active {
+  background: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+.ant-pagination .ant-pagination-item-active a {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Mobile responsive fixes */
+@media (max-width: 640px) {
+  .ant-modal {
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
+  }
+
+  .ant-modal .ant-modal-content {
+    padding: 14px 12px 10px !important;
+  }
+
+  .ant-modal .ant-modal-body {
+    max-height: calc(100dvh - 160px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.parsed-preview-intent-radio.ant-radio-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .parsed-preview-intent-radio.ant-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+

@@ -1,0 +1,18 @@
+{
+  "common": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "add": "Thêm mới",
+    "search": "Tìm kiếm",
+    "filter": "Lọc"
+  },
+  "modules": {
+    "asset": "Tài sản",
+    "expense": "Chi phí",
+    "category": "Danh mục",
+    "user": "Người dùng",
+    "dashboard": "Tổng quan"
+  }
+}
