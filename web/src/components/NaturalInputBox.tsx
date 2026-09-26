@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Input, Button, Card, Typography, Space, message, Tag, Popover, List, Tooltip } from 'antd';
+import { Input, Button, Card, Space, message, Tag, Popover, List, Tooltip } from 'antd';
 import { SendOutlined, AudioOutlined, MutedOutlined, HistoryOutlined, RedoOutlined, QrcodeOutlined } from '@ant-design/icons';
 import api from '../api/client';
 import { naturalInputApi } from '../api/natural-input';
@@ -16,7 +16,6 @@ import dayjs from 'dayjs';
 const QRScannerModal = lazy(() => import('./QRScannerModal').then((m) => ({ default: m.QRScannerModal })));
 
 const { TextArea } = Input;
-const { Title } = Typography;
 
 export const NaturalInputBox: React.FC = () => {
     const [inputValue, setInputValue] = useState('');
