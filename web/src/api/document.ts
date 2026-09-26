@@ -1,8 +1,9 @@
 import api from './client';
 
-export interface FamilyDocument {
+export interface GroupDocument {
   id: string;
-  familyId: string;
+  groupId: string;
+  familyId?: string;
   uploadedByUserId?: string;
   uploadedByUser?: {
     id: string;
@@ -27,8 +28,10 @@ export interface FamilyDocument {
   updatedAt: string;
 }
 
+export type FamilyDocument = GroupDocument;
+
 export interface DocumentListResponse {
-  items: FamilyDocument[];
+  items: GroupDocument[];
   total: number;
   page: number;
   pageSize: number;
@@ -65,7 +68,7 @@ export const documentApi = {
     sortOrder?: 'ASC' | 'DESC';
   }) => api.get<DocumentListResponse>('/documents', { params }),
 
-  getById: (id: string) => api.get<FamilyDocument>(`/documents/${id}`),
+  getById: (id: string) => api.get<GroupDocument>(`/documents/${id}`),
 
   upload: (
     file: File,
@@ -81,7 +84,7 @@ export const documentApi = {
     }
     if (metadata?.userNote) formData.append('userNote', metadata.userNote);
 
-    return api.post<FamilyDocument>('/documents/upload', formData, {
+    return api.post<GroupDocument>('/documents/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress,
     });
@@ -98,11 +101,11 @@ export const documentApi = {
       structuredData?: Record<string, any>;
       userNote?: string;
     },
-  ) => api.patch<FamilyDocument>(`/documents/${id}`, data),
+  ) => api.patch<GroupDocument>(`/documents/${id}`, data),
 
   delete: (id: string) => api.delete<{ success: boolean }>(`/documents/${id}`),
 
-  reanalyze: (id: string) => api.post<FamilyDocument>(`/documents/${id}/reanalyze`),
+  reanalyze: (id: string) => api.post<GroupDocument>(`/documents/${id}/reanalyze`),
 
   synthesize: (query: string, documentIds?: string[]) =>
     api.post<DocumentSynthesisResponse>('/documents/synthesize', { query, documentIds }),

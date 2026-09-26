@@ -103,7 +103,7 @@ export const MemberList = () => {
     });
 
     const handleEdit = (user: User) => {
-        if (role !== 'FAMILY_ADMIN') {
+        if (role !== 'GROUP_ADMIN') {
             return;
         }
         setEditingUser(user);
@@ -111,7 +111,7 @@ export const MemberList = () => {
         setIsEditModalOpen(true);
     };
 
-    const canManageMembers = role === 'FAMILY_ADMIN' && canAccess('USER', 'update');
+    const canManageMembers = role === 'GROUP_ADMIN' && canAccess('USER', 'update');
 
     const openInviteFromMemberCopy = (record: User, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -165,7 +165,7 @@ export const MemberList = () => {
                         disabled={!canManageMembers}
                         onChange={(val) => updateRoleMutation.mutate({ id: record.id, role: val })}
                         options={[
-                            { value: 'FAMILY_ADMIN', label: 'Quản trị nhóm' },
+                            { value: 'GROUP_ADMIN', label: 'Quản trị nhóm' },
                             { value: 'MEMBER', label: 'Thành viên' },
                         ]}
                     />
@@ -403,7 +403,7 @@ export const MemberList = () => {
                             initialValue="MEMBER"
                         >
                             <Select options={[
-                                { value: 'FAMILY_ADMIN', label: 'Quản trị nhóm (Toàn quyền quản lý)' },
+                                { value: 'GROUP_ADMIN', label: 'Quản trị nhóm (Toàn quyền quản lý)' },
                                 { value: 'MEMBER', label: 'Thành viên (Quyền tiêu chuẩn)' },
                             ]} />
                         </Form.Item>

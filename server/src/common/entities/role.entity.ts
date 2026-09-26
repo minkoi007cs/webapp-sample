@@ -6,7 +6,6 @@ import { Invite } from './invite.entity';
 export enum RoleScope {
   SYSTEM = 'SYSTEM',
   GROUP = 'GROUP',
-  FAMILY = 'GROUP', // Compatibility alias
 }
 
 @Entity('roles')

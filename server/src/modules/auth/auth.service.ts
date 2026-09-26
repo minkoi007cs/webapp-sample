@@ -116,11 +116,6 @@ export class AuthService {
       }
     }
 
-    try {
-      await this.permissionService.seedSystemPermissions();
-    } catch (err) {
-      this.logger.error('seedSystemPermissions failed during login; continuing without blocking auth', err instanceof Error ? err.stack : err);
-    }
 
     let memberships = await this.groupUserRepository.find({
       where: { userId: user.id, status: GroupUserStatus.ACTIVE },

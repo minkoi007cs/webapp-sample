@@ -39,7 +39,7 @@ import {
   FileCheck,
   FolderArchive,
 } from 'lucide-react';
-import { documentApi, type FamilyDocument, type DocumentSynthesisResponse } from '../api/document';
+import { documentApi, type GroupDocument, type DocumentSynthesisResponse } from '../api/document';
 import { useSession } from '../components/auth/SessionProvider';
 
 const CATEGORIES = [
@@ -89,7 +89,7 @@ const formatFileSize = (bytes: number): string => {
 
 export const Documents = () => {
   const queryClient = useQueryClient();
-  const { activeFamilyName } = useSession();
+  const { activeGroupName } = useSession();
 
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,10 +98,10 @@ export const Documents = () => {
 
   // Modals state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState<FamilyDocument | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<GroupDocument | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingDoc, setEditingDoc] = useState<FamilyDocument | null>(null);
+  const [editingDoc, setEditingDoc] = useState<GroupDocument | null>(null);
 
   // AI Dossier / Synthesis state
   const [isAiBoxExpanded, setIsAiBoxExpanded] = useState(true);
@@ -250,7 +250,7 @@ export const Documents = () => {
     });
   };
 
-  const handleOpenEdit = (doc: FamilyDocument) => {
+  const handleOpenEdit = (doc: GroupDocument) => {
     setEditingDoc(doc);
     editForm.setFieldsValue({
       title: doc.title,
@@ -281,7 +281,7 @@ export const Documents = () => {
                 <Layers className="w-4 h-4" />
               </span>
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {activeFamilyName ? `Workspace: ${activeFamilyName}` : 'Document Vault'}
+                {activeGroupName ? `Nhóm: ${activeGroupName}` : 'Kho lưu trữ tài liệu'}
               </span>
             </div>
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight font-sans">

@@ -8,7 +8,7 @@ export class AppController {
   @Get()
   getHello(): any {
     return {
-      message: 'Family Management API is running!',
+      message: 'Sample Management API is running!',
       version: '1.0.0',
       status: 'online',
       docs: '/api/docs'

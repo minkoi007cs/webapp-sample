@@ -14,6 +14,6 @@ export const groupApi = {
   getCurrent: () => api.get<Group>('/groups/current'),
   updateCurrent: (data: { name: string }) => api.patch<Group>('/groups/current', data),
   listUserGroups: () => api.get<Group[]>('/groups'),
-  switchGroup: (groupId: string) => api.post<SessionResponse>('/auth/switch-family', { familyId: groupId }),
-  createGroup: (name?: string) => api.post<SessionResponse>('/auth/create-family', { name }),
+  switchGroup: (groupId: string) => api.post<SessionResponse>('/auth/switch-group', { groupId }),
+  createGroup: (name?: string) => api.post<SessionResponse>('/auth/create-group', { name }),
 };

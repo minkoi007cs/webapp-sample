@@ -41,30 +41,38 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       payload.activeFamilyId ||
       user.lastActiveGroupId;
 
-    if (user.systemRole === SystemRole.APP_ADMIN && !requestedGroupId) {
-      return {
-        ...user,
-        role: UserRole.APP_ADMIN,
-        groupId: null,
-        familyId: null,
-      };
+    let membership: GroupUser | null = null;
+    if (requestedGroupId) {
+      membership = await this.groupUserRepository.findOne({
+        where: {
+          userId: user.id,
+          groupId: requestedGroupId,
+          status: GroupUserStatus.ACTIVE,
+        },
+        relations: ['group', 'role'],
+      });
     }
-
-    if (!requestedGroupId) {
-      throw new UnauthorizedException('Nhóm làm việc không được để trống');
-    }
-
-    const membership = await this.groupUserRepository.findOne({
-      where: {
-        userId: user.id,
-        groupId: requestedGroupId,
-        status: GroupUserStatus.ACTIVE,
-      },
-      relations: ['group', 'role'],
-    });
 
     if (!membership) {
-      throw new UnauthorizedException('Người dùng không phải thành viên của nhóm được chọn');
+      membership = await this.groupUserRepository.findOne({
+        where: {
+          userId: user.id,
+          status: GroupUserStatus.ACTIVE,
+        },
+        relations: ['group', 'role'],
+        order: { createdAt: 'ASC' },
+      });
+    }
+
+    if (!membership) {
+      return {
+        ...user,
+        groupId: null,
+        familyId: null,
+        group: null,
+        family: null,
+        role: user.systemRole === SystemRole.APP_ADMIN ? UserRole.APP_ADMIN : null,
+      };
     }
 
     if (membership.group?.status !== GroupStatus.ACTIVE) {
@@ -73,6 +81,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         groupId: null,
         familyId: null,
         group: null,
+        family: null,
         role: null,
       };
     }

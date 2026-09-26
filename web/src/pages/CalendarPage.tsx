@@ -361,7 +361,7 @@ export const CalendarPage = () => {
             label="Event Title"
             rules={[{ required: true, message: 'Please enter event title' }]}
           >
-            <Input placeholder="e.g., Family Dinner, Birthday..." className="rounded-lg h-10" />
+            <Input placeholder="e.g., Team Meeting, Review..." className="rounded-lg h-10" />
           </Form.Item>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">

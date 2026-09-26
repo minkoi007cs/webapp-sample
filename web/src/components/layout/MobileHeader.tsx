@@ -7,7 +7,7 @@ interface MobileHeaderProps {
 }
 
 export const MobileHeader = ({ onMenuClick }: MobileHeaderProps) => {
-    const { activeFamilyName } = useSession();
+    const { activeGroupName } = useSession();
 
     return (
         <header className="fixed top-0 left-0 right-0 h-14 bg-background/95 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-4 lg:hidden">
@@ -23,9 +23,9 @@ export const MobileHeader = ({ onMenuClick }: MobileHeaderProps) => {
                     className="w-7 h-7 rounded-md shrink-0"
                 />
                 <div className="min-w-0">
-                    <h1 className="font-semibold text-sm leading-tight text-foreground tracking-tight">Family Assets</h1>
-                    {activeFamilyName && (
-                        <p className="truncate text-xs leading-tight text-muted-foreground">{activeFamilyName}</p>
+                    <h1 className="font-semibold text-sm leading-tight text-foreground tracking-tight">Sample Manager</h1>
+                    {activeGroupName && (
+                        <p className="truncate text-xs leading-tight text-muted-foreground">{activeGroupName}</p>
                     )}
                 </div>
             </Link>
@@ -33,12 +33,10 @@ export const MobileHeader = ({ onMenuClick }: MobileHeaderProps) => {
             <button
                 onClick={onMenuClick}
                 className="p-1.5 hover:bg-accent rounded-md transition-colors text-foreground border border-border shadow-xs"
-                aria-label="Open menu"
+                aria-label="Mở menu"
             >
                 <Menu size={20} />
             </button>
         </header>
     );
 };
-
-

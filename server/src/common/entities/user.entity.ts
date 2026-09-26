@@ -6,7 +6,6 @@ import { Invite } from './invite.entity';
 export enum UserRole {
   APP_ADMIN = 'APP_ADMIN',
   GROUP_ADMIN = 'GROUP_ADMIN',
-  FAMILY_ADMIN = 'GROUP_ADMIN', // Alias for backwards-compat
   MEMBER = 'MEMBER',
 }
 

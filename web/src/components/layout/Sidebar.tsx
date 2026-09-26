@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useSession } from '../auth/SessionProvider';
-import { getFamilyRoleDescription, APP_ADMIN_DESCRIPTION } from '../../utils/roleDescriptions';
+import { getGroupRoleDescription, APP_ADMIN_DESCRIPTION } from '../../utils/roleDescriptions';
 
 const navigation = [
   { name: 'Hướng dẫn bắt đầu', href: '/', icon: Rocket, moduleKey: null, badge: 'Start Here' },
@@ -40,16 +40,16 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [form] = Form.useForm();
   const {
-    activeFamilyId,
-    activeFamilyName,
+    activeGroupId,
+    activeGroupName,
     memberships,
     role,
     systemRole,
     canAccess,
-    switchFamily,
-    isSwitchingFamily,
-    createFamily,
-    isCreatingFamily,
+    switchGroup,
+    isSwitchingGroup,
+    createGroup,
+    isCreatingGroup,
   } = useSession();
 
   const handleLogout = () => {
@@ -59,7 +59,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
   };
 
   const handleCreateGroup = async (values: { name: string }) => {
-    await createFamily(values.name);
+    await createGroup(values.name);
     setIsCreateModalOpen(false);
     form.resetFields();
   };
@@ -67,14 +67,14 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
   const visibleNavigation = navigation.filter((item) => item.moduleKey === null || canAccess(item.moduleKey, 'view'));
 
   const roleLabel = systemRole === 'APP_ADMIN'
-    ? `Quản trị hệ thống${role && role !== 'APP_ADMIN' ? ` · ${role === 'FAMILY_ADMIN' ? 'Admin Nhóm' : 'Thành viên'}` : ''}`
-    : role === 'FAMILY_ADMIN'
+    ? `Quản trị hệ thống${role && role !== 'APP_ADMIN' ? ` · ${role === 'GROUP_ADMIN' ? 'Admin Nhóm' : 'Thành viên'}` : ''}`
+    : role === 'GROUP_ADMIN'
       ? 'Quản trị Nhóm'
       : 'Thành viên';
 
-  const roleTooltip = systemRole === 'APP_ADMIN' && role !== 'FAMILY_ADMIN' && role !== 'MEMBER'
+  const roleTooltip = systemRole === 'APP_ADMIN' && role !== 'GROUP_ADMIN' && role !== 'MEMBER'
     ? APP_ADMIN_DESCRIPTION
-    : getFamilyRoleDescription(role === 'FAMILY_ADMIN' || role === 'MEMBER' ? role : null);
+    : getGroupRoleDescription(role === 'GROUP_ADMIN' || role === 'MEMBER' ? role : null);
 
   return (
     <aside className="w-64 h-screen flex flex-col p-3 relative bg-card text-card-foreground border-r border-border shadow-xs">
@@ -116,24 +116,24 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
         </div>
         {memberships.length > 0 ? (
           <Select
-            value={activeFamilyId ?? undefined}
+            value={activeGroupId ?? undefined}
             size="small"
             className="w-full"
             placeholder="Chọn nhóm làm việc"
-            loading={isSwitchingFamily}
-            onChange={(value) => switchFamily(value)}
+            loading={isSwitchingGroup}
+            onChange={(value) => switchGroup(value)}
             options={memberships.map((membership) => {
-              const isInactive = membership.familyStatus === 'INACTIVE';
+              const isInactive = membership.groupStatus === 'INACTIVE' || membership.familyStatus === 'INACTIVE';
               return {
-                value: membership.familyId,
+                value: membership.groupId,
                 disabled: isInactive,
-                label: `${membership.familyName} · ${membership.role === 'FAMILY_ADMIN' ? 'Admin' : 'Member'}${isInactive ? ' · Vô hiệu' : ''}`,
+                label: `${membership.groupName} · ${membership.role === 'GROUP_ADMIN' ? 'Admin' : 'Member'}${isInactive ? ' · Vô hiệu' : ''}`,
               };
             })}
           />
         ) : (
           <div className="mt-1">
-            <p className="text-xs text-muted-foreground">{activeFamilyName || 'Chưa chọn nhóm'}</p>
+            <p className="text-xs text-muted-foreground">{activeGroupName || 'Chưa chọn nhóm'}</p>
             <Button
               type="dashed"
               size="small"
@@ -176,7 +176,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
             <Button
               type="primary"
               htmlType="submit"
-              loading={isCreatingFamily}
+              loading={isCreatingGroup}
             >
               Tạo Nhóm
             </Button>

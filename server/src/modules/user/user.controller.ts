@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { UserRole } from '../../common/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ActiveFamilyGuard } from '../../common/guards/active-family.guard';
+import { ActiveGroupGuard } from '../../common/guards/active-group.guard';
 import { PermissionGuard } from '../../common/guards/permission.guard';
 import { RequirePermission } from '../../common/decorators/permission.decorator';
 import { AppModule, PermissionAction } from '../../common/entities/permission.entity';
@@ -12,7 +12,7 @@ import { User } from '../../common/entities/user.entity';
 
 @ApiTags('Users')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, ActiveFamilyGuard, PermissionGuard)
+@UseGuards(JwtAuthGuard, ActiveGroupGuard, PermissionGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

@@ -102,7 +102,7 @@ Trả về JSON định dạng:
 
   async getHistory(groupId: string, limit = 20) {
     return this.historyRepository.find({
-      where: { familyId: groupId },
+      where: { groupId },
       order: { createdAt: 'DESC' },
       take: limit,
       relations: ['user'],

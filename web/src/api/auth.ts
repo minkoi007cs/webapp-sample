@@ -1,13 +1,18 @@
 import api from './client';
 
 export type SystemRole = 'USER' | 'APP_ADMIN';
-export type FamilyRole = 'APP_ADMIN' | 'FAMILY_ADMIN' | 'MEMBER' | null;
+export type GroupRole = 'APP_ADMIN' | 'GROUP_ADMIN' | 'MEMBER' | null;
+export type FamilyRole = GroupRole;
 
 export interface SessionMembership {
-  familyId: string;
-  familyName: string;
+  groupId: string;
+  groupName: string;
+  groupStatus?: 'ACTIVE' | 'INACTIVE';
+  role: Exclude<GroupRole, null>;
+  // Compatibility
+  familyId?: string;
+  familyName?: string;
   familyStatus?: 'ACTIVE' | 'INACTIVE';
-  role: Exclude<FamilyRole, null>;
 }
 
 export interface SessionUser {
@@ -17,8 +22,9 @@ export interface SessionUser {
   avatarUrl?: string | null;
   otherNames?: string | null;
   systemRole: SystemRole;
-  role: FamilyRole;
-  familyId: string | null;
+  role: GroupRole;
+  groupId: string | null;
+  familyId?: string | null;
   memberships: SessionMembership[];
 }
 
@@ -30,10 +36,13 @@ export interface SessionResponse {
 export const authApi = {
   me: () => api.get<SessionResponse>('/auth/me'),
   updateMe: (data: { fullName?: string; otherNames?: string }) => api.patch('/auth/me', data),
-  listFamilies: () => api.get<Array<{ familyId: string; familyName: string; role: FamilyRole; status: string }>>('/auth/families'),
-  switchFamily: (familyId: string) => api.post<SessionResponse>('/auth/switch-family', { familyId }),
-  createFamily: (name?: string) => api.post<SessionResponse>('/auth/create-family', { name }),
+  listGroups: () => api.get<Array<{ groupId: string; groupName: string; role: GroupRole; status: string }>>('/auth/groups'),
+  listFamilies: () => api.get<Array<{ groupId: string; groupName: string; role: GroupRole; status: string }>>('/auth/groups'),
+  switchGroup: (groupId: string) => api.post<SessionResponse>('/auth/switch-group', { groupId }),
+  switchFamily: (groupId: string) => api.post<SessionResponse>('/auth/switch-group', { groupId }),
+  createGroup: (name?: string) => api.post<SessionResponse>('/auth/create-group', { name }),
+  createFamily: (name?: string) => api.post<SessionResponse>('/auth/create-group', { name }),
   acceptInvite: (token: string) => api.post<SessionResponse>('/auth/accept-invite', { token }),
   previewInvite: (token: string) =>
-    api.get<{ email: string; familyName: string | null; role: FamilyRole; isExpired: boolean; status: string }>(`/auth/invite/${token}`),
+    api.get<{ email: string; groupName: string | null; familyName?: string | null; role: GroupRole; isExpired: boolean; status: string }>(`/auth/invite/${token}`),
 };

@@ -392,7 +392,7 @@ const DOCUMENT_CATEGORIES: Array<{ key: DocumentCategory; label: string }> = [
 
 export function GoUsPortal() {
   const queryClient = useQueryClient();
-  const { activeFamilyId, memberships, switchFamily } = useSession();
+  const { activeGroupId, memberships, switchGroup } = useSession();
   const [activeTab, setActiveTab] = useState('overview');
 
   // Modals state
@@ -427,8 +427,8 @@ export function GoUsPortal() {
     error: caseError,
     refetch: refetchCase,
   } = useQuery({
-    queryKey: ['gous-case', activeFamilyId],
-    enabled: Boolean(activeFamilyId),
+    queryKey: ['gous-case', activeGroupId],
+    enabled: Boolean(activeGroupId),
     queryFn: async () => (await gousApi.getCase()).data,
   });
 
@@ -439,20 +439,20 @@ export function GoUsPortal() {
     error: statsError,
     refetch: refetchStats,
   } = useQuery({
-    queryKey: ['gous-stats', activeFamilyId],
-    enabled: Boolean(activeFamilyId),
+    queryKey: ['gous-stats', activeGroupId],
+    enabled: Boolean(activeGroupId),
     queryFn: async () => (await gousApi.getStats()).data,
   });
 
   const { data: members = [] } = useQuery({
-    queryKey: ['gous-members', activeFamilyId],
-    enabled: Boolean(activeFamilyId),
+    queryKey: ['gous-members', activeGroupId],
+    enabled: Boolean(activeGroupId),
     queryFn: async () => (await gousApi.getMembers()).data,
   });
 
   const { data: allDocuments = [] } = useQuery({
-    queryKey: ['gous-documents', activeFamilyId],
-    enabled: Boolean(activeFamilyId),
+    queryKey: ['gous-documents', activeGroupId],
+    enabled: Boolean(activeGroupId),
     queryFn: async () => (await gousApi.getDocuments()).data,
   });
 
@@ -494,15 +494,15 @@ export function GoUsPortal() {
   }, [allDocuments, editingMember]);
 
   const { data: tasks = [] } = useQuery({
-    queryKey: ['gous-tasks', activeFamilyId, taskStageFilter],
-    enabled: Boolean(activeFamilyId),
+    queryKey: ['gous-tasks', activeGroupId, taskStageFilter],
+    enabled: Boolean(activeGroupId),
     queryFn: async () =>
       (await gousApi.getTasks(taskStageFilter !== 'ALL' ? (taskStageFilter as GoUsStage) : undefined)).data,
   });
 
   const { data: expenses = [] } = useQuery({
-    queryKey: ['gous-expenses', activeFamilyId],
-    enabled: Boolean(activeFamilyId),
+    queryKey: ['gous-expenses', activeGroupId],
+    enabled: Boolean(activeGroupId),
     queryFn: async () => (await gousApi.getExpenses()).data,
   });
 
@@ -829,28 +829,28 @@ export function GoUsPortal() {
     return STAGES.find((s) => s.key === caseData.currentStage) || STAGES[1];
   }, [caseData?.currentStage]);
 
-  if (!activeFamilyId) {
+  if (!activeGroupId) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center">
         <div className="max-w-md p-6 rounded-3xl bg-white border border-slate-200 shadow-md space-y-4">
           <div className="w-16 h-16 mx-auto rounded-3xl bg-rose-50 text-rose-600 flex items-center justify-center">
             <PlaneTakeoff size={32} />
           </div>
-          <h2 className="text-lg font-bold text-slate-800">Select a Family to Begin</h2>
+          <h2 className="text-lg font-bold text-slate-800">Chọn Nhóm để Bắt đầu</h2>
           <p className="text-xs text-slate-700">
-            U.S. F4 immigration cases are managed per family profile. Please select an active family to open the case portal.
+            Hồ sơ định cư U.S. F4 được quản lý theo nhóm làm việc. Vui lòng chọn một nhóm đang hoạt động để mở cổng hồ sơ.
           </p>
           {memberships.length > 0 && (
             <div className="space-y-2 pt-2">
               {memberships.map((m) => (
                 <Button
-                  key={m.familyId}
+                  key={m.groupId}
                   block
                   type="primary"
                   className="!bg-rose-600"
-                  onClick={() => switchFamily(m.familyId)}
+                  onClick={() => switchGroup(m.groupId)}
                 >
-                  Enter family case: {m.familyName}
+                  Vào hồ sơ nhóm: {m.groupName}
                 </Button>
               ))}
             </div>

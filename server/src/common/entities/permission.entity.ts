@@ -4,14 +4,12 @@ import { RolePermission } from './role-permission.entity';
 export enum AppModule {
   ADMIN = 'ADMIN',
   GROUP = 'GROUP',
-  FAMILY = 'GROUP', // Backwards-compatible alias
   USER = 'USER',
   PERMISSION = 'PERMISSION',
   DASHBOARD = 'DASHBOARD',
   CATEGORY = 'CATEGORY',
   CALENDAR = 'CALENDAR',
   SAMPLE = 'SAMPLE',
-  ASSET = 'SAMPLE', // Backwards-compatible alias
   DOCUMENT = 'DOCUMENT',
   GOUS = 'GOUS',
 }

@@ -2,7 +2,8 @@ import api from './client';
 
 export interface CalendarEvent {
   id: string;
-  familyId: string;
+  groupId: string;
+  familyId?: string;
   title: string;
   description?: string;
   startDate: string;

@@ -4,7 +4,7 @@ import { CalendarService } from './calendar.service';
 import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 import { UpdateCalendarEventDto } from './dto/update-calendar-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ActiveFamilyGuard } from '../../common/guards/active-family.guard';
+import { ActiveGroupGuard } from '../../common/guards/active-group.guard';
 import { PermissionGuard } from '../../common/guards/permission.guard';
 import { RequirePermission } from '../../common/decorators/permission.decorator';
 import { AppModule, PermissionAction } from '../../common/entities/permission.entity';
@@ -13,7 +13,7 @@ import { User } from '../../common/entities/user.entity';
 
 @ApiTags('Calendar')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, ActiveFamilyGuard, PermissionGuard)
+@UseGuards(JwtAuthGuard, ActiveGroupGuard, PermissionGuard)
 @Controller('calendar')
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}

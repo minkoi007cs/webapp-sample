@@ -19,7 +19,8 @@ export interface InviteResult {
   id: string;
   email: string;
   token: string;
-  familyId: string;
+  groupId: string;
+  familyId?: string;
   roleId: string;
   status: string;
   expiresAt: string;

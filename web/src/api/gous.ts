@@ -24,7 +24,8 @@ export type ExpensePaymentStatus = 'ESTIMATED' | 'PAID' | 'UNPAID';
 
 export interface GoUsCase {
   id: string;
-  familyId: string;
+  groupId: string;
+  familyId?: string;
   visaCategory: string;
   caseNumber?: string;
   invoiceId?: string;

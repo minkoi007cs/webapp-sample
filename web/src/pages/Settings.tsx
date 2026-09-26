@@ -6,7 +6,7 @@ import { useSession } from '../components/auth/SessionProvider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api/auth';
 import { groupApi } from '../api/group';
-import { getFamilyRoleDescription, APP_ADMIN_DESCRIPTION } from '../utils/roleDescriptions';
+import { getGroupRoleDescription, APP_ADMIN_DESCRIPTION } from '../utils/roleDescriptions';
 import { MemberList } from './MemberList';
 import { CategoryList } from './CategoryList';
 
@@ -15,7 +15,7 @@ export const Settings = () => {
   const [groupForm] = Form.useForm();
   const { themeMode, setThemeMode } = useThemeMode();
   const queryClient = useQueryClient();
-  const { user, role, systemRole, activeFamilyId, activeFamilyName, memberships, refreshSession, canAccess } = useSession();
+  const { user, role, systemRole, activeGroupId, activeGroupName, memberships, refreshSession, canAccess } = useSession();
 
   useEffect(() => {
     form.setFieldsValue({
@@ -25,16 +25,16 @@ export const Settings = () => {
     });
   }, [form, user]);
 
-  const canViewGroup = Boolean(activeFamilyId && (canAccess('FAMILY', 'view') || systemRole === 'APP_ADMIN'));
-  const canUpdateGroup = Boolean(activeFamilyId && (canAccess('FAMILY', 'update') || systemRole === 'APP_ADMIN'));
+  const canViewGroup = Boolean(activeGroupId && (canAccess('GROUP', 'view') || canAccess('FAMILY', 'view') || systemRole === 'APP_ADMIN'));
+  const canUpdateGroup = Boolean(activeGroupId && (canAccess('GROUP', 'update') || canAccess('FAMILY', 'update') || systemRole === 'APP_ADMIN'));
   const canViewMembers = canAccess('USER', 'view');
   const canViewCategories = canAccess('CATEGORY', 'view');
 
   useEffect(() => {
     groupForm.setFieldsValue({
-      groupName: activeFamilyName || '',
+      groupName: activeGroupName || '',
     });
-  }, [groupForm, activeFamilyName]);
+  }, [groupForm, activeGroupName]);
 
   const updateProfileMutation = useMutation({
     mutationFn: (values: { fullName?: string; otherNames?: string }) => authApi.updateMe(values),
@@ -53,7 +53,7 @@ export const Settings = () => {
       return groupApi.updateCurrent({ name: values.groupName });
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-families'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
       await refreshSession();
       message.success('Cập nhật tên nhóm thành công');
     },
@@ -82,18 +82,18 @@ export const Settings = () => {
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Vai trò hiện tại</p>
               <p className="mt-1 font-semibold text-foreground">
                 {systemRole === 'APP_ADMIN' && role !== 'APP_ADMIN'
-                  ? `${role === 'FAMILY_ADMIN' ? 'Quản trị nhóm' : 'Thành viên'} + Quản trị hệ thống`
-                  : role === 'FAMILY_ADMIN' ? 'Quản trị nhóm'
+                  ? `${role === 'GROUP_ADMIN' ? 'Quản trị nhóm' : 'Thành viên'} + Quản trị hệ thống`
+                  : role === 'GROUP_ADMIN' ? 'Quản trị nhóm'
                   : role === 'MEMBER' ? 'Thành viên'
                   : 'Quản trị hệ thống'}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {role === 'FAMILY_ADMIN' || role === 'MEMBER' ? getFamilyRoleDescription(role) : APP_ADMIN_DESCRIPTION}
+                {role === 'GROUP_ADMIN' || role === 'MEMBER' ? getGroupRoleDescription(role) : APP_ADMIN_DESCRIPTION}
               </p>
             </div>
             <div className="rounded-xl bg-muted/40 px-4 py-3 border border-border">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Nhóm đang chọn</p>
-              <p className="mt-1 font-semibold text-foreground">{activeFamilyName || 'Chưa chọn'}</p>
+              <p className="mt-1 font-semibold text-foreground">{activeGroupName || 'Chưa chọn'}</p>
             </div>
             <div className="rounded-xl bg-muted/40 px-4 py-3 border border-border">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Số nhóm đã tham gia</p>
@@ -132,7 +132,7 @@ export const Settings = () => {
           <div className="mb-4 grid grid-cols-1 gap-3 text-sm text-muted-foreground md:grid-cols-2">
             <div className="rounded-xl bg-muted/40 px-4 py-3 border border-border">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Nhóm hiện tại</p>
-              <p className="mt-1 font-semibold text-foreground">{activeFamilyName || 'Chưa đặt tên'}</p>
+              <p className="mt-1 font-semibold text-foreground">{activeGroupName || 'Chưa đặt tên'}</p>
             </div>
             <div className="rounded-xl bg-muted/40 px-4 py-3 border border-border">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Trạng thái</p>
