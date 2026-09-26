@@ -266,8 +266,8 @@ export const CalendarPage = () => {
         className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4"
       >
         <div>
-          <Title level={2} className="!m-0">Family Calendar</Title>
-          <Text type="secondary">Track joint events, upcoming asset milestones, and historical schedules</Text>
+          <Title level={2} className="!m-0">Lịch Trình Nhóm</Title>
+          <Text type="secondary">Theo dõi sự kiện chung, lịch kiểm tra mẫu và các mốc thời gian quan trọng</Text>
         </div>
         <Button
           type="primary"

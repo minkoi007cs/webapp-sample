@@ -30,8 +30,8 @@ async function bootstrap() {
 
   // Setup Swagger
   const config = new DocumentBuilder()
-    .setTitle('Family Management API')
-    .setDescription('API documentation for Family Management System')
+    .setTitle('Sample Management API')
+    .setDescription('API documentation for Sample Management System')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

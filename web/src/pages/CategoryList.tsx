@@ -437,20 +437,19 @@ export const CategoryList = () => {
         {usageSummary && editingCategory ? (
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Category <strong>{editingCategory.name}</strong> has{' '}
-              <strong>{usageSummary.assetCount}</strong> assets and{' '}
-              <strong>{usageSummary.expenseCount}</strong> transactions. Select a target category to transfer all items to before deletion.
+              Phân loại <strong>{editingCategory.name}</strong> đang có{' '}
+              <strong>{usageSummary.assetCount}</strong> mẫu (samples). Vui lòng chọn phân loại đích để chuyển toàn bộ mẫu sang trước khi xóa.
             </p>
             {reassignCategoryOptions.length === 0 ? (
               <p className="text-sm text-amber-600">
-                No alternative categories exist. Please create at least one other category first.
+                Chưa có phân loại thay thế. Vui lòng tạo ít nhất một phân loại khác trước.
               </p>
             ) : (
               <div>
-                <div className="mb-2 text-sm font-medium text-foreground">Target Category</div>
+                <div className="mb-2 text-sm font-medium text-foreground">Phân loại đích</div>
                 <Select
                   className="w-full"
-                  placeholder="Select destination category"
+                  placeholder="Chọn phân loại chuyển tới"
                   options={reassignCategoryOptions}
                   value={reassignTargetId}
                   onChange={(v) => setReassignTargetId(v)}

@@ -59,14 +59,14 @@ export const MemberList = () => {
             setInviteLink(`${window.location.origin}/accept-invite?token=${res.data.token}`);
         },
         onError: (error: any) => {
-            message.error(error?.response?.data?.message || 'Failed to create invitation. Please check the email.');
+            message.error(error?.response?.data?.message || 'Không thể tạo lời mời. Vui lòng kiểm tra email.');
         },
     });
 
     const copyInviteLink = () => {
         if (!inviteLink) return;
         navigator.clipboard.writeText(inviteLink);
-        message.success('Invitation link copied');
+        message.success('Đã sao chép liên kết lời mời');
     };
 
     const closeInviteModal = () => {
@@ -79,7 +79,7 @@ export const MemberList = () => {
         mutationFn: ({ id, data }: { id: string; data: Partial<User> }) => userApi.update(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['members'] });
-            message.success('Member information updated');
+            message.success('Đã cập nhật thông tin thành viên');
             setIsEditModalOpen(false);
             setEditingUser(null);
             editForm.resetFields();
@@ -90,7 +90,7 @@ export const MemberList = () => {
         mutationFn: ({ id, role }: { id: string; role: string }) => userApi.updateRole(id, role),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['members'] });
-            message.success('User role updated');
+            message.success('Đã cập nhật vai trò');
         },
     });
 
@@ -98,7 +98,7 @@ export const MemberList = () => {
         mutationFn: (id: string) => userApi.remove(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['members'] });
-            message.success('Member removed from workspace');
+            message.success('Đã xóa thành viên khỏi nhóm');
         },
     });
 
@@ -127,7 +127,7 @@ export const MemberList = () => {
 
     const columns = [
         {
-            title: 'Member',
+            title: 'Thành viên',
             dataIndex: 'fullName',
             key: 'fullName',
             render: (text: string, record: User) => (
@@ -136,7 +136,7 @@ export const MemberList = () => {
                         {text?.charAt(0) || record.email.charAt(0)}
                     </Avatar>
                     <div>
-                        <div className="font-medium text-foreground">{text || 'Pending...'}</div>
+                        <div className="font-medium text-foreground">{text || 'Đang chờ...'}</div>
                         <div className="text-xs text-muted-foreground">{record.email}</div>
                     </div>
                 </Space>
@@ -144,7 +144,7 @@ export const MemberList = () => {
             sorter: (a: User, b: User) => (a.fullName || a.email || '').localeCompare(b.fullName || b.email || ''),
         },
         {
-            title: 'AI Nicknames',
+            title: 'Biệt danh AI',
             dataIndex: 'otherNames',
             key: 'otherNames',
             render: (text: string) => (
@@ -153,7 +153,7 @@ export const MemberList = () => {
             sorter: (a: User, b: User) => (a.otherNames || '').localeCompare(b.otherNames || ''),
         },
         {
-            title: 'Role',
+            title: 'Vai trò',
             dataIndex: 'role',
             key: 'role',
             render: (role: string, record: User) => (
@@ -165,8 +165,8 @@ export const MemberList = () => {
                         disabled={!canManageMembers}
                         onChange={(val) => updateRoleMutation.mutate({ id: record.id, role: val })}
                         options={[
-                            { value: 'FAMILY_ADMIN', label: 'Admin' },
-                            { value: 'MEMBER', label: 'Member' },
+                            { value: 'FAMILY_ADMIN', label: 'Quản trị nhóm' },
+                            { value: 'MEMBER', label: 'Thành viên' },
                         ]}
                     />
                 </span>
@@ -174,22 +174,22 @@ export const MemberList = () => {
             sorter: (a: User, b: User) => (a.role || '').localeCompare(b.role || ''),
         },
         {
-            title: 'Status',
+            title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
             render: (status: string) => {
                 const colors: Record<string, string> = { ACTIVE: 'green', INVITED: 'orange', REMOVED: 'red' };
                 const labels: Record<string, string> = {
-                    ACTIVE: 'Active',
-                    INVITED: 'Invited',
-                    REMOVED: 'Removed',
+                    ACTIVE: 'Hoạt động',
+                    INVITED: 'Đã mời',
+                    REMOVED: 'Đã xóa',
                 };
                 return <Tag color={colors[status] || 'blue'}>{labels[status] || status}</Tag>;
             },
             sorter: (a: User, b: User) => (a.status || '').localeCompare(b.status || ''),
         },
         {
-            title: 'Actions',
+            title: 'Thao tác',
             key: 'action',
             render: (_: unknown, record: User) => (
                 <Space onClick={(e) => e.stopPropagation()}>
@@ -197,8 +197,8 @@ export const MemberList = () => {
                         type="text"
                         disabled={!canManageMembers}
                         icon={<CopyPlus size={16} />}
-                        title="Invite another with similar role"
-                        aria-label="Invite another with similar role"
+                        title="Mời thêm thành viên với vai trò tương tự"
+                        aria-label="Mời thêm thành viên"
                         onClick={(e) => openInviteFromMemberCopy(record, e)}
                     />
                 </Space>
@@ -210,7 +210,7 @@ export const MemberList = () => {
         <div className="space-y-4 lg:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-xl lg:text-2xl font-bold text-foreground font-sans">Family Members</h1>
+                    <h1 className="text-xl lg:text-2xl font-bold text-foreground font-sans">Thành Viên Nhóm</h1>
                 </div>
                 <Button
                     type="primary"
@@ -221,8 +221,8 @@ export const MemberList = () => {
                         setIsInviteModalOpen(true);
                     }}
                     className="w-full sm:w-auto"
-                    title="Invite Member"
-                    aria-label="Invite Member"
+                    title="Mời thành viên"
+                    aria-label="Mời thành viên"
                 />
             </div>
 
@@ -251,7 +251,7 @@ export const MemberList = () => {
             </div>
 
             <Modal
-                title="Edit Member Information"
+                title="Chỉnh sửa thông tin thành viên"
                 open={isEditModalOpen}
                 forceRender
                 onCancel={() => {
@@ -266,14 +266,14 @@ export const MemberList = () => {
                             key="delete"
                             danger
                             icon={<Trash2 size={18} />}
-                            title="Remove from workspace"
-                            aria-label="Remove from workspace"
+                            title="Xóa khỏi nhóm"
+                            aria-label="Xóa khỏi nhóm"
                             loading={removeMutation.isPending}
                             disabled={!canManageMembers}
                             onClick={() => {
                                 Modal.confirm({
-                                    title: 'Confirm Removal',
-                                    content: `Are you sure you want to remove "${editingUser.fullName || editingUser.email}" from the family?`,
+                                    title: 'Xác nhận xóa thành viên',
+                                    content: `Bạn có chắc chắn muốn xóa "${editingUser.fullName || editingUser.email}" khỏi nhóm làm việc?`,
                                     onOk: () => {
                                         removeMutation.mutate(editingUser.id, {
                                             onSuccess: () => {
@@ -291,8 +291,8 @@ export const MemberList = () => {
                         key="cancel"
                         type="text"
                         icon={<X size={18} />}
-                        title="Cancel"
-                        aria-label="Cancel"
+                        title="Hủy"
+                        aria-label="Hủy"
                         onClick={() => {
                             setIsEditModalOpen(false);
                             setEditingUser(null);
@@ -303,8 +303,8 @@ export const MemberList = () => {
                         key="submit"
                         type="primary"
                         icon={<Check size={18} />}
-                        title="Update"
-                        aria-label="Update"
+                        title="Cập nhật"
+                        aria-label="Cập nhật"
                         onClick={() => editForm.submit()}
                         loading={updateMutation.isPending}
                     />,
@@ -318,45 +318,45 @@ export const MemberList = () => {
                 >
                     <Form.Item
                         name="fullName"
-                        label="Full Name"
-                        rules={[{ required: true }]}
+                        label="Họ và tên"
+                        rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
                     >
                         <Input prefix={<Users size={16} className="text-muted-foreground mr-2" />} />
                     </Form.Item>
                     <Form.Item
                         name="otherNames"
-                        label="Alternative Names / Nicknames (for AI)"
-                        extra="Comma-separated names. e.g. Dad, Mom, Mike"
+                        label="Biệt danh / Tên gọi khác (cho AI)"
+                        extra="Các tên cách nhau bởi dấu phẩy. Ví dụ: Anh Ba, Khoi..."
                     >
-                        <Input placeholder="Names for AI prompt recognition..." />
+                        <Input placeholder="Tên cho AI nhận diện..." />
                     </Form.Item>
                 </Form>
             </Modal>
 
             <Modal
-                title={inviteLink ? 'Invitation Ready' : 'Invite New Member'}
+                title={inviteLink ? 'Liên kết lời mời đã tạo' : 'Mời thành viên mới'}
                 open={isInviteModalOpen}
                 forceRender
                 onCancel={closeInviteModal}
                 footer={inviteLink ? [
                     <Button key="done" type="primary" onClick={closeInviteModal}>
-                        Done
+                        Hoàn tất
                     </Button>,
                 ] : [
                     <Button
                         key="cancel"
                         type="text"
                         icon={<X size={18} />}
-                        title="Cancel"
-                        aria-label="Cancel"
+                        title="Hủy"
+                        aria-label="Hủy"
                         onClick={closeInviteModal}
                     />,
                     <Button
                         key="submit"
                         type="primary"
                         icon={<Send size={18} />}
-                        title="Generate Invitation"
-                        aria-label="Generate Invitation"
+                        title="Tạo lời mời"
+                        aria-label="Tạo lời mời"
                         onClick={() => form.submit()}
                         loading={inviteMutation.isPending}
                     />,
@@ -366,14 +366,14 @@ export const MemberList = () => {
                     <div className="mt-4 space-y-4">
                         <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg flex gap-3 text-emerald-700 dark:text-emerald-300 text-sm">
                             <Check size={18} className="flex-shrink-0" />
-                            <p>Send this link to the invitee. They will sign in with Google to join this workspace.</p>
+                            <p>Gửi liên kết này cho người được mời. Họ chỉ cần đăng nhập Google để tham gia nhóm.</p>
                         </div>
                         <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
                             <Link2 size={16} className="flex-shrink-0 text-muted-foreground" />
                             <span className="flex-1 truncate text-sm text-muted-foreground">{inviteLink}</span>
                         </div>
                         <Button block icon={<Copy size={16} />} onClick={copyInviteLink}>
-                            Copy Link
+                            Sao chép liên kết
                         </Button>
                     </div>
                 ) : (
@@ -385,31 +385,31 @@ export const MemberList = () => {
                     >
                         <Form.Item
                             name="fullName"
-                            label="Full Name"
+                            label="Họ và tên"
                         >
-                            <Input prefix={<Users size={16} className="text-muted-foreground mr-2" />} placeholder="John Doe" />
+                            <Input prefix={<Users size={16} className="text-muted-foreground mr-2" />} placeholder="Nguyễn Văn A" />
                         </Form.Item>
                         <Form.Item
                             name="email"
-                            label="Email Address"
-                            rules={[{ required: true, type: 'email' }]}
+                            label="Địa chỉ Email"
+                            rules={[{ required: true, type: 'email', message: 'Email không hợp lệ' }]}
                         >
                             <Input prefix={<Mail size={16} className="text-muted-foreground mr-2" />} placeholder="member@example.com" />
                         </Form.Item>
                         <Form.Item
                             name="role"
-                            label="Role"
+                            label="Vai trò"
                             rules={[{ required: true }]}
                             initialValue="MEMBER"
                         >
                             <Select options={[
-                                { value: 'FAMILY_ADMIN', label: 'Workspace Administrator (Full Access)' },
-                                { value: 'MEMBER', label: 'Member (Standard Permissions)' },
+                                { value: 'FAMILY_ADMIN', label: 'Quản trị nhóm (Toàn quyền quản lý)' },
+                                { value: 'MEMBER', label: 'Thành viên (Quyền tiêu chuẩn)' },
                             ]} />
                         </Form.Item>
                         <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg flex gap-3 text-blue-700 dark:text-blue-300 text-sm">
                             <Shield size={18} className="flex-shrink-0" />
-                            <p>You will receive an invite link to send directly. The user must sign in using the designated email.</p>
+                            <p>Bạn sẽ nhận được link mời trực tiếp. Người dùng cần đăng nhập bằng tài khoản Google đúng email trên.</p>
                         </div>
                     </Form>
                 )}

@@ -49,16 +49,16 @@ const CATEGORIES = [
   'Identity & Civil Docs',
   'Education & Diplomas',
   'Bills & Contracts',
-  'Vehicles & Assets',
-  'Finance & Insurance',
+  'Samples & Specs',
+  'Certificates & Quality',
   'Other',
 ];
 
 const PROMPT_SUGGESTIONS = [
-  { label: '🏡 Property Dossier', query: 'Summarize all records, deeds, and history related to real estate assets.' },
-  { label: '👓 Vision & Medical History', query: 'Create a chronological table of eye exams, prescriptions, and optical history.' },
-  { label: '🏥 Immunization & Health Records', query: 'Synthesize medical checkups, vaccination records, and prescriptions.' },
-  { label: '📑 Official Identity Docs', query: 'List and summarize all IDs, passports, certificates, and civil documents.' },
+  { label: '📦 Mẫu & Đặc tính kỹ thuật', query: 'Tóm tắt các hồ sơ, đặc tính kỹ thuật và xuất xứ của các mẫu trong nhóm.' },
+  { label: '📑 Giấy tờ pháp lý & Chứng nhận', query: 'Tổng hợp và đối chiếu các chứng chỉ chất lượng, kiểm định và giấy tờ pháp lý.' },
+  { label: '🏥 Hồ sơ y tế & Sức khỏe', query: 'Tổng hợp hồ sơ khám sức khỏe và giấy tờ liên quan.' },
+  { label: '📄 Hợp đồng & Hóa đơn', query: 'Liệt kê và tóm tắt các hóa đơn, hợp đồng đã lưu trữ.' },
 ];
 
 const getCategoryIcon = (category: string) => {
@@ -73,8 +73,8 @@ const getCategoryIcon = (category: string) => {
     case 'Học tập & Giáo dục': return <GraduationCap className="w-4 h-4 text-emerald-500" />;
     case 'Bills & Contracts':
     case 'Hóa đơn & Hợp đồng': return <CreditCard className="w-4 h-4 text-purple-500" />;
-    case 'Vehicles & Assets':
-    case 'Xe cộ & Tài sản': return <Car className="w-4 h-4 text-cyan-500" />;
+    case 'Samples & Specs':
+    case 'Mẫu & Đặc tính kỹ thuật': return <Car className="w-4 h-4 text-cyan-500" />;
     default: return <FileText className="w-4 h-4 text-muted-foreground" />;
   }
 };

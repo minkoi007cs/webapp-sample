@@ -19,11 +19,11 @@ export const Login = () => {
             });
 
             if (error) {
-                message.error(`Login failed: ${error.message}`);
+                message.error(`Đăng nhập thất bại: ${error.message}`);
                 setLoading(false);
             }
         } catch (err: any) {
-            message.error(err.message || 'Error connecting to Google authentication');
+            message.error(err.message || 'Lỗi kết nối tới dịch vụ xác thực Google');
             setLoading(false);
         }
     };
@@ -37,10 +37,10 @@ export const Login = () => {
                             <Shield className="h-6 w-6" />
                         </div>
                         <h1 className="text-2xl font-bold tracking-tight text-foreground font-sans">
-                            Family Assets
+                            Sample Manager
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Sign in with your Google account to access your workspace
+                            Đăng nhập bằng tài khoản Google để truy cập không gian làm việc
                         </p>
                     </div>
 
@@ -75,16 +75,15 @@ export const Login = () => {
                                 </svg>
                             )}
                         >
-                            {loading ? 'Connecting...' : 'Continue with Google'}
+                            {loading ? 'Đang kết nối...' : 'Tiếp tục với Google'}
                         </Button>
                     </div>
 
                     <div className="mt-8 text-center text-xs text-muted-foreground">
-                        Secure & real-time encrypted data synchronization
+                        Đồng bộ dữ liệu an toàn & bảo mật thời gian thực
                     </div>
                 </div>
             </div>
         </div>
     );
 };
-
