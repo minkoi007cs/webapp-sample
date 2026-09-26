@@ -9,10 +9,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
-import { FamilyModule } from './modules/family/family.module';
-import { AssetModule } from './modules/asset/asset.module';
+import { GroupModule } from './modules/group/group.module';
+import { SampleModule } from './modules/sample/sample.module';
 import { CategoryModule } from './modules/category/category.module';
-import { ExpenseModule } from './modules/expense/expense.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -21,7 +20,6 @@ import { FileModule } from './modules/file/file.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CalendarModule } from './modules/calendar/calendar.module';
 import { NaturalInputModule } from './modules/natural-input/natural-input.module';
-import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { GoUsModule } from './modules/gous/gous.module';
 import { DocumentModule } from './modules/document/document.module';
 
@@ -48,10 +46,6 @@ import { DocumentModule } from './modules/document/document.module';
           autoLoadEntities: true,
           synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true',
           migrationsRun: configService.get<string>('DB_MIGRATIONS_RUN') === 'true',
-          // 'each' (not the default 'all') so an individual migration can opt out of
-          // its own transaction via `public transaction = false` — needed by migrations
-          // that run `ALTER TYPE ... ADD VALUE`, which Postgres refuses to run inside a
-          // transaction block or DO block.
           migrationsTransactionMode: 'each',
           migrations: [
             path.join(process.cwd(), 'dist/migrations/*.js'),
@@ -95,10 +89,9 @@ import { DocumentModule } from './modules/document/document.module';
     }),
     AuthModule,
     UserModule,
-    FamilyModule,
-    AssetModule,
+    GroupModule,
+    SampleModule,
     CategoryModule,
-    ExpenseModule,
     NotificationModule,
     DashboardModule,
     AdminModule,
@@ -106,7 +99,6 @@ import { DocumentModule } from './modules/document/document.module';
     FileModule,
     CalendarModule,
     NaturalInputModule,
-    MaintenanceModule,
     GoUsModule,
     DocumentModule,
     ScheduleModule.forRoot(),

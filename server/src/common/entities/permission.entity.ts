@@ -3,16 +3,17 @@ import { RolePermission } from './role-permission.entity';
 
 export enum AppModule {
   ADMIN = 'ADMIN',
-  FAMILY = 'FAMILY',
+  GROUP = 'GROUP',
+  FAMILY = 'GROUP', // Backwards-compatible alias
   USER = 'USER',
   PERMISSION = 'PERMISSION',
   DASHBOARD = 'DASHBOARD',
   CATEGORY = 'CATEGORY',
   CALENDAR = 'CALENDAR',
-  ASSET = 'ASSET',
-  TRANSACTION = 'TRANSACTION',
-  GOUS = 'GOUS',
+  SAMPLE = 'SAMPLE',
+  ASSET = 'SAMPLE', // Backwards-compatible alias
   DOCUMENT = 'DOCUMENT',
+  GOUS = 'GOUS',
 }
 
 export enum PermissionAction {
@@ -22,7 +23,7 @@ export enum PermissionAction {
   DELETE = 'delete',
 }
 
-@Entity('fml_permissions')
+@Entity('permissions')
 @Index(['moduleKey', 'action'], { unique: true })
 export class Permission {
   @PrimaryGeneratedColumn('uuid')

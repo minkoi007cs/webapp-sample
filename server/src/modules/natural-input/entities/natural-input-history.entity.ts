@@ -1,18 +1,25 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
-import { Family } from '../../../common/entities/family.entity';
+import { Group } from '../../../common/entities/group.entity';
 import { User } from '../../../common/entities/user.entity';
 
-@Entity('fml_natural_input_history')
+@Entity('natural_input_history')
 export class NaturalInputHistory extends BaseEntity {
-  @Column()
-  familyId: string;
+  @Column({ type: 'uuid' })
+  groupId: string;
 
-  @ManyToOne(() => Family)
-  @JoinColumn({ name: 'familyId' })
-  family: Family;
+  get familyId(): string {
+    return this.groupId;
+  }
+  set familyId(val: string) {
+    this.groupId = val;
+  }
 
-  @Column()
+  @ManyToOne(() => Group)
+  @JoinColumn({ name: 'groupId' })
+  group: Group;
+
+  @Column({ type: 'uuid' })
   userId: string;
 
   @ManyToOne(() => User)

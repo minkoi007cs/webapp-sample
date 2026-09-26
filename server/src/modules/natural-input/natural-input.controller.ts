@@ -13,12 +13,14 @@ export class NaturalInputController {
   @Post('parse')
   @ApiOperation({ summary: 'Parse natural Vietnamese language input' })
   async parse(@Req() req, @Body() body: { message: string }) {
-    return this.naturalInputService.parseWithUser(body.message, req.user.familyId, req.user.id);
+    const groupId = req.user.groupId || req.user.familyId;
+    return this.naturalInputService.parseWithUser(body.message, groupId, req.user.id);
   }
 
   @Get('history')
-  @ApiOperation({ summary: 'Get natural input history for the family' })
+  @ApiOperation({ summary: 'Get natural input history for the group' })
   async getHistory(@Req() req) {
-    return this.naturalInputService.getHistory(req.user.familyId);
+    const groupId = req.user.groupId || req.user.familyId;
+    return this.naturalInputService.getHistory(groupId);
   }
 }

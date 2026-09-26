@@ -15,18 +15,17 @@ const APP_ADMIN_DENIED_MODULES = new Set<AppModule>([
   AppModule.DASHBOARD,
   AppModule.CATEGORY,
   AppModule.CALENDAR,
-  AppModule.ASSET,
-  AppModule.TRANSACTION,
+  AppModule.SAMPLE,
 ]);
 
-const FAMILY_SCOPED_MODULES = new Set<AppModule>([
-  AppModule.FAMILY,
+const GROUP_SCOPED_MODULES = new Set<AppModule>([
+  AppModule.GROUP,
   AppModule.USER,
   AppModule.DASHBOARD,
   AppModule.CATEGORY,
   AppModule.CALENDAR,
-  AppModule.ASSET,
-  AppModule.TRANSACTION,
+  AppModule.SAMPLE,
+  AppModule.DOCUMENT,
   AppModule.GOUS,
 ]);
 
@@ -58,26 +57,26 @@ export class PermissionGuard implements CanActivate {
     const normalized = this.permissionService.normalizePermission(check.moduleId, check.action);
 
     if (user.systemRole === SystemRole.APP_ADMIN) {
-      if (user.role && FAMILY_SCOPED_MODULES.has(normalized.moduleKey)) {
-        const allowedInFamilyContext = await this.permissionService.hasPermission(
+      if (user.role && GROUP_SCOPED_MODULES.has(normalized.moduleKey)) {
+        const allowedInGroupContext = await this.permissionService.hasPermission(
           user.role,
           normalized.moduleKey,
           normalized.action,
         );
-        if (!allowedInFamilyContext) {
+        if (!allowedInGroupContext) {
           throw new ForbiddenException(`You do not have ${normalized.action} permission for ${normalized.moduleKey}`);
         }
         return true;
       }
 
       if (APP_ADMIN_DENIED_MODULES.has(normalized.moduleKey)) {
-        throw new ForbiddenException('APP_ADMIN cannot access family financial data');
+        throw new ForbiddenException('APP_ADMIN cannot access group data directly');
       }
       return this.permissionService.hasPermission(UserRole.APP_ADMIN, normalized.moduleKey, normalized.action);
     }
 
     if (!user.role) {
-      throw new ForbiddenException('No active family role found for this request');
+      throw new ForbiddenException('No active group role found for this request');
     }
 
     const allowed = await this.permissionService.hasPermission(user.role, normalized.moduleKey, normalized.action);

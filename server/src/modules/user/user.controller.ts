@@ -1,60 +1,78 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, ForbiddenException, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { PermissionGuard } from '../../common/guards/permission.guard';
-import { CheckPermission } from '../../common/decorators/permission.decorator';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { UserRole } from '../../common/entities/user.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ActiveFamilyGuard } from '../../common/guards/active-family.guard';
+import { PermissionGuard } from '../../common/guards/permission.guard';
+import { RequirePermission } from '../../common/decorators/permission.decorator';
+import { AppModule, PermissionAction } from '../../common/entities/permission.entity';
+import { GetUser } from '../../common/decorators/get-user.decorator';
+import { User } from '../../common/entities/user.entity';
 
 @ApiTags('Users')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), ActiveFamilyGuard, PermissionGuard)
+@UseGuards(JwtAuthGuard, ActiveFamilyGuard, PermissionGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all family members' })
-  @CheckPermission('User', 'view')
-  async findAll(@Request() req, @Query() query?: Record<string, unknown>) {
-    return this.userService.findAll(req.user.familyId, query ?? {});
+  @RequirePermission(AppModule.USER, PermissionAction.VIEW)
+  @ApiOperation({ summary: 'Lấy danh sách thành viên trong nhóm' })
+  findAll(@GetUser() user: User, @Query() query: any) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.userService.findAll(groupId, query);
+  }
+
+  @Get(':id')
+  @RequirePermission(AppModule.USER, PermissionAction.VIEW)
+  @ApiOperation({ summary: 'Lấy chi tiết thành viên' })
+  findOne(@GetUser() user: User, @Param('id') id: string) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.userService.findOne(id, groupId);
   }
 
   @Post('invite')
-  @ApiOperation({ summary: 'Invite a new member to the family' })
-  @CheckPermission('User', 'create')
-  async invite(@Request() req, @Body() data: { email: string; fullName?: string; role: UserRole }) {
-    if (req.user.role !== UserRole.FAMILY_ADMIN) {
-      throw new ForbiddenException('Only family admins can invite members');
-    }
-    return this.userService.invite(req.user.familyId, req.user.id, data);
+  @RequirePermission(AppModule.USER, PermissionAction.CREATE)
+  @ApiOperation({ summary: 'Mời thành viên mới vào nhóm' })
+  invite(
+    @GetUser() user: User,
+    @Body() body: { email: string; fullName?: string; role: UserRole },
+  ) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.userService.invite(groupId, user.id, body);
   }
 
   @Patch(':id/role')
-  @ApiOperation({ summary: 'Update member role (Family admin only)' })
-  @CheckPermission('User', 'update')
-  async updateRole(@Request() req, @Param('id') id: string, @Body('role') role: UserRole) {
-    if (req.user.role !== UserRole.FAMILY_ADMIN) {
-      throw new ForbiddenException('Only family admins can change roles');
-    }
-    return this.userService.updateRole(req.user.familyId, id, role);
+  @RequirePermission(AppModule.USER, PermissionAction.UPDATE)
+  @ApiOperation({ summary: 'Cập nhật vai trò thành viên' })
+  updateRole(
+    @GetUser() user: User,
+    @Param('id') id: string,
+    @Body('role') newRole: UserRole,
+  ) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.userService.updateRole(groupId, id, newRole);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update member details' })
-  @CheckPermission('User', 'update')
-  async update(@Request() req, @Param('id') id: string, @Body() data: { fullName?: string; otherNames?: string }) {
-    return this.userService.update(req.user.familyId, id, data);
+  @RequirePermission(AppModule.USER, PermissionAction.UPDATE)
+  @ApiOperation({ summary: 'Cập nhật thông tin thành viên' })
+  update(
+    @GetUser() user: User,
+    @Param('id') id: string,
+    @Body() body: Partial<User>,
+  ) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.userService.update(groupId, id, body);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Remove member from family' })
-  @CheckPermission('User', 'delete')
-  async remove(@Request() req, @Param('id') id: string) {
-    if (req.user.role !== UserRole.FAMILY_ADMIN) {
-      throw new ForbiddenException('Only family admins can remove members');
-    }
-    return this.userService.remove(req.user.familyId, id);
+  @RequirePermission(AppModule.USER, PermissionAction.DELETE)
+  @ApiOperation({ summary: 'Xóa thành viên khỏi nhóm' })
+  remove(@GetUser() user: User, @Param('id') id: string) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.userService.remove(groupId, id);
   }
 }

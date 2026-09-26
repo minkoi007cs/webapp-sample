@@ -1,10 +1,22 @@
 import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { Group } from './group.entity';
 
-@Entity('fml_categories')
+@Entity('categories')
 export class Category extends BaseEntity {
-  @Column()
-  familyId: string;
+  @Column({ type: 'uuid' })
+  groupId: string;
+
+  get familyId(): string {
+    return this.groupId;
+  }
+  set familyId(val: string) {
+    this.groupId = val;
+  }
+
+  @ManyToOne(() => Group, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'groupId' })
+  group: Group;
 
   @Column()
   name: string;

@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, UseGuards, Req, Res, Post, Body, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Patch, UseGuards, Req, Post, Body, Param, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -32,7 +32,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
   async getProfile(@Req() req) {
-    return this.authService.getSessionProfile(req.user.id, req.user.familyId ?? null);
+    return this.authService.getSessionProfile(req.user.id, req.user.groupId ?? req.user.familyId ?? null);
   }
 
   @Patch('me')
@@ -43,34 +43,34 @@ export class AuthController {
     return this.authService.updateMe(req.user.id, data);
   }
 
-  @Get('families')
+  @Get(['groups', 'families'])
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'List families available to current user' })
-  async listFamilies(@Req() req) {
-    return this.authService.listUserFamilies(req.user.id);
+  @ApiOperation({ summary: 'List groups available to current user' })
+  async listGroups(@Req() req) {
+    return this.authService.listUserGroups(req.user.id);
   }
 
-  @Post('switch-family')
+  @Post(['switch-group', 'switch-family'])
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Switch active family for the current session' })
-  async switchFamily(@Req() req, @Body('familyId') familyId: string) {
-    return this.authService.switchActiveFamily(req.user.id, familyId);
+  @ApiOperation({ summary: 'Switch active group for the current session' })
+  async switchGroup(@Req() req, @Body('groupId') groupId?: string, @Body('familyId') familyId?: string) {
+    return this.authService.switchActiveGroup(req.user.id, (groupId || familyId)!);
   }
 
-  @Post('create-family')
+  @Post(['create-group', 'create-family'])
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new family and switch to it' })
-  async createFamily(@Req() req, @Body('name') name?: string) {
-    return this.authService.createNewFamily(req.user.id, name);
+  @ApiOperation({ summary: 'Create a new group and switch to it' })
+  async createGroup(@Req() req, @Body('name') name?: string) {
+    return this.authService.createNewGroup(req.user.id, name);
   }
 
   @Post('accept-invite')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Accept a family invite token' })
+  @ApiOperation({ summary: 'Accept an invite token' })
   async acceptInvite(@Req() req, @Body('token') token: string) {
     return this.authService.acceptInvite(req.user.id, token);
   }

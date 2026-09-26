@@ -6,8 +6,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Request } from 'express';
 import { User, SystemRole, UserRole } from '../../../common/entities/user.entity';
-import { FamilyUser, FamilyUserStatus } from '../../../common/entities/family-user.entity';
-import { FamilyStatus } from '../../../common/entities/family.entity';
+import { GroupUser, GroupUserStatus } from '../../../common/entities/group-user.entity';
+import { GroupStatus } from '../../../common/entities/group.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,8 +15,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(FamilyUser)
-    private familyUserRepository: Repository<FamilyUser>,
+    @InjectRepository(GroupUser)
+    private groupUserRepository: Repository<GroupUser>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -35,52 +35,54 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    const requestedFamilyId = String(req.headers['x-family-id'] || '').trim() || payload.activeFamilyId || user.lastActiveFamilyId;
+    const requestedGroupId =
+      String(req.headers['x-group-id'] || req.headers['x-family-id'] || '').trim() ||
+      payload.activeGroupId ||
+      payload.activeFamilyId ||
+      user.lastActiveGroupId;
 
-    if (user.systemRole === SystemRole.APP_ADMIN && !requestedFamilyId) {
+    if (user.systemRole === SystemRole.APP_ADMIN && !requestedGroupId) {
       return {
         ...user,
         role: UserRole.APP_ADMIN,
+        groupId: null,
         familyId: null,
       };
     }
 
-    if (!requestedFamilyId) {
-      throw new UnauthorizedException('Active family is required');
+    if (!requestedGroupId) {
+      throw new UnauthorizedException('Nhóm làm việc không được để trống');
     }
 
-    const membership = await this.familyUserRepository.findOne({
+    const membership = await this.groupUserRepository.findOne({
       where: {
         userId: user.id,
-        familyId: requestedFamilyId,
-        status: FamilyUserStatus.ACTIVE,
+        groupId: requestedGroupId,
+        status: GroupUserStatus.ACTIVE,
       },
-      relations: ['family', 'role'],
+      relations: ['group', 'role'],
     });
 
     if (!membership) {
-      throw new UnauthorizedException('User is not an active member of the selected family');
+      throw new UnauthorizedException('Người dùng không phải thành viên của nhóm được chọn');
     }
 
-    if (membership.family?.status !== FamilyStatus.ACTIVE) {
-      // Don't hard-fail the whole session over one deactivated family --
-      // that would 401 every request (including /auth/me and switch-family)
-      // and strand the user with no way to recover. Fall through with no
-      // active family/role instead; family-scoped endpoints will then give a
-      // clear "no active family" error via PermissionGuard, and the user can
-      // still list/switch to another family they belong to.
+    if (membership.group?.status !== GroupStatus.ACTIVE) {
       return {
         ...user,
+        groupId: null,
         familyId: null,
-        family: null,
+        group: null,
         role: null,
       };
     }
 
     return {
       ...user,
-      familyId: membership.familyId,
-      family: membership.family,
+      groupId: membership.groupId,
+      familyId: membership.groupId,
+      group: membership.group,
+      family: membership.group,
       role: membership.role?.code ?? UserRole.MEMBER,
       membershipId: membership.id,
     };

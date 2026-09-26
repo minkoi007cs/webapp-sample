@@ -129,10 +129,9 @@ export const CategoryList = () => {
       categoryApi.delete(id, reassignTo ? { reassignTo } : undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['samples'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      message.success('Category deleted successfully');
+      message.success('Xóa phân loại thành công');
       setReassignOpen(false);
       setUsageSummary(null);
       setReassignTargetId(undefined);

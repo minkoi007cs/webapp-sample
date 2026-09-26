@@ -10,11 +10,7 @@ import { ThemeProvider, useThemeMode } from './components/theme/ThemeProvider';
 import './index.css';
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then((module) => ({ default: module.Dashboard })));
-const AssetList = lazy(() => import('./pages/AssetList').then((module) => ({ default: module.AssetList })));
-const MaintenanceList = lazy(() =>
-  import('./pages/MaintenanceList').then((module) => ({ default: module.MaintenanceList })),
-);
-const ExpenseList = lazy(() => import('./pages/ExpenseList').then((module) => ({ default: module.ExpenseList })));
+const SampleList = lazy(() => import('./pages/SampleList').then((module) => ({ default: module.SampleList })));
 const MemberList = lazy(() => import('./pages/MemberList').then((module) => ({ default: module.MemberList })));
 const CategoryList = lazy(() => import('./pages/CategoryList').then((module) => ({ default: module.CategoryList })));
 const Login = lazy(() => import('./pages/Login').then((module) => ({ default: module.Login })));
@@ -32,10 +28,6 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      // Default staleTime is 0, so every remount (switching tabs/pages) was
-      // refetching data that's almost always still fresh a few seconds
-      // later -- each of those is a full network round trip on top of
-      // whatever the page's own queries already cost.
       staleTime: 30_000,
     },
   },
@@ -113,9 +105,10 @@ function AppShell() {
                 <Route index element={<HomePage />} />
                 <Route path="guide" element={<SetupGuide />} />
                 <Route path="dashboard" element={<ProtectedPage moduleKey="DASHBOARD"><Dashboard /></ProtectedPage>} />
-                <Route path="assets" element={<ProtectedPage moduleKey="ASSET"><AssetList /></ProtectedPage>} />
-                <Route path="maintenance" element={<ProtectedPage moduleKey="ASSET"><MaintenanceList /></ProtectedPage>} />
-                <Route path="expenses" element={<ProtectedPage moduleKey="TRANSACTION"><ExpenseList /></ProtectedPage>} />
+                <Route path="samples" element={<ProtectedPage moduleKey="ASSET"><SampleList /></ProtectedPage>} />
+                <Route path="assets" element={<Navigate to="/samples" replace />} />
+                <Route path="maintenance" element={<Navigate to="/samples" replace />} />
+                <Route path="expenses" element={<Navigate to="/samples" replace />} />
                 <Route path="documents" element={<ProtectedPage moduleKey="DOCUMENT"><Documents /></ProtectedPage>} />
                 <Route path="categories" element={<ProtectedPage moduleKey="CATEGORY"><CategoryList /></ProtectedPage>} />
                 <Route path="members" element={<ProtectedPage moduleKey="USER"><MemberList /></ProtectedPage>} />
@@ -133,13 +126,13 @@ function AppShell() {
 
 const RouteLoading = () => (
   <div className="min-h-[40vh] flex items-center justify-center text-muted-foreground text-sm font-medium">
-    Loading session...
+    Đang tải phiên làm việc...
   </div>
 );
 
 const PageFallback = () => (
   <div className="min-h-[30vh] flex items-center justify-center text-muted-foreground text-sm font-medium">
-    Loading page...
+    Đang tải trang...
   </div>
 );
 

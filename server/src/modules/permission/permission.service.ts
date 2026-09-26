@@ -17,10 +17,10 @@ const APP_ADMIN_ALLOWED: Array<{ moduleKey: AppModule; action: PermissionAction 
   { moduleKey: AppModule.ADMIN, action: PermissionAction.CREATE },
   { moduleKey: AppModule.ADMIN, action: PermissionAction.UPDATE },
   { moduleKey: AppModule.ADMIN, action: PermissionAction.DELETE },
-  { moduleKey: AppModule.FAMILY, action: PermissionAction.VIEW },
-  { moduleKey: AppModule.FAMILY, action: PermissionAction.CREATE },
-  { moduleKey: AppModule.FAMILY, action: PermissionAction.UPDATE },
-  { moduleKey: AppModule.FAMILY, action: PermissionAction.DELETE },
+  { moduleKey: AppModule.GROUP, action: PermissionAction.VIEW },
+  { moduleKey: AppModule.GROUP, action: PermissionAction.CREATE },
+  { moduleKey: AppModule.GROUP, action: PermissionAction.UPDATE },
+  { moduleKey: AppModule.GROUP, action: PermissionAction.DELETE },
   { moduleKey: AppModule.USER, action: PermissionAction.VIEW },
   { moduleKey: AppModule.USER, action: PermissionAction.UPDATE },
   { moduleKey: AppModule.PERMISSION, action: PermissionAction.VIEW },
@@ -33,11 +33,11 @@ const APP_ADMIN_ALLOWED: Array<{ moduleKey: AppModule; action: PermissionAction 
   { moduleKey: AppModule.GOUS, action: PermissionAction.DELETE },
 ];
 
-const FAMILY_ADMIN_ALLOWED: Array<{ moduleKey: AppModule; action: PermissionAction }> = [
-  { moduleKey: AppModule.FAMILY, action: PermissionAction.VIEW },
-  { moduleKey: AppModule.FAMILY, action: PermissionAction.CREATE },
-  { moduleKey: AppModule.FAMILY, action: PermissionAction.UPDATE },
-  { moduleKey: AppModule.FAMILY, action: PermissionAction.DELETE },
+const GROUP_ADMIN_ALLOWED: Array<{ moduleKey: AppModule; action: PermissionAction }> = [
+  { moduleKey: AppModule.GROUP, action: PermissionAction.VIEW },
+  { moduleKey: AppModule.GROUP, action: PermissionAction.CREATE },
+  { moduleKey: AppModule.GROUP, action: PermissionAction.UPDATE },
+  { moduleKey: AppModule.GROUP, action: PermissionAction.DELETE },
   { moduleKey: AppModule.USER, action: PermissionAction.VIEW },
   { moduleKey: AppModule.USER, action: PermissionAction.CREATE },
   { moduleKey: AppModule.USER, action: PermissionAction.UPDATE },
@@ -51,14 +51,10 @@ const FAMILY_ADMIN_ALLOWED: Array<{ moduleKey: AppModule; action: PermissionActi
   { moduleKey: AppModule.CALENDAR, action: PermissionAction.CREATE },
   { moduleKey: AppModule.CALENDAR, action: PermissionAction.UPDATE },
   { moduleKey: AppModule.CALENDAR, action: PermissionAction.DELETE },
-  { moduleKey: AppModule.ASSET, action: PermissionAction.VIEW },
-  { moduleKey: AppModule.ASSET, action: PermissionAction.CREATE },
-  { moduleKey: AppModule.ASSET, action: PermissionAction.UPDATE },
-  { moduleKey: AppModule.ASSET, action: PermissionAction.DELETE },
-  { moduleKey: AppModule.TRANSACTION, action: PermissionAction.VIEW },
-  { moduleKey: AppModule.TRANSACTION, action: PermissionAction.CREATE },
-  { moduleKey: AppModule.TRANSACTION, action: PermissionAction.UPDATE },
-  { moduleKey: AppModule.TRANSACTION, action: PermissionAction.DELETE },
+  { moduleKey: AppModule.SAMPLE, action: PermissionAction.VIEW },
+  { moduleKey: AppModule.SAMPLE, action: PermissionAction.CREATE },
+  { moduleKey: AppModule.SAMPLE, action: PermissionAction.UPDATE },
+  { moduleKey: AppModule.SAMPLE, action: PermissionAction.DELETE },
   { moduleKey: AppModule.GOUS, action: PermissionAction.VIEW },
   { moduleKey: AppModule.GOUS, action: PermissionAction.CREATE },
   { moduleKey: AppModule.GOUS, action: PermissionAction.UPDATE },
@@ -70,7 +66,7 @@ const FAMILY_ADMIN_ALLOWED: Array<{ moduleKey: AppModule; action: PermissionActi
 ];
 
 const MEMBER_ALLOWED: Array<{ moduleKey: AppModule; action: PermissionAction }> = [
-  { moduleKey: AppModule.FAMILY, action: PermissionAction.VIEW },
+  { moduleKey: AppModule.GROUP, action: PermissionAction.VIEW },
   { moduleKey: AppModule.USER, action: PermissionAction.VIEW },
   { moduleKey: AppModule.DASHBOARD, action: PermissionAction.VIEW },
   { moduleKey: AppModule.CATEGORY, action: PermissionAction.VIEW },
@@ -78,14 +74,10 @@ const MEMBER_ALLOWED: Array<{ moduleKey: AppModule; action: PermissionAction }> 
   { moduleKey: AppModule.CALENDAR, action: PermissionAction.CREATE },
   { moduleKey: AppModule.CALENDAR, action: PermissionAction.UPDATE },
   { moduleKey: AppModule.CALENDAR, action: PermissionAction.DELETE },
-  { moduleKey: AppModule.ASSET, action: PermissionAction.VIEW },
-  { moduleKey: AppModule.ASSET, action: PermissionAction.CREATE },
-  { moduleKey: AppModule.ASSET, action: PermissionAction.UPDATE },
-  { moduleKey: AppModule.ASSET, action: PermissionAction.DELETE },
-  { moduleKey: AppModule.TRANSACTION, action: PermissionAction.VIEW },
-  { moduleKey: AppModule.TRANSACTION, action: PermissionAction.CREATE },
-  { moduleKey: AppModule.TRANSACTION, action: PermissionAction.UPDATE },
-  { moduleKey: AppModule.TRANSACTION, action: PermissionAction.DELETE },
+  { moduleKey: AppModule.SAMPLE, action: PermissionAction.VIEW },
+  { moduleKey: AppModule.SAMPLE, action: PermissionAction.CREATE },
+  { moduleKey: AppModule.SAMPLE, action: PermissionAction.UPDATE },
+  { moduleKey: AppModule.SAMPLE, action: PermissionAction.DELETE },
   { moduleKey: AppModule.GOUS, action: PermissionAction.VIEW },
   { moduleKey: AppModule.GOUS, action: PermissionAction.CREATE },
   { moduleKey: AppModule.GOUS, action: PermissionAction.UPDATE },
@@ -99,14 +91,6 @@ const MEMBER_ALLOWED: Array<{ moduleKey: AppModule; action: PermissionAction }> 
 @Injectable()
 export class PermissionService implements OnModuleInit {
   private readonly logger = new Logger(PermissionService.name);
-  // seedSystemPermissions() does ~100 sequential queries (a findOne per
-  // definition/link). It's already run once at boot via onModuleInit; without
-  // this flag, AuthService.validateOAuthUser also re-runs the whole thing on
-  // every single login, on every warm instance, adding seconds of latency
-  // (and risking the Vercel function timeout on a slow connection). Once a
-  // pass completes in this process, later calls are a no-op until the next
-  // cold start (new deploy/instance), which is exactly when re-seeding is
-  // actually needed again (e.g. a new AppModule value).
   private seedingComplete = false;
 
   constructor(
@@ -122,7 +106,7 @@ export class PermissionService implements OnModuleInit {
     try {
       await this.seedSystemPermissions();
     } catch (err) {
-      // Ignore during initial migrations
+      // Ignore during initial setup
     }
   }
 
@@ -133,11 +117,6 @@ export class PermissionService implements OnModuleInit {
 
     const key = (moduleKey: string, action: string) => `${moduleKey}:${action}`;
 
-    // Bulk-load what already exists (a handful of rows) instead of one
-    // findOne() round trip per definition/link -- ~100+ sequential queries
-    // used to run on every cold start (and, before seedingComplete existed,
-    // on every login), which is exactly the kind of per-request latency that
-    // gets crippling once Vercel and the DB aren't in the same region.
     const allDefinitions = this.buildPermissionDefinitions();
     const existingPermissions = await this.permissionRepository.find();
     const existingPermissionKeys = new Set(existingPermissions.map((p) => key(p.moduleKey, p.action)));
@@ -149,9 +128,6 @@ export class PermissionService implements OnModuleInit {
         const saved = await this.permissionRepository.save(missingDefinitions.map((d) => this.permissionRepository.create(d)));
         allPermissions = existingPermissions.concat(saved);
       } catch (err) {
-        // Fall back to one-by-one so a single bad definition (e.g. a
-        // moduleKey the DB enum doesn't know about yet) doesn't block
-        // seeding for every other module.
         this.logger.error('Bulk permission seed failed, falling back to per-item seeding', err instanceof Error ? err.stack : err);
         const savedFallback: Permission[] = [];
         for (const definition of missingDefinitions) {
@@ -171,9 +147,7 @@ export class PermissionService implements OnModuleInit {
     }
 
     const roleTemplates = this.getRoleTemplates();
-    const existingRoles = await this.roleRepository.find({
-      where: roleTemplates.map((t) => ({ code: t.role })),
-    });
+    const existingRoles = await this.roleRepository.find();
     const roleByCode = new Map(existingRoles.map((r) => [r.code, r]));
     const missingRoles = roleTemplates.filter((t) => !roleByCode.has(t.role));
 
@@ -195,15 +169,10 @@ export class PermissionService implements OnModuleInit {
     const missingLinks: Array<{ roleId: string; permissionId: string }> = [];
     for (const template of roleTemplates) {
       const role = roleByCode.get(template.role);
-      if (!role) {
-        this.logger.error(`Failed to link permissions for role ${template.role}: role not found/created`);
-        continue;
-      }
+      if (!role) continue;
       for (const permission of template.permissions) {
         const permissionId = permissionIdByKey.get(key(permission.moduleKey, permission.action));
-        if (!permissionId) {
-          continue;
-        }
+        if (!permissionId) continue;
         const linkKey = `${role.id}:${permissionId}`;
         if (!existingLinkKeys.has(linkKey)) {
           existingLinkKeys.add(linkKey);
@@ -216,14 +185,7 @@ export class PermissionService implements OnModuleInit {
       try {
         await this.rolePermissionRepository.save(missingLinks.map((l) => this.rolePermissionRepository.create(l)));
       } catch (err) {
-        this.logger.error('Bulk role-permission link seed failed, falling back to per-item seeding', err instanceof Error ? err.stack : err);
-        for (const link of missingLinks) {
-          try {
-            await this.rolePermissionRepository.save(this.rolePermissionRepository.create(link));
-          } catch (itemErr) {
-            this.logger.error(`Failed to link permission ${link.permissionId} to role ${link.roleId}`, itemErr instanceof Error ? itemErr.stack : itemErr);
-          }
-        }
+        this.logger.error('Bulk role-permission link seed failed', err);
       }
     }
 
@@ -320,15 +282,21 @@ export class PermissionService implements OnModuleInit {
   normalizePermission(moduleId: string, action: string): { moduleKey: AppModule; action: PermissionAction } {
     const moduleAliases: Record<string, AppModule> = {
       admin: AppModule.ADMIN,
-      family: AppModule.FAMILY,
+      group: AppModule.GROUP,
+      groups: AppModule.GROUP,
+      family: AppModule.GROUP,
+      families: AppModule.GROUP,
       user: AppModule.USER,
+      users: AppModule.USER,
       permission: AppModule.PERMISSION,
       dashboard: AppModule.DASHBOARD,
       category: AppModule.CATEGORY,
+      categories: AppModule.CATEGORY,
       calendar: AppModule.CALENDAR,
-      asset: AppModule.ASSET,
-      expense: AppModule.TRANSACTION,
-      transaction: AppModule.TRANSACTION,
+      sample: AppModule.SAMPLE,
+      samples: AppModule.SAMPLE,
+      asset: AppModule.SAMPLE,
+      assets: AppModule.SAMPLE,
       gous: AppModule.GOUS,
       document: AppModule.DOCUMENT,
       documents: AppModule.DOCUMENT,
@@ -355,7 +323,18 @@ export class PermissionService implements OnModuleInit {
 
   private buildPermissionDefinitions(): Array<Pick<Permission, 'moduleKey' | 'action' | 'name'>> {
     const definitions: Array<Pick<Permission, 'moduleKey' | 'action' | 'name'>> = [];
-    const modules = Object.values(AppModule);
+    const modules = [
+      AppModule.ADMIN,
+      AppModule.GROUP,
+      AppModule.USER,
+      AppModule.PERMISSION,
+      AppModule.DASHBOARD,
+      AppModule.CATEGORY,
+      AppModule.CALENDAR,
+      AppModule.SAMPLE,
+      AppModule.DOCUMENT,
+      AppModule.GOUS,
+    ];
     const actions = Object.values(PermissionAction);
 
     for (const moduleKey of modules) {
@@ -374,8 +353,8 @@ export class PermissionService implements OnModuleInit {
   private getRoleTemplates(): RoleTemplate[] {
     return [
       { role: UserRole.APP_ADMIN, scope: RoleScope.SYSTEM, permissions: APP_ADMIN_ALLOWED },
-      { role: UserRole.FAMILY_ADMIN, scope: RoleScope.FAMILY, permissions: FAMILY_ADMIN_ALLOWED },
-      { role: UserRole.MEMBER, scope: RoleScope.FAMILY, permissions: MEMBER_ALLOWED },
+      { role: UserRole.GROUP_ADMIN, scope: RoleScope.GROUP, permissions: GROUP_ADMIN_ALLOWED },
+      { role: UserRole.MEMBER, scope: RoleScope.GROUP, permissions: MEMBER_ALLOWED },
     ];
   }
 }

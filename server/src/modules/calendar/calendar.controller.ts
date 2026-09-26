@@ -1,74 +1,72 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CalendarService } from './calendar.service';
 import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 import { UpdateCalendarEventDto } from './dto/update-calendar-event.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ActiveFamilyGuard } from '../../common/guards/active-family.guard';
 import { PermissionGuard } from '../../common/guards/permission.guard';
-import { CheckPermission } from '../../common/decorators/permission.decorator';
+import { RequirePermission } from '../../common/decorators/permission.decorator';
+import { AppModule, PermissionAction } from '../../common/entities/permission.entity';
+import { GetUser } from '../../common/decorators/get-user.decorator';
+import { User } from '../../common/entities/user.entity';
 
 @ApiTags('Calendar')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), PermissionGuard)
+@UseGuards(JwtAuthGuard, ActiveFamilyGuard, PermissionGuard)
 @Controller('calendar')
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
   @Post()
-  @CheckPermission('Calendar', 'add')
-  @ApiOperation({ summary: 'Create a new calendar event' })
-  create(@Req() req, @Body() createDto: CreateCalendarEventDto) {
-    return this.calendarService.create(req.user.familyId, req.user.id, createDto);
+  @RequirePermission(AppModule.CALENDAR, PermissionAction.CREATE)
+  @ApiOperation({ summary: 'Tạo sự kiện lịch mới' })
+  create(@GetUser() user: User, @Body() createDto: CreateCalendarEventDto) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.calendarService.create(groupId, user.id, createDto);
   }
 
   @Get()
-  @CheckPermission('Calendar', 'view')
-  @ApiOperation({ summary: 'Get all calendar events for a family' })
+  @RequirePermission(AppModule.CALENDAR, PermissionAction.VIEW)
+  @ApiOperation({ summary: 'Lấy danh sách sự kiện' })
   findAll(
-    @Req() req,
+    @GetUser() user: User,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
     return this.calendarService.findAll(
-      req.user.familyId,
+      groupId,
       startDate ? new Date(startDate) : undefined,
       endDate ? new Date(endDate) : undefined,
     );
   }
 
   @Get(':id')
-  @CheckPermission('Calendar', 'view')
-  @ApiOperation({ summary: 'Get a specific calendar event' })
-  findOne(@Req() req, @Param('id') id: string) {
-    return this.calendarService.findOne(id, req.user.familyId);
+  @RequirePermission(AppModule.CALENDAR, PermissionAction.VIEW)
+  @ApiOperation({ summary: 'Lấy chi tiết sự kiện' })
+  findOne(@GetUser() user: User, @Param('id') id: string) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.calendarService.findOne(id, groupId);
   }
 
-  @Put(':id')
-  @CheckPermission('Calendar', 'edit')
-  @ApiOperation({ summary: 'Update a calendar event' })
+  @Patch(':id')
+  @RequirePermission(AppModule.CALENDAR, PermissionAction.UPDATE)
+  @ApiOperation({ summary: 'Cập nhật sự kiện' })
   update(
-    @Req() req,
+    @GetUser() user: User,
     @Param('id') id: string,
     @Body() updateDto: UpdateCalendarEventDto,
   ) {
-    return this.calendarService.update(id, req.user.familyId, req.user.id, updateDto);
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.calendarService.update(id, groupId, user.id, updateDto);
   }
 
   @Delete(':id')
-  @CheckPermission('Calendar', 'delete')
-  @ApiOperation({ summary: 'Delete a calendar event' })
-  remove(@Req() req, @Param('id') id: string) {
-    return this.calendarService.remove(id, req.user.familyId);
+  @RequirePermission(AppModule.CALENDAR, PermissionAction.DELETE)
+  @ApiOperation({ summary: 'Xóa sự kiện' })
+  remove(@GetUser() user: User, @Param('id') id: string) {
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.calendarService.remove(id, groupId);
   }
 }

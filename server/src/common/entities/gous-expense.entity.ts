@@ -3,11 +3,9 @@ import { BaseEntity } from './base.entity';
 import { GoUsCase } from './gous-case.entity';
 import { ExpenseCategory, ExpensePaymentStatus } from '../enums/gous.enums';
 
-export { ExpenseCategory, ExpensePaymentStatus };
-
 @Entity('gous_expenses')
 export class GoUsExpense extends BaseEntity {
-  @Column()
+  @Column({ type: 'uuid' })
   caseId: string;
 
   @ManyToOne(() => GoUsCase, (gCase) => gCase.expenses, { onDelete: 'CASCADE' })
@@ -25,12 +23,12 @@ export class GoUsExpense extends BaseEntity {
   title: string;
 
   @Column({ default: 'USD' })
-  currency: string; // 'USD' hoặc 'VND'
+  currency: string;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   estimatedAmount: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   actualAmount: number;
 
   @Column({
@@ -40,11 +38,11 @@ export class GoUsExpense extends BaseEntity {
   })
   status: ExpensePaymentStatus;
 
-  @Column({ type: 'date', nullable: true })
-  paymentDate: string;
-
   @Column({ nullable: true })
-  payer: string; // Người chi trả (vd: 'Người bảo lãnh tại Mỹ' | 'Gia đình Việt Nam')
+  payer: string;
+
+  @Column({ type: 'date', nullable: true })
+  paidDate: Date;
 
   @Column({ type: 'text', nullable: true })
   notes: string;

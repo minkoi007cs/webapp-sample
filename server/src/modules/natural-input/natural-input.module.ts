@@ -5,7 +5,7 @@ import { NaturalInputController } from './natural-input.controller';
 import { MoneyParserService } from './money-parser.service';
 import { CategoryModule } from '../category/category.module';
 import { UserModule } from '../user/user.module';
-import { AssetModule } from '../asset/asset.module';
+import { SampleModule } from '../sample/sample.module';
 import { NaturalInputHistory } from './entities/natural-input-history.entity';
 
 @Module({
@@ -13,7 +13,7 @@ import { NaturalInputHistory } from './entities/natural-input-history.entity';
     TypeOrmModule.forFeature([NaturalInputHistory]),
     CategoryModule, 
     UserModule, 
-    AssetModule
+    SampleModule,
   ],
   providers: [NaturalInputService, MoneyParserService],
   controllers: [NaturalInputController],

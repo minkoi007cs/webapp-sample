@@ -1,32 +1,31 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { randomUUID } from 'crypto';
 import { User, UserRole } from '../../common/entities/user.entity';
-import { FamilyUser, FamilyUserStatus } from '../../common/entities/family-user.entity';
+import { GroupUser, GroupUserStatus } from '../../common/entities/group-user.entity';
 import { Role } from '../../common/entities/role.entity';
 import { Invite, InviteStatus } from '../../common/entities/invite.entity';
 import { AuthService } from '../auth/auth.service';
-import { FamilyService } from '../family/family.service';
+import { GroupService } from '../group/group.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(FamilyUser)
-    private familyUserRepository: Repository<FamilyUser>,
+    @InjectRepository(GroupUser)
+    private groupUserRepository: Repository<GroupUser>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
     @InjectRepository(Invite)
     private inviteRepository: Repository<Invite>,
     private authService: AuthService,
-    private familyService: FamilyService,
+    private groupService: GroupService,
   ) {}
 
-  async findAll(familyId: string, query: Record<string, unknown> = {}) {
-    const memberships = await this.familyUserRepository.find({
-      where: { familyId, status: FamilyUserStatus.ACTIVE },
+  async findAll(groupId: string, query: Record<string, unknown> = {}) {
+    const memberships = await this.groupUserRepository.find({
+      where: { groupId, status: GroupUserStatus.ACTIVE },
       relations: ['user', 'role'],
       order: { createdAt: 'ASC' },
     });
@@ -36,7 +35,8 @@ export class UserService {
       role: membership.role?.code,
       status: membership.status,
       membershipId: membership.id,
-      familyId: membership.familyId,
+      groupId: membership.groupId,
+      familyId: membership.groupId, // Compatibility
       invitedByUserId: membership.invitedByUserId,
     }));
 
@@ -65,14 +65,14 @@ export class UserService {
     };
   }
 
-  async findOne(id: string, familyId: string) {
-    const membership = await this.familyUserRepository.findOne({
-      where: { userId: id, familyId, status: FamilyUserStatus.ACTIVE },
+  async findOne(id: string, groupId: string) {
+    const membership = await this.groupUserRepository.findOne({
+      where: { userId: id, groupId, status: GroupUserStatus.ACTIVE },
       relations: ['user', 'role'],
     });
 
     if (!membership) {
-      throw new NotFoundException('User not found in this family');
+      throw new NotFoundException('Không tìm thấy thành viên này trong nhóm');
     }
 
     return {
@@ -80,37 +80,38 @@ export class UserService {
       role: membership.role?.code,
       status: membership.status,
       membershipId: membership.id,
-      familyId: membership.familyId,
+      groupId: membership.groupId,
+      familyId: membership.groupId,
     };
   }
 
-  async invite(familyId: string, inviterId: string, data: { email: string; fullName?: string; role: UserRole }) {
+  async invite(groupId: string, inviterId: string, data: { email: string; fullName?: string; role: UserRole }) {
     const normalizedEmail = data.email.trim().toLowerCase();
 
-    const existingMemberships = await this.familyUserRepository.find({
-      where: { familyId },
+    const existingMemberships = await this.groupUserRepository.find({
+      where: { groupId },
       relations: ['user'],
     });
 
     const activeMembership = existingMemberships.find((membership) =>
       membership.user?.email?.toLowerCase() === normalizedEmail
-      && membership.status === FamilyUserStatus.ACTIVE,
+      && membership.status === GroupUserStatus.ACTIVE,
     );
 
     if (activeMembership) {
-      throw new ForbiddenException('User is already a member of this family');
+      throw new ForbiddenException('Người dùng đã là thành viên của nhóm');
     }
 
     const pendingInvite = await this.inviteRepository.findOne({
       where: {
-        familyId,
+        groupId,
         email: normalizedEmail,
         status: InviteStatus.PENDING,
       },
     });
 
     if (pendingInvite && pendingInvite.expiresAt.getTime() >= Date.now()) {
-      throw new ForbiddenException('A pending invite already exists for this email');
+      throw new ForbiddenException('Đã có lời mời đang chờ xử lý cho email này');
     }
 
     const role = await this.roleRepository.findOne({
@@ -118,14 +119,14 @@ export class UserService {
     });
 
     if (!role || role.code === UserRole.APP_ADMIN) {
-      throw new ForbiddenException('Invalid role for family invitation');
+      throw new ForbiddenException('Vai trò không hợp lệ để mời vào nhóm');
     }
 
     const token = this.authService.buildInviteToken();
     const invite = this.inviteRepository.create({
       email: normalizedEmail,
       token,
-      familyId,
+      groupId,
       roleId: role.id,
       status: InviteStatus.PENDING,
       invitedByUserId: inviterId,
@@ -135,60 +136,61 @@ export class UserService {
     return this.inviteRepository.save(invite);
   }
 
-  async updateRole(familyId: string, id: string, newRole: UserRole) {
-    const membership = await this.familyUserRepository.findOne({
-      where: { userId: id, familyId, status: FamilyUserStatus.ACTIVE },
+  async updateRole(groupId: string, id: string, newRole: UserRole) {
+    const membership = await this.groupUserRepository.findOne({
+      where: { userId: id, groupId, status: GroupUserStatus.ACTIVE },
       relations: ['role', 'user'],
     });
 
     if (!membership) {
-      throw new NotFoundException('User not found in this family');
+      throw new NotFoundException('Không tìm thấy thành viên trong nhóm');
     }
 
     const role = await this.roleRepository.findOne({ where: { code: newRole } });
     if (!role || role.code === UserRole.APP_ADMIN) {
-      throw new ForbiddenException('Invalid family role');
+      throw new ForbiddenException('Vai trò không hợp lệ');
     }
 
-    if (membership.role?.code === UserRole.FAMILY_ADMIN && newRole !== UserRole.FAMILY_ADMIN) {
-      await this.familyService.ensureFamilyKeepsAdmin(familyId);
+    if (membership.role?.code === UserRole.GROUP_ADMIN && newRole !== UserRole.GROUP_ADMIN) {
+      await this.groupService.ensureGroupKeepsAdmin(groupId);
     }
 
     membership.roleId = role.id;
     membership.role = role;
-    await this.familyUserRepository.save(membership);
+    await this.groupUserRepository.save(membership);
 
     return {
       ...membership.user,
       role: membership.role.code,
       membershipId: membership.id,
-      familyId,
+      groupId,
+      familyId: groupId,
     };
   }
 
-  async update(familyId: string, id: string, data: Partial<User>) {
-    await this.findOne(id, familyId);
+  async update(groupId: string, id: string, data: Partial<User>) {
+    await this.findOne(id, groupId);
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Không tìm thấy người dùng');
     }
     if (data.fullName !== undefined) user.fullName = data.fullName;
     if (data.otherNames !== undefined) user.otherNames = data.otherNames;
     return this.userRepository.save(user);
   }
 
-  async remove(familyId: string, id: string) {
-    const membership = await this.familyUserRepository.findOne({
-      where: { userId: id, familyId, status: FamilyUserStatus.ACTIVE },
+  async remove(groupId: string, id: string) {
+    const membership = await this.groupUserRepository.findOne({
+      where: { userId: id, groupId, status: GroupUserStatus.ACTIVE },
       relations: ['role'],
     });
     if (!membership) {
-      throw new NotFoundException('Membership not found');
+      throw new NotFoundException('Không tìm thấy tư cách thành viên');
     }
-    if (membership.role?.code === UserRole.FAMILY_ADMIN) {
-      await this.familyService.ensureFamilyKeepsAdmin(familyId);
+    if (membership.role?.code === UserRole.GROUP_ADMIN) {
+      await this.groupService.ensureGroupKeepsAdmin(groupId);
     }
-    membership.status = FamilyUserStatus.REMOVED;
-    return this.familyUserRepository.save(membership);
+    membership.status = GroupUserStatus.REMOVED;
+    return this.groupUserRepository.save(membership);
   }
 }

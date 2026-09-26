@@ -1,23 +1,34 @@
 import { Entity, Column, ManyToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { Family } from './family.entity';
+import { Group } from './group.entity';
 import { User } from './user.entity';
 
 export enum CalendarEventType {
   EVENT = 'EVENT',
-  MAINTENANCE = 'MAINTENANCE',
-  PAYMENT = 'PAYMENT',
   REMINDER = 'REMINDER',
+  SAMPLE_REVIEW = 'SAMPLE_REVIEW',
+  MEETING = 'MEETING',
 }
 
-@Entity('fml_calendar_events')
+@Entity('calendar_events')
 export class CalendarEvent extends BaseEntity {
-  @Column()
-  familyId: string;
+  @Column({ type: 'uuid' })
+  groupId: string;
 
-  @ManyToOne(() => Family)
-  @JoinColumn({ name: 'familyId' })
-  family: Family;
+  get familyId(): string {
+    return this.groupId;
+  }
+  set familyId(val: string) {
+    this.groupId = val;
+  }
+
+  @ManyToOne(() => Group)
+  @JoinColumn({ name: 'groupId' })
+  group: Group;
+
+  get family(): Group {
+    return this.group;
+  }
 
   @Column()
   title: string;
@@ -48,7 +59,7 @@ export class CalendarEvent extends BaseEntity {
   type: CalendarEventType;
 
   @Column({ nullable: true })
-  metadata: string; // JSON string for additional context (e.g., assetId, recurringId)
+  metadata: string;
 
   @Column({ nullable: true })
   recurrenceRule: string;

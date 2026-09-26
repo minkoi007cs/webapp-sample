@@ -1,24 +1,31 @@
-import { Controller, Get, UseGuards, Req, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ActiveFamilyGuard } from '../../common/guards/active-family.guard';
 import { PermissionGuard } from '../../common/guards/permission.guard';
-import { CheckPermission } from '../../common/decorators/permission.decorator';
+import { RequirePermission } from '../../common/decorators/permission.decorator';
+import { AppModule, PermissionAction } from '../../common/entities/permission.entity';
+import { GetUser } from '../../common/decorators/get-user.decorator';
+import { User } from '../../common/entities/user.entity';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), PermissionGuard)
+@UseGuards(JwtAuthGuard, ActiveFamilyGuard, PermissionGuard)
 @Controller('dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('stats')
-  @CheckPermission('Dashboard', 'view')
-  @ApiOperation({ summary: 'Get family dashboard statistics' })
+  @RequirePermission(AppModule.DASHBOARD, PermissionAction.VIEW)
+  @ApiOperation({ summary: 'Lấy dữ liệu thống kê tổng quan' })
   getStats(
-    @Req() req,
-    @Query() query: { startDate?: string; endDate?: string; categoryId?: string },
+    @GetUser() user: User,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('categoryId') categoryId?: string,
   ) {
-    return this.dashboardService.getStats(req.user.familyId, query);
+    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    return this.dashboardService.getStats(groupId, { startDate, endDate, categoryId });
   }
 }

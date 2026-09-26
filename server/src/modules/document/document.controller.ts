@@ -14,7 +14,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { PermissionGuard } from '../../common/guards/permission.guard';
 import { CheckPermission } from '../../common/decorators/permission.decorator';
@@ -35,7 +35,7 @@ export class DocumentController {
 
   @Post('upload')
   @CheckPermission('document', 'create')
-  @ApiOperation({ summary: 'Tải lên tài liệu và phân tích trích xuất AI' })
+  @ApiOperation({ summary: 'Tải lên tài liệu' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_DOC_SIZE } }))
   async upload(
@@ -46,33 +46,33 @@ export class DocumentController {
     if (!file) {
       throw new BadRequestException('Vui lòng chọn file để tải lên');
     }
-    const familyId = req.user.familyId;
+    const groupId = req.user.groupId || req.user.familyId;
     const userId = req.user.id;
-    return this.documentService.uploadAndAnalyze(file, dto, familyId, userId);
+    return this.documentService.uploadAndAnalyze(file, dto, groupId, userId);
   }
 
   @Get()
   @CheckPermission('document', 'view')
   @ApiOperation({ summary: 'Tìm kiếm và lấy danh sách tài liệu' })
   async findAll(@Query() query: QueryDocumentDto, @Req() req: any) {
-    const familyId = req.user.familyId;
-    return this.documentService.findAll(familyId, query);
+    const groupId = req.user.groupId || req.user.familyId;
+    return this.documentService.findAll(groupId, query);
   }
 
   @Post('synthesize')
   @CheckPermission('document', 'view')
-  @ApiOperation({ summary: 'Hỏi đáp & Tổng hợp hồ sơ chuyên đề bằng AI' })
+  @ApiOperation({ summary: 'Hỏi đáp & Tổng hợp hồ sơ bằng AI' })
   async synthesize(@Body() dto: SynthesizeDocumentDto, @Req() req: any) {
-    const familyId = req.user.familyId;
-    return this.documentService.synthesizeTopic(familyId, dto);
+    const groupId = req.user.groupId || req.user.familyId;
+    return this.documentService.synthesizeTopic(groupId, dto);
   }
 
   @Get(':id')
   @CheckPermission('document', 'view')
   @ApiOperation({ summary: 'Lấy chi tiết tài liệu' })
   async findOne(@Param('id') id: string, @Req() req: any) {
-    const familyId = req.user.familyId;
-    return this.documentService.findOne(id, familyId);
+    const groupId = req.user.groupId || req.user.familyId;
+    return this.documentService.findOne(id, groupId);
   }
 
   @Patch(':id')
@@ -83,23 +83,23 @@ export class DocumentController {
     @Body() dto: UpdateDocumentDto,
     @Req() req: any,
   ) {
-    const familyId = req.user.familyId;
-    return this.documentService.update(id, familyId, dto);
+    const groupId = req.user.groupId || req.user.familyId;
+    return this.documentService.update(id, groupId, dto);
   }
 
   @Delete(':id')
   @CheckPermission('document', 'delete')
   @ApiOperation({ summary: 'Xóa tài liệu' })
   async remove(@Param('id') id: string, @Req() req: any) {
-    const familyId = req.user.familyId;
-    return this.documentService.remove(id, familyId);
+    const groupId = req.user.groupId || req.user.familyId;
+    return this.documentService.remove(id, groupId);
   }
 
   @Post(':id/reanalyze')
   @CheckPermission('document', 'edit')
   @ApiOperation({ summary: 'Phân tích lại tài liệu bằng AI' })
   async reanalyze(@Param('id') id: string, @Req() req: any) {
-    const familyId = req.user.familyId;
-    return this.documentService.reanalyze(id, familyId);
+    const groupId = req.user.groupId || req.user.familyId;
+    return this.documentService.reanalyze(id, groupId);
   }
 }

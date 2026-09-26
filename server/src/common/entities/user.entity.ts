@@ -1,11 +1,12 @@
 import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { FamilyUser } from './family-user.entity';
+import { GroupUser } from './group-user.entity';
 import { Invite } from './invite.entity';
 
 export enum UserRole {
   APP_ADMIN = 'APP_ADMIN',
-  FAMILY_ADMIN = 'FAMILY_ADMIN',
+  GROUP_ADMIN = 'GROUP_ADMIN',
+  FAMILY_ADMIN = 'GROUP_ADMIN', // Alias for backwards-compat
   MEMBER = 'MEMBER',
 }
 
@@ -14,7 +15,7 @@ export enum SystemRole {
   APP_ADMIN = 'APP_ADMIN',
 }
 
-@Entity('fml_users')
+@Entity('users')
 export class User extends BaseEntity {
   @Column({ unique: true })
   email: string;
@@ -39,13 +40,20 @@ export class User extends BaseEntity {
   systemRole: SystemRole;
 
   @Column({ type: 'uuid', nullable: true })
-  lastActiveFamilyId: string | null;
+  lastActiveGroupId: string | null;
+
+  get lastActiveFamilyId(): string | null {
+    return this.lastActiveGroupId;
+  }
+  set lastActiveFamilyId(val: string | null) {
+    this.lastActiveGroupId = val;
+  }
 
   @Column({ default: true })
   isActive: boolean;
 
-  @OneToMany(() => FamilyUser, (familyUser) => familyUser.user)
-  memberships: FamilyUser[];
+  @OneToMany(() => GroupUser, (groupUser) => groupUser.user)
+  memberships: GroupUser[];
 
   @OneToMany(() => Invite, (invite) => invite.invitedByUser)
   invitesSent: Invite[];

@@ -1,7 +1,8 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { Family } from './family.entity';
+import { Group } from './group.entity';
 import { User } from './user.entity';
+import { Sample } from './sample.entity';
 
 export enum DocumentStatus {
   PROCESSING = 'PROCESSING',
@@ -9,15 +10,33 @@ export enum DocumentStatus {
   FAILED = 'FAILED',
 }
 
-@Entity('fml_documents')
+@Entity('documents')
 export class Document extends BaseEntity {
-  @Column()
+  @Column({ type: 'uuid' })
   @Index()
-  familyId: string;
+  groupId: string;
 
-  @ManyToOne(() => Family, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'familyId' })
-  family: Family;
+  get familyId(): string {
+    return this.groupId;
+  }
+  set familyId(val: string) {
+    this.groupId = val;
+  }
+
+  @ManyToOne(() => Group, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'groupId' })
+  group: Group;
+
+  get family(): Group {
+    return this.group;
+  }
+
+  @Column({ type: 'uuid', nullable: true })
+  sampleId?: string;
+
+  @ManyToOne(() => Sample, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'sampleId' })
+  sample?: Sample;
 
   @Column({ nullable: true })
   uploadedByUserId?: string;
@@ -44,7 +63,7 @@ export class Document extends BaseEntity {
   @Column({ type: 'bigint', default: 0 })
   fileSize: number;
 
-  @Column({ default: 'Khác' })
+  @Column({ default: 'Chung' })
   @Index()
   category: string;
 

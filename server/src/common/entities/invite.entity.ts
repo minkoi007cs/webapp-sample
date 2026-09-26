@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { Family } from './family.entity';
+import { Group } from './group.entity';
 import { Role } from './role.entity';
 import { User } from './user.entity';
 
@@ -10,7 +10,7 @@ export enum InviteStatus {
   CANCELLED = 'CANCELLED',
 }
 
-@Entity('fml_invites')
+@Entity('invites')
 @Index(['token'], { unique: true })
 export class Invite {
   @PrimaryGeneratedColumn('uuid')
@@ -22,12 +22,23 @@ export class Invite {
   @Column()
   token: string;
 
-  @Column()
-  familyId: string;
+  @Column({ type: 'uuid' })
+  groupId: string;
 
-  @ManyToOne(() => Family, (family) => family.invites, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'familyId' })
-  family: Family;
+  get familyId(): string {
+    return this.groupId;
+  }
+  set familyId(val: string) {
+    this.groupId = val;
+  }
+
+  @ManyToOne(() => Group, (group) => group.invites, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'groupId' })
+  group: Group;
+
+  get family(): Group {
+    return this.group;
+  }
 
   @Column()
   roleId: string;

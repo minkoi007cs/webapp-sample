@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Category } from '../../common/entities/category.entity';
-import { Asset } from '../../common/entities/asset.entity';
-import { Expense } from '../../common/entities/expense.entity';
 import { CategoryService } from './category.service';
 import { CategoryController } from './category.controller';
+import { Category } from '../../common/entities/category.entity';
 import { PermissionModule } from '../permission/permission.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Category, Asset, Expense]),
+    TypeOrmModule.forFeature([Category]),
     PermissionModule,
   ],
   controllers: [CategoryController],

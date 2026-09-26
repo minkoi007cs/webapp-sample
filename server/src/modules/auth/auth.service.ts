@@ -6,11 +6,10 @@ import { DataSource, Repository } from 'typeorm';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'crypto';
 import { User, SystemRole, UserRole } from '../../common/entities/user.entity';
-import { Family, FamilyStatus } from '../../common/entities/family.entity';
-import { FamilyUser, FamilyUserStatus } from '../../common/entities/family-user.entity';
+import { Group, GroupStatus } from '../../common/entities/group.entity';
+import { GroupUser, GroupUserStatus } from '../../common/entities/group-user.entity';
 import { Invite, InviteStatus } from '../../common/entities/invite.entity';
 import { PermissionService } from '../permission/permission.service';
-import { CategoryService } from '../category/category.service';
 
 interface OAuthProfile {
   email: string;
@@ -19,10 +18,9 @@ interface OAuthProfile {
   avatarUrl?: string | null;
 }
 
-// Public URL + anon key of Supabase "Data 01" (family web signs in and stores data here).
-const SUPABASE_URL = 'https://msozshwatonyxnkaqjfs.supabase.co';
-const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zb3pzaHdhdG9ueXhua2FxamZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MjU5MzYsImV4cCI6MjA4ODIwMTkzNn0.lbfHxn4YxXNLHB0uVBDInrHh8wsCbusDr1_SroACHgk';
+const DEFAULT_SUPABASE_URL = 'https://gohczmqykjkrgdblgbog.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaGN6bXF5a2prcmdkYmxnYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTI3NjgsImV4cCI6MjA4OTg2ODc2OH0.nSDygTI2AsSbt94Qw7wJLbObIrxWcTjFShnYtyNEtzs';
 
 @Injectable()
 export class AuthService {
@@ -35,22 +33,32 @@ export class AuthService {
     private dataSource: DataSource,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Family)
-    private familyRepository: Repository<Family>,
-    @InjectRepository(FamilyUser)
-    private familyUserRepository: Repository<FamilyUser>,
+    @InjectRepository(Group)
+    private groupRepository: Repository<Group>,
+    @InjectRepository(GroupUser)
+    private groupUserRepository: Repository<GroupUser>,
     @InjectRepository(Invite)
     private inviteRepository: Repository<Invite>,
     private permissionService: PermissionService,
-    private categoryService: CategoryService,
   ) {}
 
   getAuthConfig() {
-    return { supabaseUrl: SUPABASE_URL, supabaseAnonKey: SUPABASE_ANON_KEY };
+    const supabaseUrl =
+      this.configService.get<string>('SUPABASE_URL') ||
+      this.configService.get<string>('VITE_SUPABASE_URL') ||
+      DEFAULT_SUPABASE_URL;
+    const supabaseAnonKey =
+      this.configService.get<string>('SUPABASE_ANON_KEY') ||
+      this.configService.get<string>('VITE_SUPABASE_ANON_KEY') ||
+      DEFAULT_SUPABASE_ANON_KEY;
+    return { supabaseUrl, supabaseAnonKey };
   }
 
   private getSupabase(): SupabaseClient {
-    this.supabaseClient ??= createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    if (!this.supabaseClient) {
+      const config = this.getAuthConfig();
+      this.supabaseClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
+    }
     return this.supabaseClient;
   }
 
@@ -114,84 +122,89 @@ export class AuthService {
       this.logger.error('seedSystemPermissions failed during login; continuing without blocking auth', err instanceof Error ? err.stack : err);
     }
 
-    let memberships = await this.familyUserRepository.find({
-      where: { userId: user.id, status: FamilyUserStatus.ACTIVE },
-      relations: ['role', 'family'],
+    let memberships = await this.groupUserRepository.find({
+      where: { userId: user.id, status: GroupUserStatus.ACTIVE },
+      relations: ['role', 'group'],
       order: { createdAt: 'ASC' },
     });
 
     if (memberships.length === 0 && user.systemRole !== SystemRole.APP_ADMIN) {
       const pendingInvite = await this.inviteRepository.findOne({
         where: { email: profile.email.toLowerCase(), status: InviteStatus.PENDING },
-        relations: ['role', 'family'],
+        relations: ['role', 'group'],
       });
 
       if (pendingInvite && pendingInvite.expiresAt.getTime() >= Date.now()) {
         await this.applyInvite(user, pendingInvite);
       } else {
-        await this.createDefaultFamilyForUser(user);
+        await this.createDefaultGroupForUser(user);
       }
 
-      memberships = await this.familyUserRepository.find({
-        where: { userId: user.id, status: FamilyUserStatus.ACTIVE },
-        relations: ['role', 'family'],
+      memberships = await this.groupUserRepository.find({
+        where: { userId: user.id, status: GroupUserStatus.ACTIVE },
+        relations: ['role', 'group'],
         order: { createdAt: 'ASC' },
       });
     }
 
-    const activeFamilyId = this.pickActiveFamilyId(memberships, user.lastActiveFamilyId);
+    const activeGroupId = this.pickActiveGroupId(memberships, user.lastActiveGroupId);
 
-    if (activeFamilyId !== user.lastActiveFamilyId) {
-      user.lastActiveFamilyId = activeFamilyId;
+    if (activeGroupId !== user.lastActiveGroupId) {
+      user.lastActiveGroupId = activeGroupId;
       await this.userRepository.save(user);
     }
 
-    return this.generateToken(user, memberships, activeFamilyId);
+    return this.generateToken(user, memberships, activeGroupId);
   }
 
-  async getSessionProfile(userId: string, activeFamilyId?: string | null) {
+  async getSessionProfile(userId: string, activeGroupId?: string | null) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user || !user.isActive) {
       throw new UnauthorizedException();
     }
 
-    const memberships = await this.familyUserRepository.find({
-      where: { userId, status: FamilyUserStatus.ACTIVE },
-      relations: ['role', 'family'],
+    const memberships = await this.groupUserRepository.find({
+      where: { userId, status: GroupUserStatus.ACTIVE },
+      relations: ['role', 'group'],
       order: { createdAt: 'ASC' },
     });
 
-    const nextFamilyId = this.pickActiveFamilyId(memberships, activeFamilyId, user.lastActiveFamilyId);
+    const nextGroupId = this.pickActiveGroupId(memberships, activeGroupId, user.lastActiveGroupId);
 
-    if (nextFamilyId !== user.lastActiveFamilyId) {
-      user.lastActiveFamilyId = nextFamilyId;
+    if (nextGroupId !== user.lastActiveGroupId) {
+      user.lastActiveGroupId = nextGroupId;
       await this.userRepository.save(user);
     }
 
-    return this.generateToken(user, memberships, nextFamilyId);
+    return this.generateToken(user, memberships, nextGroupId);
   }
 
-  async switchActiveFamily(userId: string, familyId: string) {
-    const membership = await this.familyUserRepository.findOne({
-      where: { userId, familyId, status: FamilyUserStatus.ACTIVE },
-      relations: ['family'],
+  async switchActiveGroup(userId: string, groupId: string) {
+    const membership = await this.groupUserRepository.findOne({
+      where: { userId, groupId, status: GroupUserStatus.ACTIVE },
+      relations: ['group'],
     });
 
     if (!membership) {
-      throw new UnauthorizedException('User is not a member of the selected family');
+      throw new UnauthorizedException('Người dùng không phải thành viên của nhóm được chọn');
     }
 
-    if (membership.family?.status !== FamilyStatus.ACTIVE) {
-      throw new UnauthorizedException('Gia đình này đang tạm ngưng hoạt động. Vui lòng liên hệ quản trị viên hệ thống để mở lại.');
+    if (membership.group?.status !== GroupStatus.ACTIVE) {
+      throw new UnauthorizedException('Nhóm này đang tạm ngưng hoạt động. Vui lòng liên hệ quản trị viên.');
     }
 
-    return this.getSessionProfile(userId, familyId);
+    return this.getSessionProfile(userId, groupId);
+  }
+
+  // Alias for backward compat
+  async switchActiveFamily(userId: string, familyId: string) {
+    return this.switchActiveGroup(userId, familyId);
   }
 
   async previewInvite(token: string) {
     const invite = await this.inviteRepository.findOne({
       where: { token },
-      relations: ['role', 'family'],
+      relations: ['role', 'group'],
     });
 
     if (!invite) {
@@ -202,7 +215,8 @@ export class AuthService {
 
     return {
       email: invite.email,
-      familyName: invite.family?.name ?? null,
+      groupName: invite.group?.name ?? null,
+      familyName: invite.group?.name ?? null,
       role: invite.role?.code ?? null,
       isExpired,
       status: invite.status,
@@ -217,120 +231,125 @@ export class AuthService {
 
     const invite = await this.inviteRepository.findOne({
       where: { token, status: InviteStatus.PENDING },
-      relations: ['role', 'family'],
+      relations: ['role', 'group'],
     });
 
     if (!invite) {
-      throw new NotFoundException('Invite not found');
+      throw new NotFoundException('Không tìm thấy lời mời');
     }
 
     if (invite.email.toLowerCase() !== user.email.toLowerCase()) {
-      throw new UnauthorizedException('Invite email does not match current user');
+      throw new UnauthorizedException('Email nhận lời mời không khớp với tài khoản hiện tại');
     }
 
     if (invite.expiresAt.getTime() < Date.now()) {
       invite.status = InviteStatus.EXPIRED;
       await this.inviteRepository.save(invite);
-      throw new UnauthorizedException('Invite has expired');
+      throw new UnauthorizedException('Lời mời đã hết hạn');
     }
 
     await this.applyInvite(user, invite);
 
-    return this.getSessionProfile(userId, invite.familyId);
+    return this.getSessionProfile(userId, invite.groupId);
   }
 
   private async applyInvite(user: User, invite: Invite): Promise<void> {
-    const existingMembership = await this.familyUserRepository.findOne({
+    const existingMembership = await this.groupUserRepository.findOne({
       where: {
         userId: user.id,
-        familyId: invite.familyId,
+        groupId: invite.groupId,
       },
     });
 
     if (!existingMembership) {
-      await this.familyUserRepository.save(this.familyUserRepository.create({
-        familyId: invite.familyId,
+      await this.groupUserRepository.save(this.groupUserRepository.create({
+        groupId: invite.groupId,
         userId: user.id,
         roleId: invite.roleId,
-        status: FamilyUserStatus.ACTIVE,
-        invitedByUserId: invite.invitedByUserId,
+        status: GroupUserStatus.ACTIVE,
+        invitedByUserId: invite.invitedByUserId ?? undefined,
       }));
-    } else if (existingMembership.status !== FamilyUserStatus.ACTIVE || existingMembership.roleId !== invite.roleId) {
+    } else if (existingMembership.status !== GroupUserStatus.ACTIVE || existingMembership.roleId !== invite.roleId) {
       existingMembership.roleId = invite.roleId;
-      existingMembership.status = FamilyUserStatus.ACTIVE;
-      existingMembership.invitedByUserId = invite.invitedByUserId;
-      await this.familyUserRepository.save(existingMembership);
+      existingMembership.status = GroupUserStatus.ACTIVE;
+      existingMembership.invitedByUserId = invite.invitedByUserId ?? undefined;
+      await this.groupUserRepository.save(existingMembership);
     }
 
     invite.status = InviteStatus.ACCEPTED;
     invite.acceptedByUserId = user.id;
     await this.inviteRepository.save(invite);
 
-    user.lastActiveFamilyId = invite.familyId;
+    user.lastActiveGroupId = invite.groupId;
     await this.userRepository.save(user);
-
-    try {
-      await this.categoryService.ensureDefaultIncomeCategories(invite.familyId);
-    } catch (err) {
-      this.logger.error('ensureDefaultIncomeCategories failed when accepting invite', err instanceof Error ? err.stack : err);
-    }
   }
 
-  async listUserFamilies(userId: string) {
-    const memberships = await this.familyUserRepository.find({
-      where: { userId, status: FamilyUserStatus.ACTIVE },
-      relations: ['family', 'role'],
+  async listUserGroups(userId: string) {
+    const memberships = await this.groupUserRepository.find({
+      where: { userId, status: GroupUserStatus.ACTIVE },
+      relations: ['group', 'role'],
       order: { createdAt: 'ASC' },
     });
 
     return memberships.map((membership) => ({
-      familyId: membership.familyId,
-      familyName: membership.family?.name,
+      groupId: membership.groupId,
+      groupName: membership.group?.name,
+      familyId: membership.groupId,
+      familyName: membership.group?.name,
       role: membership.role?.code,
       status: membership.status,
     }));
   }
 
-  private async createDefaultFamilyForUser(user: User) {
-    const familyAdminRole = await this.permissionService.getRoleByCode(UserRole.FAMILY_ADMIN);
-
-    const family = await this.familyRepository.save(this.familyRepository.create({
-      name: user.fullName ? `Gia đình của ${user.fullName}` : 'Gia đình của tôi',
-    }));
-
-    await this.familyUserRepository.save(this.familyUserRepository.create({
-      familyId: family.id,
-      userId: user.id,
-      roleId: familyAdminRole.id,
-      status: FamilyUserStatus.ACTIVE,
-    }));
-
-    user.lastActiveFamilyId = family.id;
-    await this.userRepository.save(user);
-
-    await this.categoryService.ensureDefaultIncomeCategories(family.id);
+  // Alias for backward compat
+  async listUserFamilies(userId: string) {
+    return this.listUserGroups(userId);
   }
 
-  private pickActiveFamilyId(memberships: FamilyUser[], ...preferredFamilyIds: Array<string | null | undefined>): string | null {
-    const activeMemberships = memberships.filter((membership) => membership.family?.status === FamilyStatus.ACTIVE);
-    for (const preferred of preferredFamilyIds) {
-      if (preferred && activeMemberships.some((membership) => membership.familyId === preferred)) {
+  private async createDefaultGroupForUser(user: User) {
+    const groupAdminRole = await this.permissionService.getRoleByCode(UserRole.GROUP_ADMIN);
+
+    const group = await this.groupRepository.save(this.groupRepository.create({
+      name: user.fullName ? `Nhóm của ${user.fullName}` : 'Nhóm của tôi',
+    }));
+
+    await this.groupUserRepository.save(this.groupUserRepository.create({
+      groupId: group.id,
+      userId: user.id,
+      roleId: groupAdminRole.id,
+      status: GroupUserStatus.ACTIVE,
+    }));
+
+    user.lastActiveGroupId = group.id;
+    await this.userRepository.save(user);
+  }
+
+  // Backward compat alias
+  private async createDefaultFamilyForUser(user: User) {
+    return this.createDefaultGroupForUser(user);
+  }
+
+  private pickActiveGroupId(memberships: GroupUser[], ...preferredGroupIds: Array<string | null | undefined>): string | null {
+    const activeMemberships = memberships.filter((membership) => membership.group?.status === GroupStatus.ACTIVE);
+    for (const preferred of preferredGroupIds) {
+      if (preferred && activeMemberships.some((membership) => membership.groupId === preferred)) {
         return preferred;
       }
     }
-    return activeMemberships[0]?.familyId ?? null;
+    return activeMemberships[0]?.groupId ?? null;
   }
 
-  private generateToken(user: User, memberships: FamilyUser[], activeFamilyId: string | null) {
-    const activeMembership = activeFamilyId
-      ? memberships.find((membership) => membership.familyId === activeFamilyId)
+  private generateToken(user: User, memberships: GroupUser[], activeGroupId: string | null) {
+    const activeMembership = activeGroupId
+      ? memberships.find((membership) => membership.groupId === activeGroupId)
       : undefined;
 
     const payload = {
       email: user.email,
       sub: user.id,
       systemRole: user.systemRole,
-      activeFamilyId,
+      activeGroupId,
+      activeFamilyId: activeGroupId, // Backward-compat
       activeRole: activeMembership?.role?.code ?? (user.systemRole === SystemRole.APP_ADMIN ? UserRole.APP_ADMIN : null),
     };
 
@@ -343,11 +362,15 @@ export class AuthService {
         avatarUrl: user.avatarUrl,
         systemRole: user.systemRole,
         role: activeMembership?.role?.code ?? (user.systemRole === SystemRole.APP_ADMIN ? UserRole.APP_ADMIN : null),
-        familyId: activeFamilyId,
+        groupId: activeGroupId,
+        familyId: activeGroupId, // Backward-compat
         memberships: memberships.map((membership) => ({
-          familyId: membership.familyId,
-          familyName: membership.family?.name,
-          familyStatus: membership.family?.status,
+          groupId: membership.groupId,
+          groupName: membership.group?.name,
+          groupStatus: membership.group?.status,
+          familyId: membership.groupId,
+          familyName: membership.group?.name,
+          familyStatus: membership.group?.status,
           role: membership.role?.code,
         })),
       },
@@ -363,38 +386,37 @@ export class AuthService {
     return { id: user.id, email: user.email, fullName: user.fullName, avatarUrl: user.avatarUrl, otherNames: user.otherNames };
   }
 
-  async createNewFamily(userId: string, name?: string) {
+  async createNewGroup(userId: string, name?: string) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException();
 
-    const familyAdminRole = await this.permissionService.getRoleByCode(UserRole.FAMILY_ADMIN);
-    const familyName = name?.trim() || (user.fullName ? `Gia đình của ${user.fullName}` : 'Gia đình của tôi');
+    const groupAdminRole = await this.permissionService.getRoleByCode(UserRole.GROUP_ADMIN);
+    const groupName = name?.trim() || (user.fullName ? `Nhóm của ${user.fullName}` : 'Nhóm của tôi');
 
-    const family = await this.familyRepository.save(
-      this.familyRepository.create({
-        name: familyName,
+    const group = await this.groupRepository.save(
+      this.groupRepository.create({
+        name: groupName,
       }),
     );
 
-    await this.familyUserRepository.save(
-      this.familyUserRepository.create({
-        familyId: family.id,
+    await this.groupUserRepository.save(
+      this.groupUserRepository.create({
+        groupId: group.id,
         userId: user.id,
-        roleId: familyAdminRole.id,
-        status: FamilyUserStatus.ACTIVE,
+        roleId: groupAdminRole.id,
+        status: GroupUserStatus.ACTIVE,
       }),
     );
 
-    user.lastActiveFamilyId = family.id;
+    user.lastActiveGroupId = group.id;
     await this.userRepository.save(user);
 
-    try {
-      await this.categoryService.ensureDefaultIncomeCategories(family.id);
-    } catch (err) {
-      this.logger.error('ensureDefaultIncomeCategories failed when creating family', err);
-    }
+    return this.getSessionProfile(userId, group.id);
+  }
 
-    return this.getSessionProfile(userId, family.id);
+  // Alias
+  async createNewFamily(userId: string, name?: string) {
+    return this.createNewGroup(userId, name);
   }
 
   buildInviteToken() {

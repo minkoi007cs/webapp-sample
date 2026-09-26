@@ -1,14 +1,15 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, Index } from 'typeorm';
 import { RolePermission } from './role-permission.entity';
-import { FamilyUser } from './family-user.entity';
+import { GroupUser } from './group-user.entity';
 import { Invite } from './invite.entity';
 
 export enum RoleScope {
   SYSTEM = 'SYSTEM',
-  FAMILY = 'FAMILY',
+  GROUP = 'GROUP',
+  FAMILY = 'GROUP', // Compatibility alias
 }
 
-@Entity('fml_roles')
+@Entity('roles')
 @Index(['code'], { unique: true })
 export class Role {
   @PrimaryGeneratedColumn('uuid')
@@ -23,7 +24,7 @@ export class Role {
   @Column({
     type: 'enum',
     enum: RoleScope,
-    default: RoleScope.FAMILY,
+    default: RoleScope.GROUP,
   })
   scope: RoleScope;
 
@@ -36,8 +37,8 @@ export class Role {
   @OneToMany(() => RolePermission, (rolePermission) => rolePermission.role)
   rolePermissions: RolePermission[];
 
-  @OneToMany(() => FamilyUser, (familyUser) => familyUser.role)
-  familyUsers: FamilyUser[];
+  @OneToMany(() => GroupUser, (groupUser) => groupUser.role)
+  members: GroupUser[];
 
   @OneToMany(() => Invite, (invite) => invite.role)
   invites: Invite[];
