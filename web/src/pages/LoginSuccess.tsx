@@ -36,11 +36,19 @@ export const LoginSuccess = () => {
             if (processedRef.current) return;
             processedRef.current = true;
 
+            // Safety timeout to prevent infinite spinner
+            const safetyTimer = setTimeout(() => {
+                if (isMounted) {
+                    handleAuthError(new Error('Thời gian xác thực vượt quá giới hạn. Vui lòng thử đăng nhập lại.'));
+                }
+            }, 10000);
+
             try {
                 // 1. Check direct query token (?token=...)
                 const searchParams = new URLSearchParams(window.location.search);
                 const directToken = searchParams.get('token');
                 if (directToken) {
+                    clearTimeout(safetyTimer);
                     return completeLogin(directToken);
                 }
 
@@ -48,12 +56,13 @@ export const LoginSuccess = () => {
                 let sbAccessToken = searchParams.get('access_token');
                 if (!sbAccessToken && window.location.hash) {
                     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-                    sbAccessToken = hashParams.get('access_token');
+                    sbAccessToken = hashParams.get('access_token') || hashParams.get('token');
                 }
 
                 if (sbAccessToken) {
-                    const res = await api.post('/auth/supabase', { token: sbAccessToken });
+                    const res = await api.post('/auth/supabase', { token: sbAccessToken }, { timeout: 8000 });
                     if (res.data?.access_token) {
+                        clearTimeout(safetyTimer);
                         return completeLogin(res.data.access_token);
                     }
                 }
@@ -65,8 +74,9 @@ export const LoginSuccess = () => {
                     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                     if (error) throw error;
                     if (data?.session?.access_token) {
-                        const res = await api.post('/auth/supabase', { token: data.session.access_token });
+                        const res = await api.post('/auth/supabase', { token: data.session.access_token }, { timeout: 8000 });
                         if (res.data?.access_token) {
+                            clearTimeout(safetyTimer);
                             return completeLogin(res.data.access_token);
                         }
                     }
@@ -76,14 +86,17 @@ export const LoginSuccess = () => {
                 const supabase = await getSupabaseClient();
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session?.access_token) {
-                    const res = await api.post('/auth/supabase', { token: session.access_token });
+                    const res = await api.post('/auth/supabase', { token: session.access_token }, { timeout: 8000 });
                     if (res.data?.access_token) {
+                        clearTimeout(safetyTimer);
                         return completeLogin(res.data.access_token);
                     }
                 }
 
+                clearTimeout(safetyTimer);
                 throw new Error('Không tìm thấy thông tin phiên đăng nhập hợp lệ.');
             } catch (err: any) {
+                clearTimeout(safetyTimer);
                 handleAuthError(err);
             }
         }

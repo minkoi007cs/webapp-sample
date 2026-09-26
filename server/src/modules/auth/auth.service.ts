@@ -63,25 +63,56 @@ export class AuthService {
   }
 
   async validateSupabaseToken(token: string) {
-    const supabase = this.getSupabase();
-    const { data, error } = await supabase.auth.getUser(token);
+    let email: string | undefined;
+    let fullName = '';
+    let avatarUrl: string | null = null;
+    let googleId = '';
 
-    if (error || !data?.user) {
-      this.logger.error('Xác thực Supabase token thất bại:', error?.message);
-      throw new UnauthorizedException('Phiên đăng nhập Supabase không hợp lệ hoặc đã hết hạn');
+    // 1. First attempt instant JWT decoding (0ms network latency)
+    try {
+      const decoded: any = this.jwtService.decode(token);
+      if (decoded && typeof decoded === 'object') {
+        const meta = decoded.user_metadata || {};
+        email = decoded.email || meta.email;
+        fullName = (meta.full_name || meta.name || meta.user_name || email?.split('@')[0] || '').trim();
+        avatarUrl = meta.avatar_url || meta.picture || null;
+        googleId = decoded.sub || decoded.id || '';
+      }
+    } catch (decodeErr: any) {
+      this.logger.warn(`Could not decode token locally: ${decodeErr?.message}`);
     }
 
-    const sbUser = data.user;
-    const email = sbUser.email;
+    // 2. Fallback to Supabase remote verification if local decode didn't yield an email
     if (!email) {
-      throw new UnauthorizedException('Tài khoản không có email');
-    }
+      try {
+        const supabase = this.getSupabase();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Supabase token verification timed out')), 5000)
+        );
+        const userPromise = supabase.auth.getUser(token);
+        const { data, error }: any = await Promise.race([userPromise, timeoutPromise]);
 
-    const meta = sbUser.user_metadata || {};
-    const fullName = (meta.full_name || meta.name || meta.user_name || email.split('@')[0] || '').trim();
-    const avatarUrl = meta.avatar_url || meta.picture || null;
-    const googleIdentity = sbUser.identities?.find((id) => id.provider === 'google');
-    const googleId = (googleIdentity && googleIdentity.identity_id) ? googleIdentity.identity_id : (googleIdentity?.id || sbUser.id);
+        if (error || !data?.user) {
+          this.logger.error('Xác thực Supabase token thất bại:', error?.message);
+          throw new UnauthorizedException('Phiên đăng nhập Supabase không hợp lệ hoặc đã hết hạn');
+        }
+
+        const sbUser = data.user;
+        email = sbUser.email;
+        if (!email) {
+          throw new UnauthorizedException('Tài khoản không có email');
+        }
+
+        const meta = sbUser.user_metadata || {};
+        fullName = (meta.full_name || meta.name || meta.user_name || email.split('@')[0] || '').trim();
+        avatarUrl = meta.avatar_url || meta.picture || null;
+        const googleIdentity = sbUser.identities?.find((id: any) => id.provider === 'google');
+        googleId = (googleIdentity && googleIdentity.identity_id) ? googleIdentity.identity_id : (googleIdentity?.id || sbUser.id);
+      } catch (err: any) {
+        this.logger.error('Supabase verification error:', err?.message);
+        throw new UnauthorizedException('Phiên đăng nhập không hợp lệ hoặc máy chủ xác thực không phản hồi');
+      }
+    }
 
     return this.validateOAuthUser({
       email,
