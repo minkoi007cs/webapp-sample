@@ -34,7 +34,8 @@ import { DocumentModule } from './modules/document/document.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const url = configService.get<string>('DATABASE_URL');
+        const rawUrl = configService.get<string>('DATABASE_URL');
+        const url = rawUrl ? rawUrl.replace(/[\?&]sslmode=[^&]+/g, '').replace(/\?$/, '') : undefined;
         return {
           type: 'postgres',
           url: url || undefined,
@@ -55,9 +56,9 @@ import { DocumentModule } from './modules/document/document.module';
             path.join(__dirname, '/migrations/*.js'),
             path.join(__dirname, '../migrations/*.js'),
           ],
-          ssl: configService.get<string>('DB_SSL') === 'true' || !!url ? {
+          ssl: {
             rejectUnauthorized: false
-          } : false,
+          },
         };
       },
     }),

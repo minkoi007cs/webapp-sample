@@ -271,10 +271,25 @@ export class PermissionService implements OnModuleInit {
     return this.findRolePermissions(roleCode);
   }
 
-  async getRoleByCode(roleCode: UserRole) {
-    const role = await this.roleRepository.findOne({ where: { code: roleCode } });
+  async getRoleByCode(roleCode: UserRole | string) {
+    let role = await this.roleRepository.findOne({ where: { code: roleCode as any } });
     if (!role) {
-      throw new NotFoundException(`Role ${roleCode} not found`);
+      if (roleCode === UserRole.GROUP_ADMIN || roleCode === 'GROUP_ADMIN') {
+        role = await this.roleRepository.findOne({ where: { code: 'FAMILY_ADMIN' as any } });
+      } else if (roleCode === 'FAMILY_ADMIN') {
+        role = await this.roleRepository.findOne({ where: { code: UserRole.GROUP_ADMIN as any } });
+      }
+    }
+    if (!role) {
+      const scope = (roleCode === UserRole.APP_ADMIN || roleCode === 'APP_ADMIN') ? RoleScope.SYSTEM : RoleScope.GROUP;
+      role = await this.roleRepository.save(
+        this.roleRepository.create({
+          code: roleCode as UserRole,
+          name: roleCode,
+          scope,
+          isTemplate: true,
+        }),
+      );
     }
     return role;
   }
