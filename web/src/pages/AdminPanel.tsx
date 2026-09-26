@@ -52,11 +52,11 @@ export const AdminPanel = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-families'] });
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      message.success('Đã tạo gia đình mới thành công');
+      message.success('New workspace created successfully');
       setIsCreateFamilyModalOpen(false);
       createFamilyForm.resetFields();
     },
-    onError: () => message.error('Không thể tạo gia đình mới'),
+    onError: () => message.error('Failed to create workspace'),
   });
 
   const editFamilyMutation = useMutation({
@@ -64,11 +64,11 @@ export const AdminPanel = () => {
       adminApi.updateFamilyProfile(familyId, { name }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-families'] });
-      message.success('Đã cập nhật tên gia đình');
+      message.success('Workspace name updated');
       setEditingFamily(null);
       editFamilyForm.resetFields();
     },
-    onError: () => message.error('Không thể cập nhật tên gia đình'),
+    onError: () => message.error('Failed to update workspace name'),
   });
 
   const deleteFamilyMutation = useMutation({
@@ -77,10 +77,10 @@ export const AdminPanel = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-families'] });
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      message.success('Đã xóa gia đình thành công');
+      message.success('Workspace deleted successfully');
     },
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Không thể xóa gia đình');
+      message.error(error?.response?.data?.message || 'Failed to delete workspace');
     },
   });
 
@@ -91,11 +91,11 @@ export const AdminPanel = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-families'] });
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      message.success('Đã gán người dùng vào gia đình thành công');
+      message.success('User assigned to workspace successfully');
       setIsAddMemberModalOpen(false);
       addMemberForm.resetFields();
     },
-    onError: () => message.error('Không thể gán người dùng vào gia đình'),
+    onError: () => message.error('Failed to assign user to workspace'),
   });
 
   const removeMemberMutation = useMutation({
@@ -105,9 +105,9 @@ export const AdminPanel = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-families'] });
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      message.success('Đã gỡ thành viên khỏi gia đình');
+      message.success('Member removed from workspace');
     },
-    onError: () => message.error('Không thể gỡ thành viên khỏi gia đình'),
+    onError: () => message.error('Failed to remove member from workspace'),
   });
 
   const updateSystemRoleMutation = useMutation({
@@ -116,9 +116,9 @@ export const AdminPanel = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-families'] });
-      message.success('Đã cập nhật quyền quản trị ứng dụng');
+      message.success('System role updated successfully');
     },
-    onError: () => message.error('Không thể cập nhật quyền quản trị ứng dụng'),
+    onError: () => message.error('Failed to update system role'),
   });
 
   const updateFamilyStatusMutation = useMutation({
@@ -126,9 +126,9 @@ export const AdminPanel = () => {
       adminApi.updateFamilyStatus(familyId, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-families'] });
-      message.success('Đã cập nhật trạng thái gia đình');
+      message.success('Workspace status updated');
     },
-    onError: () => message.error('Không thể cập nhật trạng thái gia đình'),
+    onError: () => message.error('Failed to update workspace status'),
   });
 
   const updateFamilyRoleMutation = useMutation({
@@ -137,9 +137,9 @@ export const AdminPanel = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-families'] });
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      message.success('Đã cập nhật vai trò trong gia đình');
+      message.success('Workspace role updated');
     },
-    onError: () => message.error('Không thể cập nhật vai trò trong gia đình'),
+    onError: () => message.error('Failed to update workspace role'),
   });
 
   const memberRows = useMemo<FamilyMemberRow[]>(() => (
@@ -202,17 +202,17 @@ export const AdminPanel = () => {
 
   const userColumns: ColumnsType<AdminUser> = [
     {
-      title: 'Người dùng',
+      title: 'User',
       key: 'user',
       render: (_, record) => (
         <div>
-          <div className="font-semibold text-slate-900">{record.fullName || 'Chưa đặt tên'}</div>
-          <div className="text-xs text-slate-700">{record.email}</div>
+          <div className="font-semibold text-foreground">{record.fullName || 'Unnamed'}</div>
+          <div className="text-xs text-muted-foreground">{record.email}</div>
         </div>
       ),
     },
     {
-      title: 'Quyền hệ thống',
+      title: 'System Role',
       dataIndex: 'systemRole',
       key: 'systemRole',
       render: (value: 'USER' | 'APP_ADMIN', record) => (
@@ -223,24 +223,24 @@ export const AdminPanel = () => {
           loading={updateSystemRoleMutation.isPending}
           onChange={(nextValue) => updateSystemRoleMutation.mutate({ userId: record.id, systemRole: nextValue })}
           options={[
-            { value: 'USER', label: 'Người dùng thường' },
-            { value: 'APP_ADMIN', label: 'Quản trị ứng dụng' },
+            { value: 'USER', label: 'Standard User' },
+            { value: 'APP_ADMIN', label: 'System Admin' },
           ]}
         />
       ),
     },
     {
-      title: 'Gia đình tham gia',
+      title: 'Workspaces Joined',
       key: 'memberships',
       render: (_, record) => (
         <div className="flex flex-wrap gap-1.5">
           {record.memberships.length > 0
             ? record.memberships.map((membership) => (
               <Tag key={`${record.id}-${membership.familyId}`}>
-                {membership.familyName} · {membership.role === 'FAMILY_ADMIN' ? 'Quản trị' : 'Thành viên'}
+                {membership.familyName} · {membership.role === 'FAMILY_ADMIN' ? 'Admin' : 'Member'}
               </Tag>
             ))
-            : <span className="text-xs text-slate-600">Chưa tham gia gia đình nào</span>}
+            : <span className="text-xs text-muted-foreground">No active workspaces</span>}
         </div>
       ),
     },
@@ -248,27 +248,27 @@ export const AdminPanel = () => {
 
   const memberColumns: ColumnsType<FamilyMemberRow> = [
     {
-      title: 'Gia đình',
+      title: 'Workspace',
       key: 'family',
       render: (_, record) => (
         <div>
-          <div className="font-semibold text-slate-900">{record.familyName}</div>
-          <div className="text-xs text-slate-700">{record.familyStatus === 'ACTIVE' ? 'Đang hoạt động' : 'Ngưng hoạt động'}</div>
+          <div className="font-semibold text-foreground">{record.familyName}</div>
+          <div className="text-xs text-muted-foreground">{record.familyStatus === 'ACTIVE' ? 'Active' : 'Inactive'}</div>
         </div>
       ),
     },
     {
-      title: 'Thành viên',
+      title: 'Member',
       key: 'member',
       render: (_, record) => (
         <div>
-          <div className="font-semibold text-slate-900">{record.fullName || 'Chưa đặt tên'}</div>
-          <div className="text-xs text-slate-700">{record.email}</div>
+          <div className="font-semibold text-foreground">{record.fullName || 'Unnamed'}</div>
+          <div className="text-xs text-muted-foreground">{record.email}</div>
         </div>
       ),
     },
     {
-      title: 'Quyền hệ thống',
+      title: 'System Role',
       dataIndex: 'systemRole',
       key: 'systemRole',
       render: (value: 'USER' | 'APP_ADMIN') => (
@@ -278,7 +278,7 @@ export const AdminPanel = () => {
       ),
     },
     {
-      title: 'Vai trò trong gia đình',
+      title: 'Workspace Role',
       dataIndex: 'role',
       key: 'role',
       render: (value: 'FAMILY_ADMIN' | 'MEMBER', record) => (
@@ -293,22 +293,22 @@ export const AdminPanel = () => {
             role: nextValue,
           })}
           options={[
-            { value: 'FAMILY_ADMIN', label: 'Quản trị gia đình' },
-            { value: 'MEMBER', label: 'Thành viên' },
+            { value: 'FAMILY_ADMIN', label: 'Workspace Admin' },
+            { value: 'MEMBER', label: 'Member' },
           ]}
         />
       ),
     },
     {
-      title: 'Thao tác',
+      title: 'Actions',
       key: 'action',
       width: 100,
       render: (_, record) => (
         <Popconfirm
-          title="Gỡ thành viên khỏi gia đình"
-          description={`Bạn có chắc muốn gỡ "${record.fullName || record.email}" khỏi "${record.familyName}"?`}
-          okText="Gỡ"
-          cancelText="Hủy"
+          title="Remove Member from Workspace"
+          description={`Are you sure you want to remove "${record.fullName || record.email}" from "${record.familyName}"?`}
+          okText="Remove"
+          cancelText="Cancel"
           okButtonProps={{ danger: true, loading: removeMemberMutation.isPending }}
           onConfirm={() => removeMemberMutation.mutate({ familyId: record.familyId, userId: record.userId })}
         >
@@ -317,9 +317,9 @@ export const AdminPanel = () => {
             danger
             size="small"
             icon={<UserMinus size={14} />}
-            title="Gỡ khỏi gia đình"
+            title="Remove from workspace"
           >
-            Gỡ
+            Remove
           </Button>
         </Popconfirm>
       ),
@@ -329,9 +329,9 @@ export const AdminPanel = () => {
   return (
     <div className="space-y-4 lg:space-y-5">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 font-display">Quản trị ứng dụng</h1>
-        <p className="mt-1 text-sm text-slate-700">
-          Xem cấu trúc gia đình, sửa/xóa gia đình, chỉnh vai trò và cấp quyền APP_ADMIN ở mức hệ thống.
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground font-sans">System Administration</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage system workspaces, edit configurations, assign members, and manage APP_ADMIN privileges.
         </p>
       </div>
 
@@ -339,12 +339,12 @@ export const AdminPanel = () => {
         <Col xs={24} md={8}>
           <Card className="glass-card" loading={statsLoading}>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#efe7ff] text-[#7b61c8]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 border border-purple-500/20">
                 <ShieldCheck size={18} />
               </div>
               <div>
-                <div className="text-xs uppercase tracking-[0.16em] text-slate-600">Người dùng</div>
-                <div className="text-2xl font-bold text-slate-900">{stats?.totalUsers ?? 0}</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Total Users</div>
+                <div className="text-2xl font-bold text-foreground">{stats?.totalUsers ?? 0}</div>
               </div>
             </div>
           </Card>
@@ -352,12 +352,12 @@ export const AdminPanel = () => {
         <Col xs={24} md={8}>
           <Card className="glass-card" loading={statsLoading}>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#e7f5ff] text-[#4f86c7]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 border border-blue-500/20">
                 <Building2 size={18} />
               </div>
               <div>
-                <div className="text-xs uppercase tracking-[0.16em] text-slate-600">Gia đình</div>
-                <div className="text-2xl font-bold text-slate-900">{stats?.totalFamilies ?? 0}</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Workspaces</div>
+                <div className="text-2xl font-bold text-foreground">{stats?.totalFamilies ?? 0}</div>
               </div>
             </div>
           </Card>
@@ -365,12 +365,12 @@ export const AdminPanel = () => {
         <Col xs={24} md={8}>
           <Card className="glass-card" loading={statsLoading}>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#e9faf0] text-[#55a67c]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                 <Users size={18} />
               </div>
               <div>
-                <div className="text-xs uppercase tracking-[0.16em] text-slate-600">Membership đang hoạt động</div>
-                <div className="text-2xl font-bold text-slate-900">{stats?.totalMemberships ?? 0}</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Active Memberships</div>
+                <div className="text-2xl font-bold text-foreground">{stats?.totalMemberships ?? 0}</div>
               </div>
             </div>
           </Card>
@@ -380,8 +380,8 @@ export const AdminPanel = () => {
       <Card className="glass-card">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <Typography.Title level={4} className="!mb-1">Quyền hệ thống</Typography.Title>
-            <Typography.Text type="secondary">Chỉ APP_ADMIN mới có thể nâng hoặc hạ quyền quản trị ứng dụng.</Typography.Text>
+            <Typography.Title level={4} className="!mb-1">System Permissions</Typography.Title>
+            <Typography.Text type="secondary">Only APP_ADMIN accounts can grant or revoke application-level administrative privileges.</Typography.Text>
           </div>
         </div>
         <Table
@@ -399,34 +399,33 @@ export const AdminPanel = () => {
       <Card className="glass-card">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <Typography.Title level={4} className="!mb-1">Gia đình và thành viên</Typography.Title>
-            <Typography.Text type="secondary">Quản lý gia đình, sửa tên, xóa gia đình khi không còn thành viên, và gán thành viên.</Typography.Text>
+            <Typography.Title level={4} className="!mb-1">Workspaces and Members</Typography.Title>
+            <Typography.Text type="secondary">Manage workspaces, modify names, assign members, and manage workspace statuses.</Typography.Text>
           </div>
           <div className="flex items-center gap-2">
             <Button
               type="primary"
               icon={<Plus size={14} />}
-              className="bg-[#c85f58] hover:bg-[#b04a43]"
               onClick={() => setIsCreateFamilyModalOpen(true)}
             >
-              Tạo gia đình mới
+              Create Workspace
             </Button>
             <Button
               icon={<UserPlus size={14} />}
               onClick={() => setIsAddMemberModalOpen(true)}
             >
-              Gán thành viên
+              Assign Member
             </Button>
           </div>
         </div>
 
         <div className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
           {(families ?? []).map((family: AdminFamily) => (
-            <div key={family.id} className="rounded-2xl border border-[rgba(242,214,197,0.78)] bg-white/80 p-4">
+            <div key={family.id} className="rounded-2xl border border-border bg-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-slate-900">{family.name}</p>
-                  <p className="text-xs text-slate-700">{family.members.length} thành viên</p>
+                  <p className="font-semibold text-foreground">{family.name}</p>
+                  <p className="text-xs text-muted-foreground">{family.members.length} members</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Select
@@ -436,8 +435,8 @@ export const AdminPanel = () => {
                     loading={updateFamilyStatusMutation.isPending}
                     onChange={(status) => updateFamilyStatusMutation.mutate({ familyId: family.id, status })}
                     options={[
-                      { value: 'ACTIVE', label: 'Hoạt động' },
-                      { value: 'INACTIVE', label: 'Ngưng' },
+                      { value: 'ACTIVE', label: 'Active' },
+                      { value: 'INACTIVE', label: 'Inactive' },
                     ]}
                   />
                   <Button
@@ -447,17 +446,17 @@ export const AdminPanel = () => {
                       setEditingFamily(family);
                       editFamilyForm.setFieldsValue({ name: family.name });
                     }}
-                    title="Sửa tên gia đình"
+                    title="Edit Workspace Name"
                   />
                   <Popconfirm
-                    title="Xóa gia đình"
+                    title="Delete Workspace"
                     description={
                       family.members.length > 0
-                        ? `Gia đình đang có ${family.members.length} thành viên. Bạn phải gỡ hết thành viên trước khi có thể xóa gia đình.`
-                        : `Bạn có chắc chắn muốn xóa vĩnh viễn gia đình "${family.name}"?`
+                        ? `Workspace currently has ${family.members.length} members. Remove all members first before deleting.`
+                        : `Are you sure you want to permanently delete "${family.name}"?`
                     }
-                    okText={family.members.length > 0 ? 'Đã hiểu' : 'Xóa vĩnh viễn'}
-                    cancelText="Hủy"
+                    okText={family.members.length > 0 ? 'Understood' : 'Delete Permanently'}
+                    cancelText="Cancel"
                     okButtonProps={{
                       danger: family.members.length === 0,
                       disabled: family.members.length > 0,
@@ -473,7 +472,7 @@ export const AdminPanel = () => {
                       size="small"
                       danger
                       icon={<Trash2 size={13} />}
-                      title="Xóa gia đình"
+                      title="Delete Workspace"
                     />
                   </Popconfirm>
                 </div>
@@ -496,12 +495,12 @@ export const AdminPanel = () => {
         />
       </Card>
 
-      {/* Modal Tạo Gia Đình Mới */}
+      {/* Modal Create Family */}
       <Modal
         title={
-          <div className="flex items-center gap-2 text-base font-bold text-slate-800">
-            <Building2 size={18} className="text-[#c85f58]" />
-            <span>Tạo Gia Đình Mới (Quyền Quản Trị Hệ Thống)</span>
+          <div className="flex items-center gap-2 text-base font-bold text-foreground">
+            <Building2 size={18} className="text-primary" />
+            <span>Create New Workspace</span>
           </div>
         }
         open={isCreateFamilyModalOpen}
@@ -510,8 +509,8 @@ export const AdminPanel = () => {
         centered
         destroyOnClose
       >
-        <p className="text-xs text-slate-700 mb-4">
-          Tạo một gia đình mới trong hệ thống và chỉ định một người dùng làm Chủ hộ / Quản trị gia đình (FAMILY_ADMIN). Bắt buộc phải có người quản lý để gia đình không bị bỏ trống không ai kiểm soát.
+        <p className="text-xs text-muted-foreground mb-4">
+          Create a new workspace and assign an initial Workspace Administrator (FAMILY_ADMIN).
         </p>
         <Form
           form={createFamilyForm}
@@ -520,19 +519,19 @@ export const AdminPanel = () => {
         >
           <Form.Item
             name="name"
-            label="Tên gia đình"
-            rules={[{ required: true, message: 'Vui lòng nhập tên gia đình' }]}
+            label="Workspace Name"
+            rules={[{ required: true, message: 'Please enter workspace name' }]}
           >
-            <Input placeholder="Ví dụ: Gia đình Nguyễn Văn C" size="large" />
+            <Input placeholder="e.g., Smith Family Workspace" size="large" />
           </Form.Item>
           <Form.Item
             name="adminUserId"
-            label="Chỉ định Chủ hộ / Quản trị viên"
-            tooltip="Người dùng được chọn sẽ có quyền Quản trị viên (FAMILY_ADMIN) của gia đình này"
-            rules={[{ required: true, message: 'Bắt buộc chỉ định một Chủ hộ / Quản trị viên' }]}
+            label="Initial Administrator"
+            tooltip="Selected user will be designated as Workspace Admin (FAMILY_ADMIN)"
+            rules={[{ required: true, message: 'Please select an initial administrator' }]}
           >
             <Select
-              placeholder="Chọn người dùng làm Quản trị gia đình"
+              placeholder="Select user as Workspace Administrator"
               size="large"
               allowClear
               showSearch
@@ -541,30 +540,29 @@ export const AdminPanel = () => {
               }
               options={(users ?? []).map((u) => ({
                 value: u.id,
-                label: `${u.fullName || 'Chưa đặt tên'} (${u.email})`,
+                label: `${u.fullName || 'Unnamed'} (${u.email})`,
               }))}
             />
           </Form.Item>
           <div className="flex justify-end gap-2 mt-6">
-            <Button onClick={() => setIsCreateFamilyModalOpen(false)}>Hủy</Button>
+            <Button onClick={() => setIsCreateFamilyModalOpen(false)}>Cancel</Button>
             <Button
               type="primary"
               htmlType="submit"
               loading={createFamilyMutation.isPending}
-              className="bg-[#c85f58] hover:bg-[#b04a43]"
             >
-              Tạo gia đình
+              Create Workspace
             </Button>
           </div>
         </Form>
       </Modal>
 
-      {/* Modal Gán Thành Viên Vào Gia Đình */}
+      {/* Modal Assign Member */}
       <Modal
         title={
-          <div className="flex items-center gap-2 text-base font-bold text-slate-800">
-            <UserPlus size={18} className="text-[#c85f58]" />
-            <span>Gán Người Dùng Vào Gia Đình</span>
+          <div className="flex items-center gap-2 text-base font-bold text-foreground">
+            <UserPlus size={18} className="text-primary" />
+            <span>Assign User to Workspace</span>
           </div>
         }
         open={isAddMemberModalOpen}
@@ -573,8 +571,8 @@ export const AdminPanel = () => {
         centered
         destroyOnClose
       >
-        <p className="text-xs text-slate-700 mb-4">
-          Chỉ định trực tiếp bất kỳ tài khoản người dùng nào vào một gia đình với vai trò cụ thể.
+        <p className="text-xs text-muted-foreground mb-4">
+          Directly assign any user account into a workspace with a specific role.
         </p>
         <Form
           form={addMemberForm}
@@ -584,11 +582,11 @@ export const AdminPanel = () => {
         >
           <Form.Item
             name="familyId"
-            label="Chọn Gia đình"
-            rules={[{ required: true, message: 'Vui lòng chọn gia đình' }]}
+            label="Select Workspace"
+            rules={[{ required: true, message: 'Please select a workspace' }]}
           >
             <Select
-              placeholder="Chọn gia đình"
+              placeholder="Select workspace"
               size="large"
               showSearch
               filterOption={(input, option) =>
@@ -602,11 +600,11 @@ export const AdminPanel = () => {
           </Form.Item>
           <Form.Item
             name="userId"
-            label="Chọn Người dùng"
-            rules={[{ required: true, message: 'Vui lòng chọn người dùng' }]}
+            label="Select User"
+            rules={[{ required: true, message: 'Please select a user' }]}
           >
             <Select
-              placeholder="Chọn người dùng"
+              placeholder="Select user"
               size="large"
               showSearch
               filterOption={(input, option) =>
@@ -614,43 +612,42 @@ export const AdminPanel = () => {
               }
               options={(users ?? []).map((u) => ({
                 value: u.id,
-                label: `${u.fullName || 'Chưa đặt tên'} (${u.email})`,
+                label: `${u.fullName || 'Unnamed'} (${u.email})`,
               }))}
             />
           </Form.Item>
           <Form.Item
             name="role"
-            label="Vai trò trong gia đình"
-            rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
+            label="Workspace Role"
+            rules={[{ required: true, message: 'Please select role' }]}
           >
             <Select
               size="large"
               options={[
-                { value: 'FAMILY_ADMIN', label: 'Quản trị gia đình (Chủ hộ)' },
-                { value: 'MEMBER', label: 'Thành viên' },
+                { value: 'FAMILY_ADMIN', label: 'Workspace Admin' },
+                { value: 'MEMBER', label: 'Member' },
               ]}
             />
           </Form.Item>
           <div className="flex justify-end gap-2 mt-6">
-            <Button onClick={() => setIsAddMemberModalOpen(false)}>Hủy</Button>
+            <Button onClick={() => setIsAddMemberModalOpen(false)}>Cancel</Button>
             <Button
               type="primary"
               htmlType="submit"
               loading={addFamilyMemberMutation.isPending}
-              className="bg-[#c85f58] hover:bg-[#b04a43]"
             >
-              Gán thành viên
+              Assign Member
             </Button>
           </div>
         </Form>
       </Modal>
 
-      {/* Modal Sửa Tên Gia Đình */}
+      {/* Modal Edit Family Name */}
       <Modal
         title={
-          <div className="flex items-center gap-2 text-base font-bold text-slate-800">
-            <Pencil size={18} className="text-[#c85f58]" />
-            <span>Sửa Tên Gia Đình</span>
+          <div className="flex items-center gap-2 text-base font-bold text-foreground">
+            <Pencil size={18} className="text-primary" />
+            <span>Edit Workspace Name</span>
           </div>
         }
         open={editingFamily !== null}
@@ -670,20 +667,19 @@ export const AdminPanel = () => {
         >
           <Form.Item
             name="name"
-            label="Tên gia đình"
-            rules={[{ required: true, message: 'Vui lòng nhập tên gia đình' }]}
+            label="Workspace Name"
+            rules={[{ required: true, message: 'Please enter workspace name' }]}
           >
-            <Input placeholder="Nhập tên mới cho gia đình" size="large" />
+            <Input placeholder="Enter new workspace name" size="large" />
           </Form.Item>
           <div className="flex justify-end gap-2 mt-6">
-            <Button onClick={() => setEditingFamily(null)}>Hủy</Button>
+            <Button onClick={() => setEditingFamily(null)}>Cancel</Button>
             <Button
               type="primary"
               htmlType="submit"
               loading={editFamilyMutation.isPending}
-              className="bg-[#c85f58] hover:bg-[#b04a43]"
             >
-              Lưu thay đổi
+              Save Changes
             </Button>
           </div>
         </Form>

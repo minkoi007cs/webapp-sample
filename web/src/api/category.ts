@@ -12,11 +12,11 @@ export interface Category {
 }
 
 export const expenseEntryTypeLabels: Record<ExpenseEntryType, string> = {
-  INCOME: 'Thu nhập',
-  EXPENSE: 'Chi phí',
+  INCOME: 'Income',
+  EXPENSE: 'Expense',
 };
 
-/** Danh mục lá: có cha (dùng cho chọn trên form giao dịch/tài sản). */
+/** Leaf category indicator: has parent */
 export const isLeafCategory = (category?: Pick<Category, 'parentId'> | null) =>
   !!category?.parentId;
 

@@ -4,7 +4,7 @@ import { Button, Spin } from 'antd';
 import { UserPlus, AlertTriangle, LogIn } from 'lucide-react';
 import { authApi } from '../api/auth';
 
-const roleLabel = (role: string | null) => (role === 'FAMILY_ADMIN' ? 'Quản trị viên' : 'Thành viên');
+const roleLabel = (role: string | null) => (role === 'FAMILY_ADMIN' ? 'Administrator' : 'Member');
 
 export const AcceptInvite = () => {
     const [searchParams] = useSearchParams();
@@ -19,7 +19,7 @@ export const AcceptInvite = () => {
     useEffect(() => {
         if (!token) {
             setStatus('error');
-            setErrorMessage('Đường dẫn lời mời không hợp lệ.');
+            setErrorMessage('Invalid invitation link.');
             return;
         }
 
@@ -27,7 +27,7 @@ export const AcceptInvite = () => {
             .then((res) => {
                 if (res.data.isExpired) {
                     setStatus('error');
-                    setErrorMessage('Lời mời này đã hết hạn hoặc đã được sử dụng. Vui lòng nhờ quản trị viên gửi lời mời mới.');
+                    setErrorMessage('This invitation has expired or has already been accepted.');
                     return;
                 }
                 setPreview({ familyName: res.data.familyName, role: res.data.role, email: res.data.email });
@@ -35,7 +35,7 @@ export const AcceptInvite = () => {
             })
             .catch(() => {
                 setStatus('error');
-                setErrorMessage('Không tìm thấy lời mời này. Đường dẫn có thể đã bị sai hoặc lời mời đã bị hủy.');
+                setErrorMessage('Invitation not found or was revoked by an administrator.');
             });
     }, [token]);
 
@@ -53,7 +53,7 @@ export const AcceptInvite = () => {
             window.location.href = '/';
         } catch (err: any) {
             setStatus('error');
-            setErrorMessage(err?.response?.data?.message || 'Không thể chấp nhận lời mời. Vui lòng thử lại.');
+            setErrorMessage(err?.response?.data?.message || 'Could not accept invitation. Please try again.');
         }
     };
 
@@ -64,7 +64,7 @@ export const AcceptInvite = () => {
                     {status === 'loading' && (
                         <div className="py-8">
                             <Spin size="large" />
-                            <p className="mt-4 text-sm text-muted-foreground">Đang kiểm tra lời mời...</p>
+                            <p className="mt-4 text-sm text-muted-foreground">Checking invitation...</p>
                         </div>
                     )}
 
@@ -73,10 +73,10 @@ export const AcceptInvite = () => {
                             <div className="mx-auto inline-flex items-center justify-center w-12 h-12 bg-destructive/10 text-destructive rounded-lg">
                                 <AlertTriangle size={24} />
                             </div>
-                            <h1 className="text-xl font-bold tracking-tight text-foreground">Không thể tham gia</h1>
+                            <h1 className="text-xl font-bold tracking-tight text-foreground">Unable to Join</h1>
                             <p className="text-sm text-muted-foreground">{errorMessage}</p>
                             <Button type="default" block onClick={() => (window.location.href = '/')}>
-                                Về trang chủ
+                                Return Home
                             </Button>
                         </div>
                     )}
@@ -87,10 +87,10 @@ export const AcceptInvite = () => {
                                 <UserPlus size={24} />
                             </div>
                             <div>
-                                <h1 className="text-lg font-semibold text-foreground">Bạn được mời tham gia</h1>
-                                <p className="mt-1 text-2xl font-bold tracking-tight text-primary">{preview.familyName || 'một không gian'}</p>
+                                <h1 className="text-lg font-semibold text-foreground">You are invited to join</h1>
+                                <p className="mt-1 text-2xl font-bold tracking-tight text-primary">{preview.familyName || 'Workspace'}</p>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    với vai trò <strong className="text-foreground">{roleLabel(preview.role)}</strong>
+                                    as <strong className="text-foreground">{roleLabel(preview.role)}</strong>
                                 </p>
                             </div>
 
@@ -103,12 +103,12 @@ export const AcceptInvite = () => {
                                     onClick={handleAccept}
                                     className="h-10 rounded-md"
                                 >
-                                    Chấp nhận lời mời
+                                    Accept Invitation
                                 </Button>
                             ) : (
                                 <>
                                     <p className="text-xs text-muted-foreground">
-                                        Đăng nhập bằng Google với email <strong>{preview.email}</strong> để tham gia.
+                                        Sign in with Google using <strong>{preview.email}</strong> to accept.
                                     </p>
                                     <Button
                                         type="primary"
@@ -118,7 +118,7 @@ export const AcceptInvite = () => {
                                         onClick={handleLoginToAccept}
                                         className="h-10 rounded-md"
                                     >
-                                        Đăng nhập với Google để tham gia
+                                        Sign in with Google to Join
                                     </Button>
                                 </>
                             )}
@@ -129,4 +129,5 @@ export const AcceptInvite = () => {
         </div>
     );
 };
+
 

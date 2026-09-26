@@ -18,11 +18,11 @@ export const GoUsLayout = () => {
                 <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2.5">
                     <Link
                         to="/"
-                        title="Về Tài sản Gia đình"
+                        title="Back to Family Assets"
                         className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                     >
                         <ArrowLeft size={16} />
-                        <span className="hidden sm:inline">Tài sản Gia đình</span>
+                        <span className="hidden sm:inline">Family Assets</span>
                     </Link>
 
                     <div className="flex-1" />
@@ -30,7 +30,7 @@ export const GoUsLayout = () => {
                     {memberships.length > 0 ? (
                         <Select
                             value={activeFamilyId ?? undefined}
-                            placeholder={activeFamilyName ?? 'Chọn gia đình'}
+                            placeholder={activeFamilyName ?? 'Select workspace'}
                             size="small"
                             className="w-36 sm:w-52"
                             loading={isSwitchingFamily}
@@ -45,8 +45,8 @@ export const GoUsLayout = () => {
                     <button
                         type="button"
                         onClick={handleLogout}
-                        title="Đăng xuất"
-                        aria-label="Đăng xuất"
+                        title="Log out"
+                        aria-label="Log out"
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                     >
                         <LogOut size={16} />

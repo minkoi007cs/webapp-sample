@@ -69,15 +69,10 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
         if (parsedData && visible) {
             setIntent(parsedData.intent);
 
-            // Map common aliases or legacy field names from AI
             const rawData = parsedData.data || {};
-
-            // Helper to validate UUIDs to prevent backend errors from AI placeholders
             const isUUID = (str: any) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-
             const sanitizeId = (id: any) => isUUID(id) ? id : undefined;
 
-            // Chuẩn hóa từ phản hồi AI để form và backend nhận đúng enum / boolean
             const normalizeEntryType = (v: any): ExpenseEntryType | undefined => {
                 if (typeof v !== 'string') return undefined;
                 const u = v.trim().toUpperCase();
@@ -101,7 +96,6 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
 
             const mappedData = {
                 ...rawData,
-                // Expense mapping
                 expenseDate: rawData.expenseDate || rawData.date,
                 note: parsedData.originalText || rawData.note || rawData.description,
                 description: parsedData.originalText || rawData.description || rawData.note,
@@ -112,9 +106,7 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
                 ownerId: sanitizeId(rawData.ownerId),
                 usedById: sanitizeId(rawData.usedById),
                 assetId: sanitizeId(rawData.assetId),
-                // Asset mapping
                 purchaseDate: rawData.purchaseDate || rawData.date,
-                // Event mapping
                 startDate: rawData.startDate || rawData.date,
                 recurrenceRule: rawData.recurrenceRule,
                 participantIds: rawData.participantIds || (rawData.participants ? rawData.participants.map((p: any) => typeof p === 'string' ? sanitizeId(p) : sanitizeId(p.id)) : []),
@@ -125,7 +117,7 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
                 expenseDate: mappedData.expenseDate ? dayjs(mappedData.expenseDate) : dayjs(),
                 purchaseDate: mappedData.purchaseDate ? dayjs(mappedData.purchaseDate) : dayjs(),
                 startDate: mappedData.startDate ? dayjs(mappedData.startDate) : dayjs(),
-                date: mappedData.date ? dayjs(mappedData.date) : dayjs(), // For other intents
+                date: mappedData.date ? dayjs(mappedData.date) : dayjs(),
             });
         }
     }, [parsedData, visible, form]);
@@ -139,7 +131,6 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
             participantIds: values.participantIds,
         };
 
-        // Ưu tiên giá trị form (đã map từ AI), chỉ khi trống mới suy theo tab Chi/Thu
         if (intent === 'create_expense' || intent === 'create_income') {
             const intentDefaultEntry: ExpenseEntryType =
                 intent === 'create_income' ? 'INCOME' : 'EXPENSE';
@@ -167,13 +158,13 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
 
             if (duplicateExpense) {
                 const shouldContinue = await confirmDuplicateWarning({
-                    title: 'Phát hiện giao dịch trùng',
-                    summary: 'Đã có giao dịch cùng số tiền, danh mục, ngày thực hiện và tài sản. Bạn vẫn có thể tiếp tục nếu đây là bản ghi hợp lệ.',
+                    title: 'Duplicate Transaction Detected',
+                    summary: 'A transaction with the same amount, category, date, and asset already exists. You can still continue if this is intended.',
                     detailLines: [
-                        `Số tiền: ${formatVndAmount(formattedValues.amount)}`,
-                        `Danh mục: ${getCategoryLabel(categories, formattedValues.categoryId)}`,
-                        `Ngày: ${dayjs(formattedValues.expenseDate).format('DD/MM/YYYY')}`,
-                        `Tài sản: ${getAssetLabel(assets, formattedValues.assetId)}`,
+                        `Amount: ${formatVndAmount(formattedValues.amount)}`,
+                        `Category: ${getCategoryLabel(categories, formattedValues.categoryId)}`,
+                        `Date: ${dayjs(formattedValues.expenseDate).format('YYYY-MM-DD')}`,
+                        `Asset: ${getAssetLabel(assets, formattedValues.assetId)}`,
                     ],
                 });
 
@@ -189,11 +180,11 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
 
             if (duplicateAsset) {
                 const shouldContinue = await confirmDuplicateWarning({
-                    title: 'Phát hiện tài sản trùng',
-                    summary: 'Đã có tài sản cùng tên và danh mục. Bạn vẫn có thể tiếp tục nếu đây là một tài sản khác nhưng trùng cách đặt tên.',
+                    title: 'Duplicate Asset Detected',
+                    summary: 'An asset with the same name and category already exists. You can still continue if this is a separate asset.',
                     detailLines: [
-                        `Tên tài sản: ${formattedValues.name || '-'}`,
-                        `Danh mục: ${getCategoryLabel(categories, formattedValues.categoryId)}`,
+                        `Asset Name: ${formattedValues.name || '-'}`,
+                        `Category: ${getCategoryLabel(categories, formattedValues.categoryId)}`,
                     ],
                 });
 
@@ -216,28 +207,28 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
             case 'create_income': {
                 return (
                     <>
-                        <Form.Item name="entryType" label="Loại bút toán">
+                        <Form.Item name="entryType" label="Entry Type">
                             <Select
                                 allowClear
-                                placeholder="Theo AI hoặc Chi/Thu mặc định"
+                                placeholder="AI Default or Income/Expense"
                                 options={(Object.keys(expenseEntryTypeLabels) as ExpenseEntryType[]).map((key) => ({
                                     value: key,
                                     label: expenseEntryTypeLabels[key],
                                 }))}
                             />
                         </Form.Item>
-                        <Form.Item name="isTransfer" label="Chuyển nội bộ" valuePropName="checked">
+                        <Form.Item name="isTransfer" label="Internal Transfer" valuePropName="checked">
                             <Switch />
                         </Form.Item>
-                        <Form.Item name="amount" label="Số tiền" rules={[{ required: true }]}>
+                        <Form.Item name="amount" label="Amount" rules={[{ required: true, message: 'Amount is required' }]}>
                             <InputNumber
                                 style={{ width: '100%' }}
                                 formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                                 parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
-                                addonAfter="đồng"
+                                addonAfter="$"
                             />
                         </Form.Item>
-                        <Form.Item name="categoryId" label="Danh mục" rules={[{ required: true }]}>
+                        <Form.Item name="categoryId" label="Category" rules={[{ required: true, message: 'Category is required' }]}>
                             <Select
                                 options={categories
                                     .map((category) => ({
@@ -245,21 +236,21 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
                                         value: category.id,
                                     }))
                                 }
-                                placeholder="Chọn danh mục..."
+                                placeholder="Select category..."
                                 showSearch
                                 filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
                             />
                         </Form.Item>
-                        <Form.Item name="assignedToUserId" label="Người thực hiện (Không bắt buộc)">
-                            <Select options={userOptions} placeholder="Chọn thành viên..." allowClear />
+                        <Form.Item name="assignedToUserId" label="Assigned Member (Optional)">
+                            <Select options={userOptions} placeholder="Select member..." allowClear />
                         </Form.Item>
-                        <Form.Item name="assetId" label="Liên quan đến tài sản (Không bắt buộc)">
-                            <Select options={assetOptions} placeholder="Chọn tài sản..." allowClear showSearch />
+                        <Form.Item name="assetId" label="Associated Asset (Optional)">
+                            <Select options={assetOptions} placeholder="Select asset..." allowClear showSearch />
                         </Form.Item>
-                        <Form.Item name="expenseDate" label="Ngày giao dịch" rules={[{ required: true }]}>
+                        <Form.Item name="expenseDate" label="Transaction Date" rules={[{ required: true, message: 'Date is required' }]}>
                             <DatePicker style={{ width: '100%' }} />
                         </Form.Item>
-                        <Form.Item name="note" label="Ghi chú">
+                        <Form.Item name="note" label="Notes">
                             <Input.TextArea autoSize />
                         </Form.Item>
                     </>
@@ -269,10 +260,10 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
             case 'update_asset':
                 return (
                     <>
-                        <Form.Item name="name" label="Tên tài sản" rules={[{ required: true }]}>
+                        <Form.Item name="name" label="Asset Name" rules={[{ required: true, message: 'Name is required' }]}>
                             <Input />
                         </Form.Item>
-                        <Form.Item name="categoryId" label="Danh mục">
+                        <Form.Item name="categoryId" label="Category">
                             <Select
                                 options={categories
                                     .map((category) => ({
@@ -280,30 +271,30 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
                                         value: category.id,
                                     }))
                                 }
-                                placeholder="Chọn danh mục..."
+                                placeholder="Select category..."
                                 showSearch
                             />
                         </Form.Item>
                         {intent === 'create_asset' && (
-                            <Form.Item name="purchasePrice" label="Giá mua">
+                            <Form.Item name="purchasePrice" label="Purchase Price">
                                 <InputNumber
                                     style={{ width: '100%' }}
                                     formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                                     parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
-                                    addonAfter="đồng"
+                                    addonAfter="$"
                                 />
                             </Form.Item>
                         )}
-                        <Form.Item name="purchaseDate" label="Ngày mua/cập nhật">
+                        <Form.Item name="purchaseDate" label="Purchase / Acquisition Date">
                             <DatePicker style={{ width: '100%' }} />
                         </Form.Item>
-                        <Form.Item name="ownerId" label="Người đứng tên (Không bắt buộc)">
-                            <Select options={userOptions} placeholder="Chọn thành viên..." allowClear showSearch />
+                        <Form.Item name="ownerId" label="Legal Owner (Optional)">
+                            <Select options={userOptions} placeholder="Select member..." allowClear showSearch />
                         </Form.Item>
-                        <Form.Item name="usedById" label="Người sử dụng (Không bắt buộc)">
-                            <Select options={userOptions} placeholder="Chọn thành viên..." allowClear showSearch />
+                        <Form.Item name="usedById" label="Primary User (Optional)">
+                            <Select options={userOptions} placeholder="Select member..." allowClear showSearch />
                         </Form.Item>
-                        <Form.Item name="description" label="Ghi chú/Mô tả">
+                        <Form.Item name="description" label="Description / Notes">
                             <Input.TextArea autoSize />
                         </Form.Item>
                     </>
@@ -312,33 +303,33 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
             case 'create_task':
                 return (
                     <>
-                        <Form.Item name="title" label="Tiêu đề" rules={[{ required: true }]}>
+                        <Form.Item name="title" label="Title" rules={[{ required: true, message: 'Title is required' }]}>
                             <Input />
                         </Form.Item>
-                        <Form.Item name="startDate" label="Ngày" rules={[{ required: true }]}>
+                        <Form.Item name="startDate" label="Date" rules={[{ required: true, message: 'Date is required' }]}>
                             <DatePicker style={{ width: '100%' }} />
                         </Form.Item>
-                        <Form.Item name="time" label="Giờ">
+                        <Form.Item name="time" label="Time">
                             <Input placeholder="HH:mm" />
                         </Form.Item>
-                        <Form.Item name="recurrenceRule" label="Lặp lại">
-                            <Select placeholder="Chọn chế độ lặp" allowClear>
-                                <Select.Option value="DAILY">Hàng ngày</Select.Option>
-                                <Select.Option value="WEEKLY">Hàng tuần</Select.Option>
-                                <Select.Option value="MONTHLY">Hàng tháng</Select.Option>
-                                <Select.Option value="YEARLY">Hàng năm</Select.Option>
+                        <Form.Item name="recurrenceRule" label="Recurrence">
+                            <Select placeholder="Select recurrence pattern" allowClear>
+                                <Select.Option value="DAILY">Daily</Select.Option>
+                                <Select.Option value="WEEKLY">Weekly</Select.Option>
+                                <Select.Option value="MONTHLY">Monthly</Select.Option>
+                                <Select.Option value="YEARLY">Yearly</Select.Option>
                             </Select>
                         </Form.Item>
-                        <Form.Item name="participantIds" label="Người tham gia / Nhắc cho ai">
-                            <Select mode="multiple" options={userOptions} placeholder="Chọn thành viên..." allowClear showSearch />
+                        <Form.Item name="participantIds" label="Participants / Assignees">
+                            <Select mode="multiple" options={userOptions} placeholder="Select members..." allowClear showSearch />
                         </Form.Item>
-                        <Form.Item name="description" label="Mô tả">
+                        <Form.Item name="description" label="Description">
                             <Input.TextArea autoSize />
                         </Form.Item>
                     </>
                 );
             default:
-                return <Text type="secondary">Ý định không xác định hoặc chưa được hỗ trợ form chỉnh sửa.</Text>;
+                return <Text type="secondary">Unrecognized intent or form not supported.</Text>;
         }
     };
 
@@ -346,7 +337,7 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
         <Modal
             title={
                 <Space>
-                    <Text strong>Xác nhận thông tin nhập liệu</Text>
+                    <Text strong>Review AI Input Details</Text>
                     <Tag color="cyan">{intent?.toUpperCase()}</Tag>
                 </Space>
             }
@@ -359,16 +350,16 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
                     key="cancel"
                     type="text"
                     icon={<X size={18} />}
-                    title="Hủy"
-                    aria-label="Hủy"
+                    title="Cancel"
+                    aria-label="Cancel"
                     onClick={onCancel}
                 />,
                 <Button
                     key="ok"
                     type="primary"
                     icon={<Check size={18} />}
-                    title="Xác nhận và lưu"
-                    aria-label="Xác nhận và lưu"
+                    title="Confirm and Save"
+                    aria-label="Confirm and Save"
                     loading={loading}
                     onClick={() => form.submit()}
                 />,
@@ -376,21 +367,21 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
             styles={{ body: { paddingTop: 16 } }}
         >
             <div style={{ marginBottom: 16 }}>
-                <Text type="secondary">Chúng tôi đã phân tích yêu cầu của bạn. Vui lòng kiểm tra lại độ chính xác trước khi lưu vào hệ thống.</Text>
+                <Text type="secondary">We have parsed your request. Please review the details below before saving.</Text>
             </div>
 
             <Form
                 form={form}
                 layout="vertical"
                 onFinish={handleFinish}
-                initialValues={{ currency: 'VND' }}
+                initialValues={{ currency: 'USD' }}
             >
-                <Form.Item label="Loại giao dịch/hành động">
+                <Form.Item label="Action / Transaction Type">
                     <Radio.Group value={intent} onChange={(e) => setIntent(e.target.value)}>
-                        <Radio.Button value="create_expense">Chi tiêu</Radio.Button>
-                        <Radio.Button value="create_income">Thu nhập</Radio.Button>
-                        <Radio.Button value="create_asset">Tài sản</Radio.Button>
-                        <Radio.Button value="create_event">Sự kiện</Radio.Button>
+                        <Radio.Button value="create_expense">Expense</Radio.Button>
+                        <Radio.Button value="create_income">Income</Radio.Button>
+                        <Radio.Button value="create_asset">Asset</Radio.Button>
+                        <Radio.Button value="create_event">Event</Radio.Button>
                     </Radio.Group>
                 </Form.Item>
 
@@ -400,7 +391,7 @@ export const ParsedPreviewModal: React.FC<ParsedPreviewModalProps> = ({
 
                 <div style={{ marginTop: 8, textAlign: 'right' }}>
                     <Text type="secondary">
-                        Độ tin cậy AI: <Tag color={parsedData?.confidence > 0.8 ? 'green' : 'orange'}>
+                        AI Confidence: <Tag color={parsedData?.confidence > 0.8 ? 'green' : 'orange'}>
                             {(parsedData?.confidence * 100 || 0).toFixed(0)}%
                         </Tag>
                     </Text>

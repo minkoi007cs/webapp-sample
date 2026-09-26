@@ -5,18 +5,18 @@ type FormatVndOptions = {
     forceSign?: 'plus' | 'minus';
 };
 
-const wholeNumberFormatter = new Intl.NumberFormat('vi-VN', {
+const wholeNumberFormatter = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
 });
 
-const compactNumberFormatter = new Intl.NumberFormat('vi-VN', {
+const compactNumberFormatter = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2,
 });
 
-const vndUnits = [
-    { value: 1_000_000_000, label: 'tỉ' },
-    { value: 1_000_000, label: 'triệu' },
-    { value: 1_000, label: 'nghìn' },
+const currencyUnits = [
+    { value: 1_000_000_000, label: 'B' },
+    { value: 1_000_000, label: 'M' },
+    { value: 1_000, label: 'k' },
 ] as const;
 
 const toNumber = (value: CurrencyValue) => {
@@ -46,18 +46,18 @@ export const formatVndAmount = (value: CurrencyValue, options: FormatVndOptions 
                     : '';
 
     if (absAmount < 1_000) {
-        return `${sign}${wholeNumberFormatter.format(absAmount)} đồng`;
+        return `${sign}$${wholeNumberFormatter.format(absAmount)}`;
     }
 
-    let unitIndex = vndUnits.findIndex((unit) => absAmount >= unit.value);
-    let unit = vndUnits[unitIndex];
+    let unitIndex = currencyUnits.findIndex((unit) => absAmount >= unit.value);
+    let unit = currencyUnits[unitIndex];
     let scaledAmount = roundToDisplayPrecision(absAmount / unit.value);
 
     if (scaledAmount >= 1_000 && unitIndex > 0) {
         unitIndex -= 1;
-        unit = vndUnits[unitIndex];
+        unit = currencyUnits[unitIndex];
         scaledAmount = roundToDisplayPrecision(absAmount / unit.value);
     }
 
-    return `${sign}${compactNumberFormatter.format(scaledAmount)} ${unit.label} đồng`;
+    return `${sign}$${compactNumberFormatter.format(scaledAmount)}${unit.label}`;
 };

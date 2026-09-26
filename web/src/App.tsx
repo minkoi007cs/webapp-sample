@@ -129,14 +129,14 @@ function AppShell() {
 }
 
 const RouteLoading = () => (
-  <div className="min-h-[40vh] flex items-center justify-center text-slate-700">
-    Đang tải phiên làm việc...
+  <div className="min-h-[40vh] flex items-center justify-center text-muted-foreground text-sm font-medium">
+    Loading session...
   </div>
 );
 
 const PageFallback = () => (
-  <div className="min-h-[30vh] flex items-center justify-center text-slate-700">
-    Đang tải giao diện...
+  <div className="min-h-[30vh] flex items-center justify-center text-muted-foreground text-sm font-medium">
+    Loading page...
   </div>
 );
 

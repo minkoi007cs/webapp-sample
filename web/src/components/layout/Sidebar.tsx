@@ -20,14 +20,14 @@ import { useSession } from '../auth/SessionProvider';
 import { getFamilyRoleDescription, APP_ADMIN_DESCRIPTION } from '../../utils/roleDescriptions';
 
 const navigation = [
-    { name: 'Tổng quan', href: '/', icon: LayoutDashboard, moduleKey: 'DASHBOARD' as const },
-    { name: 'Quản lý tài sản', href: '/assets', icon: Package, moduleKey: 'ASSET' as const },
-    { name: 'Bảo trì khai thác và nợ', href: '/maintenance', icon: Wrench, moduleKey: 'ASSET' as const },
-    { name: 'Quản lý tài chính', href: '/expenses', icon: Receipt, moduleKey: 'TRANSACTION' as const },
-    { name: 'Kho tài liệu', href: '/documents', icon: FolderArchive, moduleKey: 'DOCUMENT' as const },
-    { name: 'Lịch gia đình', href: '/calendar', icon: CalendarDays, moduleKey: 'CALENDAR' as const },
-    { name: 'Quản trị hệ thống', href: '/admin', icon: ShieldCheck, moduleKey: 'ADMIN' as const },
-    { name: 'Thiết lập', href: '/settings', icon: Settings, moduleKey: null },
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard, moduleKey: 'DASHBOARD' as const },
+    { name: 'Assets', href: '/assets', icon: Package, moduleKey: 'ASSET' as const },
+    { name: 'Maintenance & Debt', href: '/maintenance', icon: Wrench, moduleKey: 'ASSET' as const },
+    { name: 'Finances', href: '/expenses', icon: Receipt, moduleKey: 'TRANSACTION' as const },
+    { name: 'Documents', href: '/documents', icon: FolderArchive, moduleKey: 'DOCUMENT' as const },
+    { name: 'Calendar', href: '/calendar', icon: CalendarDays, moduleKey: 'CALENDAR' as const },
+    { name: 'System Admin', href: '/admin', icon: ShieldCheck, moduleKey: 'ADMIN' as const },
+    { name: 'Settings', href: '/settings', icon: Settings, moduleKey: null },
 ];
 
 interface SidebarProps {
@@ -66,10 +66,10 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
     const visibleNavigation = navigation.filter((item) => item.moduleKey === null || canAccess(item.moduleKey, 'view'));
 
     const roleLabel = systemRole === 'APP_ADMIN'
-        ? `Quản trị ứng dụng${role && role !== 'APP_ADMIN' ? ` · ${role === 'FAMILY_ADMIN' ? 'Quản trị gia đình' : 'Thành viên'}` : ''}`
+        ? `System Admin${role && role !== 'APP_ADMIN' ? ` · ${role === 'FAMILY_ADMIN' ? 'Admin' : 'Member'}` : ''}`
         : role === 'FAMILY_ADMIN'
-            ? 'Quản trị gia đình'
-            : 'Thành viên';
+            ? 'Family Admin'
+            : 'Member';
 
     const roleTooltip = systemRole === 'APP_ADMIN' && role !== 'FAMILY_ADMIN' && role !== 'MEMBER'
         ? APP_ADMIN_DESCRIPTION
@@ -80,7 +80,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
             <button
                 onClick={onClose}
                 className="absolute top-3 right-3 p-1.5 lg:hidden text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
-                aria-label="Đóng thanh bên"
+                aria-label="Close sidebar"
             >
                 <X size={18} />
             </button>
@@ -98,7 +98,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
                     className="w-7 h-7 rounded-md shrink-0"
                 />
                 <div className="min-w-0">
-                    <h1 className="font-semibold text-sm text-foreground tracking-tight truncate">Tài sản Gia đình</h1>
+                    <h1 className="font-semibold text-sm text-foreground tracking-tight truncate">Family Assets</h1>
                 </div>
             </Link>
 
@@ -111,10 +111,10 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
                         type="button"
                         onClick={() => setIsCreateModalOpen(true)}
                         className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium transition-colors"
-                        title="Tạo gia đình mới"
+                        title="Create new workspace"
                     >
                         <Plus size={12} />
-                        <span>Tạo mới</span>
+                        <span>Create</span>
                     </button>
                 </div>
                 {memberships.length > 0 ? (
@@ -122,7 +122,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
                         value={activeFamilyId ?? undefined}
                         size="small"
                         className="w-full"
-                        placeholder="Chọn gia đình"
+                        placeholder="Select workspace"
                         loading={isSwitchingFamily}
                         onChange={(value) => switchFamily(value)}
                         options={memberships.map((membership) => {
@@ -130,13 +130,13 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
                             return {
                                 value: membership.familyId,
                                 disabled: isInactive,
-                                label: `${membership.familyName} · ${membership.role === 'FAMILY_ADMIN' ? 'Quản trị' : 'Thành viên'}${isInactive ? ' · Tạm ngưng' : ''}`,
+                                label: `${membership.familyName} · ${membership.role === 'FAMILY_ADMIN' ? 'Admin' : 'Member'}${isInactive ? ' · Inactive' : ''}`,
                             };
                         })}
                     />
                 ) : (
                     <div className="mt-1">
-                        <p className="text-xs text-muted-foreground">{activeFamilyName || 'Chưa có gia đình'}</p>
+                        <p className="text-xs text-muted-foreground">{activeFamilyName || 'No workspace selected'}</p>
                         <Button
                             type="dashed"
                             size="small"
@@ -144,7 +144,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
                             className="mt-1.5 w-full text-xs"
                             onClick={() => setIsCreateModalOpen(true)}
                         >
-                            Tạo gia đình đầu tiên
+                            Create First Workspace
                         </Button>
                     </div>
                 )}
@@ -154,7 +154,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
                 title={
                     <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                         <Users size={16} className="text-primary" />
-                        <span>Tạo Không Gian Gia Đình Mới</span>
+                        <span>Create New Workspace</span>
                     </div>
                 }
                 open={isCreateModalOpen}
@@ -164,24 +164,24 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
                 destroyOnClose
             >
                 <p className="text-xs text-muted-foreground mb-4">
-                    Tạo một gia đình mới để quản lý độc lập tài sản, chi tiêu và hồ sơ riêng biệt. Bạn sẽ là Quản trị viên của gia đình này.
+                    Create a new family space to independently manage assets, expenses, and records. You will be the Administrator.
                 </p>
                 <Form form={form} layout="vertical" onFinish={handleCreateFamily}>
                     <Form.Item
                         name="name"
-                        label="Tên gia đình"
-                        rules={[{ required: true, message: 'Vui lòng nhập tên gia đình' }]}
+                        label="Workspace Name"
+                        rules={[{ required: true, message: 'Please enter workspace name' }]}
                     >
-                        <Input placeholder="Ví dụ: Gia đình Nguyễn Văn A" />
+                        <Input placeholder="e.g. John's Family" />
                     </Form.Item>
                     <div className="flex justify-end gap-2 mt-4">
-                        <Button onClick={() => setIsCreateModalOpen(false)}>Hủy</Button>
+                        <Button onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
                         <Button
                             type="primary"
                             htmlType="submit"
                             loading={isCreatingFamily}
                         >
-                            Tạo gia đình
+                            Create Workspace
                         </Button>
                     </div>
                 </Form>
@@ -209,13 +209,14 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
             <button
                 type="button"
                 onClick={handleLogout}
-                title="Đăng xuất"
-                aria-label="Đăng xuất"
+                title="Log out"
+                aria-label="Log out"
                 className="mt-auto flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors w-full"
             >
                 <LogOut size={16} className="shrink-0" />
-                <span>Đăng xuất</span>
+                <span>Log out</span>
             </button>
         </aside>
     );
 };
+

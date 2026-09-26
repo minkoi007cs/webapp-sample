@@ -16,7 +16,7 @@ export const LoginSuccess = () => {
         async function processLogin() {
             if (processedRef.current) return;
 
-            // 1. Kiểm tra token trực tiếp qua query params (Legacy)
+            // 1. Check for direct query parameter token (Legacy)
             const queryToken = searchParams.get('token');
             if (queryToken) {
                 processedRef.current = true;
@@ -28,13 +28,12 @@ export const LoginSuccess = () => {
             try {
                 const supabase = await getSupabaseClient();
 
-                // 2. Xử lý luồng PKCE (Supabase OAuth trả về ?code=...)
+                // 2. Handle PKCE code flow (Supabase OAuth returns ?code=...)
                 const code = searchParams.get('code');
                 if (code) {
-                    console.log('Đang đổi mã PKCE code sang session Supabase...');
                     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                     if (error) {
-                        throw new Error(`Xác thực mã đăng nhập thất bại: ${error.message}`);
+                        throw new Error(`Authentication failed: ${error.message}`);
                     }
                     if (data?.session?.access_token) {
                         processedRef.current = true;
@@ -42,7 +41,7 @@ export const LoginSuccess = () => {
                     }
                 }
 
-                // 3. Xử lý luồng Implicit Token từ URL Hash (#access_token=...)
+                // 3. Handle Implicit Token flow from URL Hash (#access_token=...)
                 const hash = window.location.hash;
                 if (hash && hash.includes('access_token')) {
                     const params = new URLSearchParams(hash.replace(/^#/, ''));
@@ -53,14 +52,14 @@ export const LoginSuccess = () => {
                     }
                 }
 
-                // 4. Kiểm tra session hiện có trong Supabase Client
+                // 4. Check existing session in Supabase Client
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session?.access_token) {
                     processedRef.current = true;
                     return await exchangeSupabaseToken(session.access_token);
                 }
 
-                // 5. Lắng nghe sự kiện đăng nhập nếu đang trong quá trình trao đổi
+                // 5. Listen for auth state change
                 const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
                     if (session?.access_token && !processedRef.current) {
                         processedRef.current = true;
@@ -68,11 +67,11 @@ export const LoginSuccess = () => {
                     }
                 });
 
-                // Timeout dự phòng nếu không nhận được token sau 5 giây
+                // Fallback timeout after 5 seconds
                 setTimeout(() => {
                     if (!processedRef.current && isMounted) {
                         subscription.unsubscribe();
-                        setErrorMessage('Không nhận được phiên đăng nhập hợp lệ từ Google/Supabase.');
+                        setErrorMessage('Did not receive a valid session from authentication provider.');
                         setTimeout(() => navigate('/login', { replace: true }), 3500);
                     }
                 }, 5000);
@@ -80,7 +79,7 @@ export const LoginSuccess = () => {
             } catch (err: any) {
                 if (isMounted) {
                     const serverError = err.response?.data?.error || err.response?.data?.message;
-                    const msg = serverError || err.message || 'Lỗi khi đồng bộ tài khoản';
+                    const msg = serverError || err.message || 'Error synchronizing account session';
                     setErrorMessage(msg);
                     setTimeout(() => navigate('/login', { replace: true }), 4000);
                 }
@@ -95,12 +94,12 @@ export const LoginSuccess = () => {
                     localStorage.setItem('token', appToken);
                     handleRedirect();
                 } else {
-                    throw new Error('Máy chủ không trả về token phiên làm việc');
+                    throw new Error('Server did not return a valid session token');
                 }
             } catch (err: any) {
                 if (isMounted) {
                     const serverError = err.response?.data?.error || err.response?.data?.message;
-                    const msg = serverError || err.message || 'Đăng nhập không thành công';
+                    const msg = serverError || err.message || 'Login was unsuccessful';
                     message.error(msg);
                     setErrorMessage(msg);
                     setTimeout(() => navigate('/login', { replace: true }), 4000);
@@ -126,20 +125,20 @@ export const LoginSuccess = () => {
     }, [searchParams, navigate]);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="text-center p-8 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-lg w-full mx-4">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+            <div className="text-center p-8 bg-card rounded-xl shadow-sm border border-border max-w-md w-full text-card-foreground">
                 {errorMessage ? (
                     <>
-                        <h2 className="text-2xl font-semibold text-red-600 mb-2">Đăng nhập thất bại</h2>
-                        <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm mb-4 break-words">
+                        <h2 className="text-xl font-semibold text-destructive mb-2">Authentication Failed</h2>
+                        <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm mb-4 break-words">
                             {errorMessage}
                         </div>
-                        <p className="text-sm text-gray-400">Đang chuyển hướng về trang đăng nhập...</p>
+                        <p className="text-xs text-muted-foreground">Redirecting to login page...</p>
                     </>
                 ) : (
                     <>
-                        <h2 className="text-2xl font-semibold text-gray-900">Đang xác thực tài khoản...</h2>
-                        <p className="mt-2 text-gray-600">Vui lòng chờ trong giây lát.</p>
+                        <h2 className="text-xl font-semibold text-foreground">Verifying account...</h2>
+                        <p className="mt-2 text-sm text-muted-foreground">Please wait a moment while we set up your session.</p>
                     </>
                 )}
             </div>

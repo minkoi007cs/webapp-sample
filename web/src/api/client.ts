@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const raw = import.meta.env.VITE_API_URL?.trim() ?? '';
-// Dev: để trống VITE_API_URL → dùng /api/v1 (Vite proxy tới server), tránh trỏ nhầm URL deploy cũ
 export const apiBaseUrl = raw !== '' ? raw.replace(/\/$/, '') : '/api/v1';
 
 const api = axios.create({
@@ -27,7 +26,7 @@ api.interceptors.response.use(
   }
 );
 
-/** Phản hồi phân trang từ API khi có query page/pageSize */
+/** Paginated response from API when querying with page/pageSize */
 export type PaginatedList<T> = {
   items: T[];
   total: number;
@@ -36,7 +35,7 @@ export type PaginatedList<T> = {
   hasMore: boolean;
 };
 
-/** Chuẩn hóa mảng hoặc object phân trang — dùng cho infinite query */
+/** Normalize array or paginated object for infinite query use */
 export function asPaginatedList<T>(data: T[] | PaginatedList<T>): PaginatedList<T> {
   if (Array.isArray(data)) {
     return {
@@ -50,7 +49,7 @@ export function asPaginatedList<T>(data: T[] | PaginatedList<T>): PaginatedList<
   return data;
 }
 
-/** Lấy mảng phần tử dù client cũ chỉ mong đợi mảng */
+/** Extract items array from response */
 export function asArray<T>(data: T[] | PaginatedList<T>): T[] {
   return Array.isArray(data) ? data : data.items;
 }

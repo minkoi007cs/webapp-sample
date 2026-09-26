@@ -32,22 +32,22 @@ type MaintenanceMetadata = {
 };
 
 const maintenanceTypeLabels: Record<string, string> = {
-  maintenance: 'Bảo trì',
-  operation: 'Khai thác',
-  liability: 'Nợ',
+  maintenance: 'Maintenance',
+  operation: 'Operation',
+  liability: 'Liability',
 };
 
 const maintenanceStatusLabels: Record<string, string> = {
-  open: 'Đang chờ',
-  completed: 'Đã ghi nhận',
-  skipped: 'Đã bỏ qua',
+  open: 'Pending',
+  completed: 'Recorded',
+  skipped: 'Skipped',
 };
 
 const eventTypeLabels: Record<CalendarEvent['type'], string> = {
-  EVENT: 'Sự kiện',
-  MAINTENANCE: 'Tài sản',
-  PAYMENT: 'Thanh toán',
-  REMINDER: 'Nhắc việc',
+  EVENT: 'Event',
+  MAINTENANCE: 'Asset',
+  PAYMENT: 'Payment',
+  REMINDER: 'Reminder',
 };
 
 const parseMaintenanceMetadata = (event: CalendarEvent): MaintenanceMetadata | null => {
@@ -101,7 +101,7 @@ const EventListCard = ({
 }) => (
   <Card
     title={<Title level={4} className="!m-0">{title}</Title>}
-    className="border-none shadow-xl shadow-slate-200/50 rounded-2xl glass-card"
+    className="border-none shadow-sm rounded-2xl glass-card"
   >
     {events.length ? (
       <div className="flex flex-col gap-3 max-h-[340px] overflow-y-auto pr-1">
@@ -112,12 +112,12 @@ const EventListCard = ({
               key={event.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border border-slate-100 bg-white/80 p-4 shadow-sm cursor-pointer hover:bg-white transition-colors"
+              className="rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer hover:bg-muted/40 transition-colors"
               onClick={() => onEdit(event)}
             >
               <div className="mb-2 flex items-start justify-between gap-2">
                 <div>
-                  <Title level={5} className="!m-0 !text-slate-800">{event.title}</Title>
+                  <Title level={5} className="!m-0 !text-foreground">{event.title}</Title>
                   <div className="mt-1 flex flex-wrap gap-2">
                     <Tag color={event.type === 'MAINTENANCE' ? 'orange' : 'blue'}>
                       {getEventKindLabel(event)}
@@ -125,17 +125,17 @@ const EventListCard = ({
                     {statusLabel ? <Tag color={getEventBadgeStatus(event)}>{statusLabel}</Tag> : null}
                   </div>
                 </div>
-                <div className="text-right text-xs text-slate-700">
-                  <div>{dayjs(event.startDate).format('DD/MM/YYYY')}</div>
+                <div className="text-right text-xs text-muted-foreground">
+                  <div>{dayjs(event.startDate).format('YYYY-MM-DD')}</div>
                   <div>{dayjs(event.startDate).format('HH:mm')}</div>
                 </div>
               </div>
 
               <Text type="secondary" className="block mb-3 line-clamp-2">
-                {event.description || 'Không có mô tả'}
+                {event.description || 'No description provided'}
               </Text>
 
-              <Space className="w-full text-slate-700 text-sm" wrap>
+              <Space className="w-full text-muted-foreground text-sm" wrap>
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5" />
                   <span>{dayjs(event.startDate).format('HH:mm')}</span>
@@ -152,7 +152,7 @@ const EventListCard = ({
         })}
       </div>
     ) : (
-      <div className="py-10 text-center text-slate-600">
+      <div className="py-10 text-center text-muted-foreground">
         <Text type="secondary">{emptyText}</Text>
       </div>
     )}
@@ -179,7 +179,7 @@ export const CalendarPage = () => {
   const createMutation = useMutation({
     mutationFn: (values: any) => calendarApi.create(values).then((res) => res.data),
     onSuccess: () => {
-      message.success('Thêm sự kiện thành công');
+      message.success('Event added successfully');
       setIsModalVisible(false);
       form.resetFields();
       queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
@@ -189,7 +189,7 @@ export const CalendarPage = () => {
   const updateMutation = useMutation({
     mutationFn: (values: any) => calendarApi.update(selectedEvent!.id, values).then((res) => res.data),
     onSuccess: () => {
-      message.success('Cập nhật sự kiện thành công');
+      message.success('Event updated successfully');
       setIsModalVisible(false);
       setSelectedEvent(null);
       form.resetFields();
@@ -259,15 +259,15 @@ export const CalendarPage = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen bg-slate-50/50">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4"
       >
         <div>
-          <Title level={2} className="!m-0">Lịch gia đình</Title>
-          <Text type="secondary">Theo dõi sự kiện chung, lịch tài sản sắp tới và lịch sử đã diễn ra</Text>
+          <Title level={2} className="!m-0">Family Calendar</Title>
+          <Text type="secondary">Track joint events, upcoming asset milestones, and historical schedules</Text>
         </div>
         <Button
           type="primary"
@@ -278,69 +278,71 @@ export const CalendarPage = () => {
             setIsModalVisible(true);
             form.setFieldsValue({ startDate: selectedDate });
           }}
-          className="bg-sky-500 hover:bg-sky-600 border-none shadow-lg shadow-sky-200/50 h-12 w-12 rounded-xl flex items-center justify-center p-0"
-          title="Thêm sự kiện"
-          aria-label="Thêm sự kiện"
-        />
+          className="rounded-xl flex items-center justify-center"
+          title="Add Event"
+          aria-label="Add Event"
+        >
+          Add Event
+        </Button>
       </motion.div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
-          <Card className="border-none shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden glass-card">
+          <Card className="border-none shadow-sm rounded-2xl overflow-hidden glass-card">
             <Calendar fullscreen cellRender={dateCellRender} onSelect={setSelectedDate} className="p-4" />
           </Card>
         </div>
 
         <div className="space-y-6">
           <EventListCard
-            title={`Sự kiện ngày ${selectedDate.format('DD/MM/YYYY')}`}
+            title={`Events for ${selectedDate.format('YYYY-MM-DD')}`}
             events={selectedDayEvents}
-            emptyText="Không có sự kiện trong ngày đang chọn"
+            emptyText="No events on selected date"
             onEdit={handleEdit}
           />
           <EventListCard
-            title="Sự kiện sắp tới"
+            title="Upcoming Events"
             events={futureEvents}
-            emptyText="Chưa có sự kiện tương lai"
+            emptyText="No upcoming events scheduled"
             onEdit={handleEdit}
           />
           <EventListCard
-            title="Sự kiện đã qua"
+            title="Past Events"
             events={pastEvents}
-            emptyText="Chưa có sự kiện đã qua"
+            emptyText="No past events"
             onEdit={handleEdit}
           />
         </div>
       </div>
 
       <Modal
-        title={selectedEvent ? 'Sửa sự kiện' : 'Thêm sự kiện mới'}
+        title={selectedEvent ? 'Edit Event' : 'Add New Event'}
         open={isModalVisible}
         forceRender
         onCancel={() => setIsModalVisible(false)}
         footer={[
-          <div key="metadata" className="flex flex-col items-start text-[12px] text-slate-600 mb-4 px-2 sm:px-4 w-full">
+          <div key="metadata" className="flex flex-col items-start text-[12px] text-muted-foreground mb-4 px-2 sm:px-4 w-full">
             {selectedEvent?.createdAt ? (
-              <span>Tạo bởi {selectedEvent.creator?.fullName || selectedEvent.creator?.email || 'Hệ thống'} lúc {dayjs(selectedEvent.createdAt).format('HH:mm DD/MM/YYYY')}</span>
+              <span>Created by {selectedEvent.creator?.fullName || selectedEvent.creator?.email || 'System'} at {dayjs(selectedEvent.createdAt).format('HH:mm YYYY-MM-DD')}</span>
             ) : null}
             {selectedEvent?.updatedAt && selectedEvent.updatedBy ? (
-              <span>Cập nhật cuối bởi {selectedEvent.updater?.fullName || selectedEvent.updater?.email || '-'} lúc {dayjs(selectedEvent.updatedAt).format('HH:mm DD/MM/YYYY')}</span>
+              <span>Last updated by {selectedEvent.updater?.fullName || selectedEvent.updater?.email || '-'} at {dayjs(selectedEvent.updatedAt).format('HH:mm YYYY-MM-DD')}</span>
             ) : null}
           </div>,
           <Button
             key="cancel"
             type="text"
             icon={<X size={18} />}
-            title="Hủy"
-            aria-label="Hủy"
+            title="Cancel"
+            aria-label="Cancel"
             onClick={() => setIsModalVisible(false)}
           />,
           <Button
             key="submit"
             type="primary"
             icon={<Check size={18} />}
-            title={selectedEvent ? 'Cập nhật' : 'Tạo mới'}
-            aria-label={selectedEvent ? 'Cập nhật' : 'Tạo mới'}
+            title={selectedEvent ? 'Update' : 'Create'}
+            aria-label={selectedEvent ? 'Update' : 'Create'}
             onClick={() => form.submit()}
             loading={createMutation.isPending || updateMutation.isPending}
           />,
@@ -356,49 +358,49 @@ export const CalendarPage = () => {
         >
           <Form.Item
             name="title"
-            label="Tiêu đề"
-            rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
+            label="Event Title"
+            rules={[{ required: true, message: 'Please enter event title' }]}
           >
-            <Input placeholder="Ví dụ: Họp gia đình, Sinh nhật..." className="rounded-lg h-10" />
+            <Input placeholder="e.g., Family Dinner, Birthday..." className="rounded-lg h-10" />
           </Form.Item>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <Form.Item name="type" label="Loại" rules={[{ required: true }]}>
+            <Form.Item name="type" label="Type" rules={[{ required: true }]}>
               <Select className="h-10">
-                <Select.Option value="EVENT">Sự kiện</Select.Option>
-                <Select.Option value="MAINTENANCE">Tài sản</Select.Option>
-                <Select.Option value="PAYMENT">Thanh toán</Select.Option>
-                <Select.Option value="REMINDER">Ghi chú</Select.Option>
+                <Select.Option value="EVENT">Event</Select.Option>
+                <Select.Option value="MAINTENANCE">Asset Maintenance</Select.Option>
+                <Select.Option value="PAYMENT">Payment</Select.Option>
+                <Select.Option value="REMINDER">Reminder</Select.Option>
               </Select>
             </Form.Item>
-            <Form.Item name="reminderMinutes" label="Báo trước">
-              <Select className="h-10" placeholder="Chọn thời gian nhắc">
-                <Select.Option value={0}>Khi bắt đầu</Select.Option>
-                <Select.Option value={5}>5 phút trước</Select.Option>
-                <Select.Option value={15}>15 phút trước</Select.Option>
-                <Select.Option value={30}>30 phút trước</Select.Option>
-                <Select.Option value={60}>1 tiếng trước</Select.Option>
-                <Select.Option value={120}>2 tiếng trước</Select.Option>
-                <Select.Option value={1440}>1 ngày trước</Select.Option>
+            <Form.Item name="reminderMinutes" label="Reminder in Advance">
+              <Select className="h-10" placeholder="Select advance notice">
+                <Select.Option value={0}>At start time</Select.Option>
+                <Select.Option value={5}>5 minutes before</Select.Option>
+                <Select.Option value={15}>15 minutes before</Select.Option>
+                <Select.Option value={30}>30 minutes before</Select.Option>
+                <Select.Option value={60}>1 hour before</Select.Option>
+                <Select.Option value={120}>2 hours before</Select.Option>
+                <Select.Option value={1440}>1 day before</Select.Option>
               </Select>
             </Form.Item>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <Form.Item name="recurrenceRule" label="Lặp lại">
-              <Select className="h-10" placeholder="Chế độ lặp">
-                <Select.Option value={undefined}>Không lặp</Select.Option>
-                <Select.Option value="DAILY">Hàng ngày</Select.Option>
-                <Select.Option value="WEEKLY">Hàng tuần</Select.Option>
-                <Select.Option value="MONTHLY">Hàng tháng</Select.Option>
-                <Select.Option value="YEARLY">Hàng năm</Select.Option>
+            <Form.Item name="recurrenceRule" label="Recurrence">
+              <Select className="h-10" placeholder="Recurrence pattern">
+                <Select.Option value={undefined}>No recurrence</Select.Option>
+                <Select.Option value="DAILY">Daily</Select.Option>
+                <Select.Option value="WEEKLY">Weekly</Select.Option>
+                <Select.Option value="MONTHLY">Monthly</Select.Option>
+                <Select.Option value="YEARLY">Yearly</Select.Option>
               </Select>
             </Form.Item>
-            <Form.Item name="participantIds" label="Người tham gia / Nhắc cho ai">
+            <Form.Item name="participantIds" label="Assigned Participants">
               <Select
                 mode="multiple"
                 className="w-full"
-                placeholder="Chọn người nhắc"
+                placeholder="Select participants"
                 options={users.map((user) => ({ value: user.id, label: user.fullName || user.email }))}
                 allowClear
               />
@@ -406,20 +408,20 @@ export const CalendarPage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <Form.Item name="startDate" label="Bắt đầu" rules={[{ required: true }]}>
+            <Form.Item name="startDate" label="Start Time" rules={[{ required: true }]}>
               <DatePicker showTime className="w-full h-10 rounded-lg" />
             </Form.Item>
-            <Form.Item name="endDate" label="Kết thúc">
+            <Form.Item name="endDate" label="End Time">
               <DatePicker showTime className="w-full h-10 rounded-lg" />
             </Form.Item>
           </div>
 
-          <Form.Item name="location" label="Địa điểm">
-            <Input prefix={<MapPin className="w-4 h-4 text-slate-600" />} placeholder="Nhập địa điểm..." className="rounded-lg h-10" />
+          <Form.Item name="location" label="Location">
+            <Input prefix={<MapPin className="w-4 h-4 text-muted-foreground" />} placeholder="Enter location..." className="rounded-lg h-10" />
           </Form.Item>
 
-          <Form.Item name="description" label="Mô tả">
-            <Input.TextArea placeholder="Ghi chú thêm..." rows={3} className="rounded-lg" />
+          <Form.Item name="description" label="Description">
+            <Input.TextArea placeholder="Additional notes..." rows={3} className="rounded-lg" />
           </Form.Item>
         </Form>
       </Modal>

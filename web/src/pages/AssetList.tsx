@@ -15,15 +15,14 @@ import { asArray, asPaginatedList } from '../api/client';
 
 const ASSET_PAGE_SIZE = 20;
 
-/** Nhãn hiển thị cho trạng thái SOLD (đồng bộ filter + form) */
-const SOLD_STATUS_LABEL = 'Đã bán/bỏ';
+const SOLD_STATUS_LABEL = 'Sold / Disposed';
 
 const getAssetRowClassName = (record: Asset) => {
     if (record.status === 'BROKEN') {
-        return '[&>td]:!bg-slate-100 [&>td]:!text-red-600';
+        return '[&>td]:!bg-rose-50/40 [&>td]:!text-rose-600';
     }
     if (record.status === 'SOLD' || record.status === 'LOST') {
-        return '[&>td]:!bg-slate-100 [&>td]:!text-slate-700';
+        return '[&>td]:!bg-muted/40 [&>td]:!text-muted-foreground';
     }
     return '';
 };
@@ -90,7 +89,7 @@ export const AssetList = () => {
         mutationFn: (data: Partial<Asset>) => assetApi.create(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['assets'] });
-            message.success('Tài sản đã được thêm');
+            message.success('Asset created successfully');
             setIsModalOpen(false);
             setCopyMode(false);
             form.resetFields();
@@ -101,7 +100,7 @@ export const AssetList = () => {
         mutationFn: (data: Partial<Asset>) => assetApi.update(editingAsset!.id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['assets'] });
-            message.success('Cập nhật thành công');
+            message.success('Asset updated successfully');
             setIsModalOpen(false);
             setCopyMode(false);
             setEditingAsset(null);
@@ -113,7 +112,7 @@ export const AssetList = () => {
         mutationFn: (id: string) => assetApi.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['assets'] });
-            message.success('Đã xóa tài sản');
+            message.success('Asset deleted successfully');
         },
     });
 
@@ -129,7 +128,7 @@ export const AssetList = () => {
             link.click();
             link.remove();
         } catch (error) {
-            message.error('Lỗi khi xuất dữ liệu');
+            message.error('Failed to export asset data');
         } finally {
             if (url) window.URL.revokeObjectURL(url);
         }
@@ -172,7 +171,7 @@ export const AssetList = () => {
 
     const columns = [
         {
-            title: 'Tên tài sản',
+            title: 'Asset Name',
             dataIndex: 'name',
             key: 'name',
             render: (text: string, record: Asset) => (
@@ -180,69 +179,64 @@ export const AssetList = () => {
                     <div
                         className={cn(
                             'font-medium',
-                            record.status === 'BROKEN' && 'text-red-600',
-                            (record.status === 'SOLD' || record.status === 'LOST') && 'text-slate-700',
-                            (!record.status || record.status === 'ACTIVE') && 'text-slate-900',
+                            record.status === 'BROKEN' && 'text-rose-600',
+                            (record.status === 'SOLD' || record.status === 'LOST') && 'text-muted-foreground',
+                            (!record.status || record.status === 'ACTIVE') && 'text-foreground',
                         )}
                     >
                         {text}
                     </div>
-                    <div
-                        className={cn(
-                            'text-xs',
-                            record.status === 'BROKEN' && 'text-red-500/90',
-                            (record.status === 'SOLD' || record.status === 'LOST') && 'text-slate-600',
-                            (!record.status || record.status === 'ACTIVE') && 'text-slate-700',
-                        )}
-                    >
-                        {record.description}
-                    </div>
+                    {record.description ? (
+                        <div className="text-xs text-muted-foreground">
+                            {record.description}
+                        </div>
+                    ) : null}
                 </div>
             ),
             sorter: (a: Asset, b: Asset) => (a.name || '').localeCompare(b.name || ''),
         },
         {
-            title: 'Danh mục',
+            title: 'Category',
             dataIndex: ['category', 'name'],
             key: 'category',
             sorter: (a: Asset, b: Asset) => (a.category?.name || '').localeCompare(b.category?.name || ''),
         },
         {
-            title: 'Người đứng tên',
+            title: 'Owner',
             key: 'owner',
             render: (_: unknown, record: Asset) => record.owner?.fullName || record.owner?.email || '-',
             sorter: (a: Asset, b: Asset) => (a.owner?.fullName || a.owner?.email || '').localeCompare(b.owner?.fullName || b.owner?.email || ''),
         },
         {
-            title: 'Người sử dụng',
+            title: 'User',
             key: 'usedBy',
             render: (_: unknown, record: Asset) => record.usedBy?.fullName || record.usedBy?.email || '-',
             sorter: (a: Asset, b: Asset) => (a.usedBy?.fullName || a.usedBy?.email || '').localeCompare(b.usedBy?.fullName || b.usedBy?.email || ''),
         },
         {
-            title: 'Giá mua',
+            title: 'Purchase Price',
             dataIndex: 'purchasePrice',
             key: 'purchasePrice',
             render: (val: number) => renderMoneyBadge(val),
             sorter: (a: Asset, b: Asset) => Number(a.purchasePrice || 0) - Number(b.purchasePrice || 0),
         },
         {
-            title: 'Giá trị hiện tại',
+            title: 'Current Value',
             dataIndex: 'currentValue',
             key: 'currentValue',
             render: (val: number) => renderMoneyBadge(val),
             sorter: (a: Asset, b: Asset) => Number(a.currentValue || 0) - Number(b.currentValue || 0),
         },
         {
-            title: 'Thao tác',
+            title: 'Actions',
             key: 'action',
             render: (_: unknown, record: Asset) => (
                 <Space size="middle" onClick={(e) => e.stopPropagation()}>
                     <Button
                         type="text"
                         icon={<Copy size={16} />}
-                        title="Sao chép"
-                        aria-label="Sao chép"
+                        title="Duplicate"
+                        aria-label="Duplicate"
                         onClick={(e) => openAssetCopyModal(record, e)}
                     />
                 </Space>
@@ -271,11 +265,11 @@ export const AssetList = () => {
         if (!duplicate) return true;
 
         return confirmDuplicateWarning({
-            title: 'Phát hiện tài sản trùng',
-            summary: 'Đã có tài sản cùng tên và danh mục. Bạn vẫn có thể tiếp tục nếu đây là một tài sản khác nhưng trùng cách đặt tên.',
+            title: 'Duplicate Asset Detected',
+            summary: 'An asset with the same name and category already exists. You can still proceed if this is a distinct item.',
             detailLines: [
-                `Tên tài sản: ${data.name || '-'}`,
-                `Danh mục: ${getCategoryLabel(categories ?? [], data.categoryId)}`,
+                `Asset: ${data.name || '-'}`,
+                `Category: ${getCategoryLabel(categories ?? [], data.categoryId)}`,
             ],
         });
     };
@@ -301,15 +295,15 @@ export const AssetList = () => {
         <div className="space-y-4 lg:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-xl lg:text-2xl font-bold text-slate-900 font-display">Quản lý tài sản</h1>
+                    <h1 className="text-xl lg:text-2xl font-bold text-foreground font-sans">Asset Management</h1>
                 </div>
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                     <Button
                         icon={<Download size={18} />}
                         onClick={handleExport}
                         className="flex-1 sm:flex-none"
-                        title="Xuất CSV"
-                        aria-label="Xuất CSV"
+                        title="Export CSV"
+                        aria-label="Export CSV"
                     />
                     <Button
                         type="primary"
@@ -321,8 +315,8 @@ export const AssetList = () => {
                             setIsModalOpen(true);
                         }}
                         className="flex-1 sm:flex-none"
-                        title="Thêm tài sản"
-                        aria-label="Thêm tài sản"
+                        title="Add Asset"
+                        aria-label="Add Asset"
                     />
                 </div>
             </div>
@@ -330,26 +324,26 @@ export const AssetList = () => {
             <div className="glass-card p-4 lg:p-6 overflow-hidden">
                 <div className="mb-4 flex flex-col sm:flex-row gap-3">
                     <Input
-                        placeholder="Tìm kiếm tài sản..."
-                        prefix={<Search size={16} className="text-slate-600" />}
+                        placeholder="Search assets..."
+                        prefix={<Search size={16} className="text-muted-foreground" />}
                         className="w-full sm:max-w-xs"
                         onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                     />
                     <Select
-                        placeholder="Loại trạng thái"
-                        className="w-full sm:w-40"
+                        placeholder="Filter by status"
+                        className="w-full sm:w-44"
                         allowClear
                         onChange={(val) => setFilters({ ...filters, status: val })}
                         options={[
-                            { value: 'ACTIVE', label: 'Hoạt động' },
-                            { value: 'BROKEN', label: 'Hỏng' },
+                            { value: 'ACTIVE', label: 'Active' },
+                            { value: 'BROKEN', label: 'Broken' },
                             { value: 'SOLD', label: SOLD_STATUS_LABEL },
-                            { value: 'LOST', label: 'Mất' },
+                            { value: 'LOST', label: 'Lost' },
                         ]}
                     />
                 </div>
 
-                {isError && <div className="mb-3 p-3 rounded-lg bg-red-50 text-red-600 text-sm">Không thể tải danh sách tài sản. Vui lòng thử lại.</div>}
+                {isError && <div className="mb-3 p-3 rounded-lg bg-rose-50 text-rose-600 text-sm">Failed to load asset list. Please retry.</div>}
                 <div className="overflow-x-auto">
                     <Table
                         columns={columns}
@@ -375,7 +369,7 @@ export const AssetList = () => {
             </div>
 
             <Modal
-                title={editingAsset ? 'Cập nhật tài sản' : copyMode ? 'Sao chép tài sản' : 'Thêm tài sản mới'}
+                title={editingAsset ? 'Edit Asset' : copyMode ? 'Duplicate Asset' : 'Add New Asset'}
                 open={isModalOpen}
                 forceRender
                 onCancel={() => {
@@ -387,12 +381,12 @@ export const AssetList = () => {
                 confirmLoading={createMutation.isPending || updateMutation.isPending}
                 width={600}
                 footer={[
-                    <div key="metadata" className="flex flex-col items-start text-[12px] text-slate-600 mb-4 px-2 sm:px-4 w-full">
+                    <div key="metadata" className="flex flex-col items-start text-[12px] text-muted-foreground mb-4 px-2 sm:px-4 w-full">
                         {editingAsset?.createdAt && (
-                            <span>Tạo bởi {editingAsset.creator?.fullName || editingAsset.creator?.email || 'Hệ thống'} lúc {dayjs(editingAsset.createdAt).format('HH:mm DD/MM/YYYY')}</span>
+                            <span>Created by {editingAsset.creator?.fullName || editingAsset.creator?.email || 'System'} at {dayjs(editingAsset.createdAt).format('HH:mm YYYY-MM-DD')}</span>
                         )}
                         {editingAsset?.updatedAt && editingAsset.updatedBy && (
-                            <span>Cập nhật cuối bởi {editingAsset.updater?.fullName || editingAsset.updater?.email || '-'} lúc {dayjs(editingAsset.updatedAt).format('HH:mm DD/MM/YYYY')}</span>
+                            <span>Last updated by {editingAsset.updater?.fullName || editingAsset.updater?.email || '-'} at {dayjs(editingAsset.updatedAt).format('HH:mm YYYY-MM-DD')}</span>
                         )}
                     </div>,
                     editingAsset ? (
@@ -400,13 +394,13 @@ export const AssetList = () => {
                             key="delete"
                             danger
                             icon={<Trash2 size={18} />}
-                            title="Xóa tài sản"
-                            aria-label="Xóa tài sản"
+                            title="Delete Asset"
+                            aria-label="Delete Asset"
                             loading={deleteMutation.isPending}
                             onClick={() => {
                                 Modal.confirm({
-                                    title: 'Xác nhận xóa',
-                                    content: `Bạn có chắc muốn xóa "${editingAsset.name}"?`,
+                                    title: 'Confirm Deletion',
+                                    content: `Are you sure you want to delete "${editingAsset.name}"?`,
                                     onOk: () => {
                                         deleteMutation.mutate(editingAsset.id, {
                                             onSuccess: () => {
@@ -425,16 +419,16 @@ export const AssetList = () => {
                         key="cancel"
                         type="text"
                         icon={<X size={18} />}
-                        title="Hủy"
-                        aria-label="Hủy"
+                        title="Cancel"
+                        aria-label="Cancel"
                         onClick={() => { setIsModalOpen(false); setCopyMode(false); setEditingAsset(null); form.resetFields(); }}
                     />,
                     <Button
                         key="submit"
                         type="primary"
                         icon={<Check size={18} />}
-                        title={editingAsset ? 'Cập nhật' : 'Thêm tài sản'}
-                        aria-label={editingAsset ? 'Cập nhật' : 'Thêm tài sản'}
+                        title={editingAsset ? 'Update' : 'Save Asset'}
+                        aria-label={editingAsset ? 'Update' : 'Save Asset'}
                         onClick={() => form.submit()}
                         loading={createMutation.isPending || updateMutation.isPending}
                     />
@@ -457,59 +451,59 @@ export const AssetList = () => {
                     className="mt-4"
                 >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <Form.Item name="name" label="Tên tài sản" rules={[{ required: true }]} className="sm:col-span-2">
+                        <Form.Item name="name" label="Asset Name" rules={[{ required: true }]} className="sm:col-span-2">
                             <Input />
                         </Form.Item>
-                        <Form.Item name="categoryId" label="Danh mục" rules={[{ required: true }]}>
+                        <Form.Item name="categoryId" label="Category" rules={[{ required: true }]}>
                             <Select options={assetCategoryOptions} />
                         </Form.Item>
-                        <Form.Item name="status" label="Trạng thái" initialValue="ACTIVE">
+                        <Form.Item name="status" label="Status" initialValue="ACTIVE">
                             <Select options={[
-                                { value: 'ACTIVE', label: 'Hoạt động' },
-                                { value: 'BROKEN', label: 'Hỏng' },
+                                { value: 'ACTIVE', label: 'Active' },
+                                { value: 'BROKEN', label: 'Broken' },
                                 { value: 'SOLD', label: SOLD_STATUS_LABEL },
                             ]} />
                         </Form.Item>
-                        <Form.Item name="purchasePrice" label="Giá mua">
-                            <InputNumber className="w-full" formatter={val => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} addonAfter="đồng" />
+                        <Form.Item name="purchasePrice" label="Purchase Price">
+                            <InputNumber className="w-full" formatter={val => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
                         </Form.Item>
                         <Form.Item
-                            label="Giá hiện tại (tự động)"
+                            label="Current Valuation (Auto)"
                             className="sm:col-span-2"
-                            extra="Theo dữ liệu đã lưu: giá mua + tổng chi − tổng thu của các giao dịch tài chính có gắn tài sản này (không tính chuyển nội bộ). Đổi giá mua bên trên chỉ là ước tính cho đến khi bấm Lưu."
+                            extra="Based on stored data: purchase price + total linked expenses − total linked income. Editing purchase price is an estimate until saved."
                         >
-                            <Typography.Text className="text-base font-semibold text-slate-800">
+                            <Typography.Text className="text-base font-semibold text-foreground">
                                 {formatVndAmount(displayedCurrentValue)}
                             </Typography.Text>
                             {editingAsset ? (
-                                <div className="mt-1 text-xs text-slate-700">
-                                    Chi đã gắn: {formatVndAmount(linkedChi)} · Thu đã gắn: {formatVndAmount(linkedThu)}
+                                <div className="mt-1 text-xs text-muted-foreground">
+                                    Linked Expenses: {formatVndAmount(linkedChi)} · Linked Income: {formatVndAmount(linkedThu)}
                                 </div>
                             ) : null}
                         </Form.Item>
-                        <Form.Item name="purchaseDate" label="Ngày mua">
+                        <Form.Item name="purchaseDate" label="Purchase Date">
                             <DatePicker className="w-full" />
                         </Form.Item>
-                        <Form.Item name="warrantyExpiredAt" label="Hết hạn bảo hành">
+                        <Form.Item name="warrantyExpiredAt" label="Warranty Expiry Date">
                             <DatePicker className="w-full" />
                         </Form.Item>
-                        <Form.Item name="ownerId" label="Người đứng tên">
+                        <Form.Item name="ownerId" label="Legal Owner">
                             <Select
                                 options={users?.map(u => ({ value: u.id, label: u.fullName || u.email }))}
                                 allowClear
                                 showSearch
-                                placeholder="Chọn người đứng tên..."
+                                placeholder="Select owner..."
                             />
                         </Form.Item>
-                        <Form.Item name="usedById" label="Người sử dụng">
+                        <Form.Item name="usedById" label="Primary User">
                             <Select
                                 options={users?.map(u => ({ value: u.id, label: u.fullName || u.email }))}
                                 allowClear
                                 showSearch
-                                placeholder="Chọn người sử dụng..."
+                                placeholder="Select primary user..."
                             />
                         </Form.Item>
-                        <Form.Item name="description" label="Mô tả" className="sm:col-span-2">
+                        <Form.Item name="description" label="Description" className="sm:col-span-2">
                             <Input.TextArea rows={3} />
                         </Form.Item>
                     </div>

@@ -47,10 +47,10 @@ export const Settings = () => {
         mutationFn: (values: { fullName?: string; otherNames?: string }) => authApi.updateMe(values),
         onSuccess: async () => {
             await refreshSession();
-            message.success('Đã lưu hồ sơ cá nhân');
+            message.success('Personal profile saved');
         },
         onError: () => {
-            message.error('Không thể lưu hồ sơ cá nhân. Vui lòng thử lại.');
+            message.error('Failed to save profile. Please retry.');
         },
     });
 
@@ -66,10 +66,10 @@ export const Settings = () => {
             queryClient.invalidateQueries({ queryKey: ['family-profile', activeFamilyId] });
             queryClient.invalidateQueries({ queryKey: ['admin-families'] });
             await refreshSession();
-            message.success('Đã cập nhật tên gia đình');
+            message.success('Family name updated');
         },
         onError: (error: any) => {
-            message.error(error?.response?.data?.message || 'Không thể cập nhật tên gia đình');
+            message.error(error?.response?.data?.message || 'Failed to update family name');
         },
     });
 
@@ -79,10 +79,10 @@ export const Settings = () => {
             queryClient.invalidateQueries({ queryKey: ['family-profile'] });
             queryClient.invalidateQueries({ queryKey: ['admin-families'] });
             await refreshSession();
-            message.success('Đã xóa gia đình thành công');
+            message.success('Family workspace deleted successfully');
         },
         onError: (error: any) => {
-            message.error(error?.response?.data?.message || 'Không thể xóa gia đình');
+            message.error(error?.response?.data?.message || 'Failed to delete workspace');
         },
     });
 
@@ -92,10 +92,10 @@ export const Settings = () => {
             queryClient.invalidateQueries({ queryKey: ['family-profile'] });
             queryClient.invalidateQueries({ queryKey: ['admin-families'] });
             await refreshSession();
-            message.success(res.data.message);
+            message.success(res.data.message || 'Workspace deactivated');
         },
         onError: (error: any) => {
-            message.error(error?.response?.data?.message || 'Không thể tạm ngưng gia đình');
+            message.error(error?.response?.data?.message || 'Failed to deactivate workspace');
         },
     });
 
@@ -104,66 +104,70 @@ export const Settings = () => {
         onSuccess: async () => {
             queryClient.invalidateQueries({ queryKey: ['family-profile'] });
             await refreshSession();
-            message.success('Bạn đã rời khỏi gia đình');
+            message.success('You have left the workspace');
         },
         onError: (error: any) => {
-            message.error(error?.response?.data?.message || 'Không thể rời khỏi gia đình');
+            message.error(error?.response?.data?.message || 'Failed to leave workspace');
         },
     });
 
     const profileTab = (
         <div className="space-y-6">
-            <Card title={<div className="flex items-center gap-2"><User size={18} /><span>Hồ sơ cá nhân</span></div>} className="shadow-sm border-slate-100 rounded-2xl overflow-hidden">
+            <Card title={<div className="flex items-center gap-2"><User size={18} /><span>Profile</span></div>} className="shadow-sm border-border rounded-2xl overflow-hidden glass-card">
                 <Form form={form} layout="vertical" onFinish={(v) => updateProfileMutation.mutate(v)}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                        <Form.Item label="Họ và tên" name="fullName" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}>
-                            <Input placeholder="Nhập họ tên" />
+                        <Form.Item label="Full Name" name="fullName" rules={[{ required: true, message: 'Please enter your full name' }]}>
+                            <Input placeholder="Enter full name" />
                         </Form.Item>
                         <Form.Item label="Email" name="email">
                             <Input disabled />
                         </Form.Item>
                     </div>
-                    <Form.Item label="Tên gọi khác cho AI" name="otherNames" extra="Phân tách bằng dấu phẩy, ví dụ: Bố, Mẹ, Bin">
-                        <Input placeholder="Tên gọi khác để AI dễ nhận diện" />
+                    <Form.Item label="Alternative Names / Nicknames (for AI)" name="otherNames" extra="Comma-separated names, e.g., Dad, Mom, Mike">
+                        <Input placeholder="Nicknames for AI recognition" />
                     </Form.Item>
-                    <div className="mb-4 grid grid-cols-1 gap-3 text-sm text-slate-600 md:grid-cols-3">
-                        <div className="rounded-2xl bg-slate-50 px-4 py-3 md:col-span-3">
-                            <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Vai trò hiện tại</p>
-                            <p className="mt-1 font-semibold text-slate-800">
+                    <div className="mb-4 grid grid-cols-1 gap-3 text-sm text-muted-foreground md:grid-cols-3">
+                        <div className="rounded-2xl bg-muted/40 px-4 py-3 md:col-span-3 border border-border">
+                            <p className="text-xs uppercase tracking-wider text-muted-foreground">Current Role</p>
+                            <p className="mt-1 font-semibold text-foreground">
                                 {systemRole === 'APP_ADMIN' && role !== 'APP_ADMIN'
-                                    ? `${role === 'FAMILY_ADMIN' ? 'Quản trị gia đình' : 'Thành viên'} + APP_ADMIN`
-                                    : role === 'FAMILY_ADMIN' ? 'Quản trị gia đình'
-                                    : role === 'MEMBER' ? 'Thành viên'
-                                    : 'Quản trị ứng dụng'}
+                                    ? `${role === 'FAMILY_ADMIN' ? 'Workspace Admin' : 'Member'} + System Admin`
+                                    : role === 'FAMILY_ADMIN' ? 'Workspace Admin'
+                                    : role === 'MEMBER' ? 'Member'
+                                    : 'System Admin'}
                             </p>
-                            <p className="mt-1 text-xs text-slate-700">
+                            <p className="mt-1 text-xs text-muted-foreground">
                                 {role === 'FAMILY_ADMIN' || role === 'MEMBER' ? getFamilyRoleDescription(role) : APP_ADMIN_DESCRIPTION}
                             </p>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                            <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Gia đình đang chọn</p>
-                            <p className="mt-1 font-semibold text-slate-800">{activeFamilyName || 'Không áp dụng'}</p>
+                        <div className="rounded-2xl bg-muted/40 px-4 py-3 border border-border">
+                            <p className="text-xs uppercase tracking-wider text-muted-foreground">Active Workspace</p>
+                            <p className="mt-1 font-semibold text-foreground">{activeFamilyName || 'None'}</p>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                            <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Số gia đình tham gia</p>
-                            <p className="mt-1 font-semibold text-slate-800">{memberships.length}</p>
+                        <div className="rounded-2xl bg-muted/40 px-4 py-3 border border-border">
+                            <p className="text-xs uppercase tracking-wider text-muted-foreground">Workspaces Joined</p>
+                            <p className="mt-1 font-semibold text-foreground">{memberships.length}</p>
                         </div>
                     </div>
                     <Button
                         type="primary"
                         htmlType="submit"
                         icon={<Save size={18} />}
-                        title="Lưu thay đổi"
-                        aria-label="Lưu thay đổi"
+                        title="Save Changes"
+                        aria-label="Save Changes"
                         loading={updateProfileMutation.isPending}
-                    />
+                    >
+                        Save Changes
+                    </Button>
                 </Form>
             </Card>
 
-            <Card title={<div className="flex items-center gap-2"><Shield size={18} /><span>Bảo mật</span></div>} className="shadow-sm border-slate-100 rounded-2xl overflow-hidden">
+            <Card title={<div className="flex items-center gap-2"><Shield size={18} /><span>Security</span></div>} className="shadow-sm border-border rounded-2xl overflow-hidden glass-card">
                 <div className="space-y-4">
-                    <p className="text-sm text-slate-600 mb-4">Bạn đang sử dụng đăng nhập qua Google. Mọi thông tin bảo mật được quản lý bởi tài khoản Google của bạn.</p>
-                    <Button disabled icon={<Lock size={18} />} title="Thay đổi mật khẩu (Google)" aria-label="Thay đổi mật khẩu" />
+                    <p className="text-sm text-muted-foreground mb-4">You are logged in via Google OAuth. Account security and authentication are handled securely by Google.</p>
+                    <Button disabled icon={<Lock size={18} />} title="Change Password (Google)" aria-label="Change Password">
+                        Managed by Google
+                    </Button>
                 </div>
             </Card>
         </div>
@@ -171,47 +175,49 @@ export const Settings = () => {
 
     const familyTab = canViewFamily ? (
         <div className="space-y-6">
-            <Card title={<div className="flex items-center gap-2"><Building2 size={18} /><span>Thông tin gia đình</span></div>} className="shadow-sm border-slate-100 rounded-2xl overflow-hidden">
+            <Card title={<div className="flex items-center gap-2"><Building2 size={18} /><span>Workspace Information</span></div>} className="shadow-sm border-border rounded-2xl overflow-hidden glass-card">
                 <Form form={familyForm} layout="vertical" onFinish={(values) => updateFamilyMutation.mutate(values)}>
-                    <Form.Item label="Tên gia đình" name="familyName" rules={[{ required: true, message: 'Vui lòng nhập tên gia đình' }]}>
-                        <Input placeholder="Nhập tên gia đình" disabled={!canUpdateFamily} />
+                    <Form.Item label="Workspace Name" name="familyName" rules={[{ required: true, message: 'Please enter workspace name' }]}>
+                        <Input placeholder="Enter workspace name" disabled={!canUpdateFamily} />
                     </Form.Item>
-                    <div className="mb-4 grid grid-cols-1 gap-3 text-sm text-slate-600 md:grid-cols-3">
-                        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                            <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Gia đình đang chọn</p>
-                            <p className="mt-1 font-semibold text-slate-800">{activeFamilyName || family?.name || 'Chưa có tên'}</p>
+                    <div className="mb-4 grid grid-cols-1 gap-3 text-sm text-muted-foreground md:grid-cols-3">
+                        <div className="rounded-2xl bg-muted/40 px-4 py-3 border border-border">
+                            <p className="text-xs uppercase tracking-wider text-muted-foreground">Current Workspace</p>
+                            <p className="mt-1 font-semibold text-foreground">{activeFamilyName || family?.name || 'Untitled'}</p>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                            <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Trạng thái</p>
-                            <p className="mt-1 font-semibold text-slate-800">{family?.status === 'INACTIVE' ? 'Ngưng hoạt động' : 'Đang hoạt động'}</p>
+                        <div className="rounded-2xl bg-muted/40 px-4 py-3 border border-border">
+                            <p className="text-xs uppercase tracking-wider text-muted-foreground">Status</p>
+                            <p className="mt-1 font-semibold text-foreground">{family?.status === 'INACTIVE' ? 'Inactive' : 'Active'}</p>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                            <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Số thành viên</p>
-                            <p className="mt-1 font-semibold text-slate-800">{family?.members?.length ?? 0}</p>
+                        <div className="rounded-2xl bg-muted/40 px-4 py-3 border border-border">
+                            <p className="text-xs uppercase tracking-wider text-muted-foreground">Members</p>
+                            <p className="mt-1 font-semibold text-foreground">{family?.members?.length ?? 0}</p>
                         </div>
                     </div>
                     <Button
                         type="primary"
                         htmlType="submit"
                         icon={<Save size={18} />}
-                        title="Lưu tên gia đình"
-                        aria-label="Lưu tên gia đình"
+                        title="Save Workspace Name"
+                        aria-label="Save Workspace Name"
                         loading={updateFamilyMutation.isPending}
                         disabled={!canUpdateFamily}
-                    />
+                    >
+                        Save Workspace Name
+                    </Button>
                 </Form>
             </Card>
 
             {(role === 'FAMILY_ADMIN' || systemRole === 'APP_ADMIN') && family?.status !== 'INACTIVE' && (
                 <Card
-                    title={<div className="flex items-center gap-2 text-amber-600 font-semibold"><span>Tạm ngưng hoạt động gia đình</span></div>}
-                    className="shadow-sm border-amber-100 bg-amber-50/20 rounded-2xl overflow-hidden"
+                    title={<div className="flex items-center gap-2 text-amber-600 font-semibold"><span>Deactivate Workspace</span></div>}
+                    className="shadow-sm border-amber-500/20 bg-amber-500/5 rounded-2xl overflow-hidden"
                 >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <p className="font-semibold text-slate-800">Tạm ngưng thay vì xóa hẳn</p>
-                            <p className="text-xs text-slate-700 mt-0.5">
-                                Mọi thành viên (kể cả bạn) sẽ không truy cập được gia đình này cho đến khi quản trị viên hệ thống mở lại. Dữ liệu vẫn được giữ nguyên, không mất gì.
+                            <p className="font-semibold text-foreground">Suspend workspace access</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                All members will lose access until reactivated by a system administrator. All data is preserved.
                             </p>
                         </div>
                         <Button
@@ -219,15 +225,15 @@ export const Settings = () => {
                             loading={deactivateFamilyMutation.isPending}
                             onClick={() => {
                                 Modal.confirm({
-                                    title: `Tạm ngưng hoạt động gia đình "${family?.name || activeFamilyName}"?`,
-                                    content: 'Không ai (kể cả bạn) truy cập được gia đình này cho đến khi quản trị viên hệ thống mở lại. Bạn có thể liên hệ quản trị viên bất cứ lúc nào để mở lại.',
-                                    okText: 'Tạm ngưng',
-                                    cancelText: 'Hủy',
+                                    title: `Deactivate workspace "${family?.name || activeFamilyName}"?`,
+                                    content: 'Members will not have access until reactivated. You can request reactivation at any time.',
+                                    okText: 'Deactivate',
+                                    cancelText: 'Cancel',
                                     onOk: () => deactivateFamilyMutation.mutate(),
                                 });
                             }}
                         >
-                            Tạm ngưng gia đình
+                            Deactivate
                         </Button>
                     </div>
                 </Card>
@@ -235,16 +241,16 @@ export const Settings = () => {
 
             {(role === 'FAMILY_ADMIN' || systemRole === 'APP_ADMIN') && (
                 <Card
-                    title={<div className="flex items-center gap-2 text-rose-600 font-semibold"><span>Vùng nguy hiểm: Xóa không gian gia đình</span></div>}
-                    className="shadow-sm border-rose-100 bg-rose-50/20 rounded-2xl overflow-hidden"
+                    title={<div className="flex items-center gap-2 text-rose-600 font-semibold"><span>Danger Zone: Delete Workspace</span></div>}
+                    className="shadow-sm border-rose-500/20 bg-rose-500/5 rounded-2xl overflow-hidden"
                 >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <p className="font-semibold text-slate-800">Xóa vĩnh viễn gia đình này</p>
-                            <p className="text-xs text-slate-700 mt-0.5">
+                            <p className="font-semibold text-foreground">Permanently delete this workspace</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
                                 {(family?.members?.length ?? 0) > 1
-                                    ? `Gia đình đang có ${family?.members?.length} thành viên. Bạn phải gỡ hết các thành viên khác trước khi có thể xóa gia đình.`
-                                    : 'Xóa toàn bộ dữ liệu, danh mục thu chi, và hồ sơ định cư F4 gắn với gia đình này. Hành động không thể hoàn tác.'}
+                                    ? `Workspace has ${family?.members?.length} members. You must remove other members before deleting.`
+                                    : 'Deletes all transactions, assets, documents, and associated records. This action is irreversible.'}
                             </p>
                         </div>
                         <Button
@@ -254,30 +260,30 @@ export const Settings = () => {
                             loading={deleteFamilyMutation.isPending}
                             onClick={() => {
                                 Modal.confirm({
-                                    title: `Xác nhận xóa vĩnh viễn gia đình "${family?.name || activeFamilyName}"?`,
-                                    content: 'Toàn bộ dữ liệu thu chi, hồ sơ định cư, và phân quyền của gia đình này sẽ bị xóa hoàn toàn.',
-                                    okText: 'Xóa vĩnh viễn',
+                                    title: `Permanently delete workspace "${family?.name || activeFamilyName}"?`,
+                                    content: 'All data and records will be permanently removed.',
+                                    okText: 'Delete Permanently',
                                     okType: 'danger',
-                                    cancelText: 'Hủy',
+                                    cancelText: 'Cancel',
                                     onOk: () => deleteFamilyMutation.mutate(),
                                 });
                             }}
                         >
-                            Xóa gia đình
+                            Delete Workspace
                         </Button>
                     </div>
                 </Card>
             )}
 
             <Card
-                title={<div className="flex items-center gap-2 text-slate-600 font-semibold"><span>Rời khỏi gia đình</span></div>}
-                className="shadow-sm border-slate-100 rounded-2xl overflow-hidden"
+                title={<div className="flex items-center gap-2 text-muted-foreground font-semibold"><span>Leave Workspace</span></div>}
+                className="shadow-sm border-border rounded-2xl overflow-hidden glass-card"
             >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <p className="font-semibold text-slate-800">Rời khỏi gia đình này</p>
-                        <p className="text-xs text-slate-700 mt-0.5">
-                            Bạn sẽ mất quyền truy cập vào dữ liệu của gia đình này. Nếu bạn là Quản trị viên duy nhất, hãy chuyển quyền cho người khác trước.
+                        <p className="font-semibold text-foreground">Leave this workspace</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            You will lose access to data in this workspace. If you are the sole administrator, transfer admin rights first.
                         </p>
                     </div>
                     <Button
@@ -285,32 +291,32 @@ export const Settings = () => {
                         loading={leaveFamilyMutation.isPending}
                         onClick={() => {
                             Modal.confirm({
-                                title: `Rời khỏi gia đình "${family?.name || activeFamilyName}"?`,
-                                content: 'Bạn có thể được mời lại sau nếu cần.',
-                                okText: 'Rời khỏi',
+                                title: `Leave workspace "${family?.name || activeFamilyName}"?`,
+                                content: 'You will need a new invite to rejoin later.',
+                                okText: 'Leave',
                                 okType: 'danger',
-                                cancelText: 'Hủy',
+                                cancelText: 'Cancel',
                                 onOk: () => leaveFamilyMutation.mutate(),
                             });
                         }}
                     >
-                        Rời khỏi gia đình
+                        Leave Workspace
                     </Button>
                 </div>
             </Card>
         </div>
     ) : (
-        <p className="text-sm text-slate-600 p-4">Bạn chưa tham gia gia đình nào.</p>
+        <p className="text-sm text-muted-foreground p-4">You have not joined any workspace yet.</p>
     );
 
     const appearanceTab = (
         <div className="space-y-6">
-            <Card title={<div className="flex items-center gap-2"><Palette size={18} /><span>Giao diện</span></div>} className="shadow-sm border-slate-100 rounded-2xl overflow-hidden">
-                <div className="rounded-2xl border border-[rgba(232,206,238,0.78)] bg-[linear-gradient(135deg,rgba(255,248,252,0.96),rgba(244,247,255,0.96))] p-4 shadow-[0_14px_30px_rgba(211,188,227,0.12)] dark-mode-preview-panel">
+            <Card title={<div className="flex items-center gap-2"><Palette size={18} /><span>Appearance</span></div>} className="shadow-sm border-border rounded-2xl overflow-hidden glass-card">
+                <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                            <p className="font-semibold text-slate-800">Chế độ tối</p>
-                            <p className="mt-1 text-sm text-slate-700">Chuyển đổi giữa giao diện sáng và tối để dùng thoải mái hơn vào buổi tối hoặc môi trường ít sáng.</p>
+                            <p className="font-semibold text-foreground">Dark Mode</p>
+                            <p className="mt-1 text-sm text-muted-foreground">Toggle between light and dark theme according to your preference.</p>
                         </div>
                         <Switch
                             checked={themeMode === 'dark'}
@@ -319,60 +325,60 @@ export const Settings = () => {
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className={`rounded-2xl border p-3 shadow-sm transition-all ${themeMode === 'light' ? 'border-[#f4d4bf] ring-2 ring-[#ffd8ca]' : 'border-[rgba(243,212,191,0.78)] bg-white/85'}`}>
-                            <div className="mb-2 flex items-center gap-2 text-[#b9745f]">
+                        <div className={`rounded-2xl border p-3 shadow-sm transition-all ${themeMode === 'light' ? 'border-primary ring-2 ring-primary/20 bg-card' : 'border-border bg-muted/30'}`}>
+                            <div className="mb-2 flex items-center gap-2 text-foreground">
                                 <SunMedium size={16} />
-                                <span className="text-xs font-semibold">Sáng hiện tại</span>
+                                <span className="text-xs font-semibold">Light Theme</span>
                             </div>
                             <div className="space-y-2">
-                                <div className="h-3 rounded-full bg-[#ffe6dc]" />
-                                <div className="h-3 w-4/5 rounded-full bg-[#edf7ff]" />
+                                <div className="h-3 rounded-full bg-muted" />
+                                <div className="h-3 w-4/5 rounded-full bg-muted/60" />
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="h-10 rounded-xl bg-[#fff3ec]" />
-                                    <div className="h-10 rounded-xl bg-[#eef9f2]" />
-                                    <div className="h-10 rounded-xl bg-[#fff7dd]" />
+                                    <div className="h-10 rounded-xl bg-card border border-border" />
+                                    <div className="h-10 rounded-xl bg-card border border-border" />
+                                    <div className="h-10 rounded-xl bg-card border border-border" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className={`rounded-2xl border bg-[linear-gradient(180deg,#293042,#1d2230)] p-3 shadow-sm transition-all ${themeMode === 'dark' ? 'border-[#7280aa] ring-2 ring-[#5f6e98]' : 'border-[rgba(110,118,148,0.32)]'}`}>
-                            <div className="mb-2 flex items-center gap-2 text-[#d8def6]">
+                        <div className={`rounded-2xl border p-3 shadow-sm transition-all ${themeMode === 'dark' ? 'border-primary ring-2 ring-primary/20 bg-card' : 'border-border bg-muted/30'}`}>
+                            <div className="mb-2 flex items-center gap-2 text-foreground">
                                 <MoonStar size={16} />
-                                <span className="text-xs font-semibold">Bản tối dự kiến</span>
+                                <span className="text-xs font-semibold">Dark Theme</span>
                             </div>
                             <div className="space-y-2">
-                                <div className="h-3 rounded-full bg-[#44506b]" />
-                                <div className="h-3 w-4/5 rounded-full bg-[#353f56]" />
+                                <div className="h-3 rounded-full bg-muted" />
+                                <div className="h-3 w-4/5 rounded-full bg-muted/60" />
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="h-10 rounded-xl bg-[#31394d]" />
-                                    <div className="h-10 rounded-xl bg-[#273445]" />
-                                    <div className="h-10 rounded-xl bg-[#3a2f4f]" />
+                                    <div className="h-10 rounded-xl bg-card border border-border" />
+                                    <div className="h-10 rounded-xl bg-card border border-border" />
+                                    <div className="h-10 rounded-xl bg-card border border-border" />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-4 flex items-center gap-2 text-xs text-slate-700">
-                        <Sparkles size={14} className="text-[#9b7fd4]" />
-                        <span>Giao diện đang áp dụng ngay cho các bề mặt chính, bảng, biểu mẫu và popup.</span>
+                    <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                        <Sparkles size={14} className="text-primary" />
+                        <span>Theme changes are applied immediately across all views, tables, forms, and dialogs.</span>
                     </div>
                 </div>
             </Card>
 
-            <Card title={<div className="flex items-center gap-2"><Bell size={18} /><span>Thông báo</span></div>} className="shadow-sm border-slate-100 rounded-2xl overflow-hidden">
+            <Card title={<div className="flex items-center gap-2"><Bell size={18} /><span>Notifications</span></div>} className="shadow-sm border-border rounded-2xl overflow-hidden glass-card">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="font-semibold text-slate-800">Thông báo qua Email</p>
-                            <p className="text-sm text-slate-700">Nhận thông báo về các thay đổi trong gia đình qua email</p>
+                            <p className="font-semibold text-foreground">Email Notifications</p>
+                            <p className="text-sm text-muted-foreground">Receive email alerts for important workspace activities</p>
                         </div>
                         <Switch defaultChecked />
                     </div>
                     <Divider className="my-2" />
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="font-semibold text-slate-800">Cảnh báo bảo hành</p>
-                            <p className="text-sm text-slate-700">Thông báo khi tài sản sắp hết hạn bảo hành</p>
+                            <p className="font-semibold text-foreground">Warranty & Milestone Alerts</p>
+                            <p className="text-sm text-muted-foreground">Receive notifications when asset warranties or milestones approach</p>
                         </div>
                         <Switch defaultChecked />
                     </div>
@@ -382,17 +388,17 @@ export const Settings = () => {
     );
 
     const tabItems = [
-        { key: 'profile', label: 'Hồ sơ cá nhân', children: profileTab },
-        { key: 'family', label: 'Gia đình', children: familyTab },
-        ...(canViewMembers ? [{ key: 'members', label: 'Thành viên', children: <MemberList /> }] : []),
-        ...(canViewCategories ? [{ key: 'categories', label: 'Danh mục', children: <CategoryList /> }] : []),
-        { key: 'appearance', label: 'Giao diện', children: appearanceTab },
+        { key: 'profile', label: 'Profile', children: profileTab },
+        { key: 'family', label: 'Workspace', children: familyTab },
+        ...(canViewMembers ? [{ key: 'members', label: 'Members', children: <MemberList /> }] : []),
+        ...(canViewCategories ? [{ key: 'categories', label: 'Categories', children: <CategoryList /> }] : []),
+        { key: 'appearance', label: 'Appearance', children: appearanceTab },
     ];
 
     return (
         <div className="space-y-4 max-w-5xl animate-in fade-in duration-500">
             <header>
-                <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight font-display">Thiết lập</h1>
+                <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight font-sans">Settings</h1>
             </header>
 
             <Tabs items={tabItems} className="settings-tabs" />

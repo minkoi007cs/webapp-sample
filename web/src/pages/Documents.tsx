@@ -43,33 +43,39 @@ import { documentApi, type FamilyDocument, type DocumentSynthesisResponse } from
 import { useSession } from '../components/auth/SessionProvider';
 
 const CATEGORIES = [
-  'Tất cả',
-  'Y tế & Sức khỏe',
-  'Nhà đất & Bất động sản',
-  'Giấy tờ tùy thân',
-  'Học tập & Giáo dục',
-  'Hóa đơn & Hợp đồng',
-  'Xe cộ & Tài sản',
-  'Tài chính & Bảo hiểm',
-  'Khác',
+  'All',
+  'Medical & Health',
+  'Real Estate & Property',
+  'Identity & Civil Docs',
+  'Education & Diplomas',
+  'Bills & Contracts',
+  'Vehicles & Assets',
+  'Finance & Insurance',
+  'Other',
 ];
 
 const PROMPT_SUGGESTIONS = [
-  { label: '🏡 Hồ sơ về nhà Mỹ Ca', query: 'Hãy tổng hợp toàn bộ hồ sơ, giấy tờ, diễn tiến lịch sử và thông tin liên quan đến nhà Mỹ Ca' },
-  { label: '👓 Lịch sử đo kính Mi Mi', query: 'Lập bảng theo dõi lịch sử các lần đo mắt, độ cận, độ loạn và cắt kính của Mi Mi' },
-  { label: '🏥 Sổ khám & Tiêm chủng', query: 'Tổng hợp tình hình khám chữa bệnh, đơn thuốc và lịch tiêm chủng của gia đình' },
-  { label: '📑 Giấy tờ tùy thân quan trọng', query: 'Liệt kê và tóm tắt các giấy tờ tùy thân, CCCD, hộ chiếu và bằng cấp hiện có' },
+  { label: '🏡 Property Dossier', query: 'Summarize all records, deeds, and history related to real estate assets.' },
+  { label: '👓 Vision & Medical History', query: 'Create a chronological table of eye exams, prescriptions, and optical history.' },
+  { label: '🏥 Immunization & Health Records', query: 'Synthesize medical checkups, vaccination records, and prescriptions.' },
+  { label: '📑 Official Identity Docs', query: 'List and summarize all IDs, passports, certificates, and civil documents.' },
 ];
 
 const getCategoryIcon = (category: string) => {
   switch (category) {
+    case 'Medical & Health':
     case 'Y tế & Sức khỏe': return <HeartPulse className="w-4 h-4 text-rose-500" />;
+    case 'Real Estate & Property':
     case 'Nhà đất & Bất động sản': return <Building className="w-4 h-4 text-amber-500" />;
+    case 'Identity & Civil Docs':
     case 'Giấy tờ tùy thân': return <FileCheck className="w-4 h-4 text-blue-500" />;
+    case 'Education & Diplomas':
     case 'Học tập & Giáo dục': return <GraduationCap className="w-4 h-4 text-emerald-500" />;
+    case 'Bills & Contracts':
     case 'Hóa đơn & Hợp đồng': return <CreditCard className="w-4 h-4 text-purple-500" />;
+    case 'Vehicles & Assets':
     case 'Xe cộ & Tài sản': return <Car className="w-4 h-4 text-cyan-500" />;
-    default: return <FileText className="w-4 h-4 text-slate-500" />;
+    default: return <FileText className="w-4 h-4 text-muted-foreground" />;
   }
 };
 
@@ -87,7 +93,7 @@ export const Documents = () => {
 
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Tất cả');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   // Modals state
@@ -115,7 +121,7 @@ export const Documents = () => {
     queryFn: async () => {
       const res = await documentApi.getAll({
         search: searchTerm || undefined,
-        category: selectedCategory !== 'Tất cả' ? selectedCategory : undefined,
+        category: selectedCategory !== 'All' ? selectedCategory : undefined,
         tag: selectedTag || undefined,
         pageSize: 100,
       });
@@ -138,14 +144,14 @@ export const Documents = () => {
       return res.data;
     },
     onSuccess: () => {
-      message.success('Tải lên và trích xuất tài liệu bằng AI thành công!');
+      message.success('Document uploaded and analyzed with AI successfully!');
       setIsUploadModalOpen(false);
       uploadForm.resetFields();
       setUploadFileList([]);
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
     onError: (err: any) => {
-      message.error(err?.response?.data?.message || 'Không thể tải tài liệu lên');
+      message.error(err?.response?.data?.message || 'Failed to upload document');
     },
   });
 
@@ -155,12 +161,12 @@ export const Documents = () => {
       return res.data;
     },
     onSuccess: (updated) => {
-      message.success('Đã cập nhật thông tin tài liệu');
+      message.success('Document details updated');
       setIsEditModalOpen(false);
       if (selectedDoc?.id === updated.id) setSelectedDoc(updated);
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
-    onError: () => message.error('Cập nhật thất bại'),
+    onError: () => message.error('Failed to update document'),
   });
 
   const deleteMutation = useMutation({
@@ -168,11 +174,11 @@ export const Documents = () => {
       await documentApi.delete(id);
     },
     onSuccess: () => {
-      message.success('Đã xóa tài liệu');
+      message.success('Document deleted successfully');
       setIsViewerOpen(false);
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
-    onError: () => message.error('Không thể xóa tài liệu'),
+    onError: () => message.error('Failed to delete document'),
   });
 
   const reanalyzeMutation = useMutation({
@@ -181,11 +187,11 @@ export const Documents = () => {
       return res.data;
     },
     onSuccess: (updated) => {
-      message.success('Đã phân tích lại tài liệu thành công!');
+      message.success('Document re-analyzed successfully!');
       setSelectedDoc(updated);
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
-    onError: (err: any) => message.error(err?.response?.data?.message || 'Phân tích lại thất bại'),
+    onError: (err: any) => message.error(err?.response?.data?.message || 'Failed to re-analyze document'),
   });
 
   const synthesizeMutation = useMutation({
@@ -197,14 +203,14 @@ export const Documents = () => {
       setSynthesisResult(resData);
     },
     onError: (err: any) => {
-      message.error(err?.response?.data?.message || 'Lỗi khi trợ lý AI tổng hợp dữ liệu');
+      message.error(err?.response?.data?.message || 'AI dossier synthesis failed');
     },
   });
 
   const handleRunSynthesis = (promptText?: string) => {
     const q = promptText || synthesisQuery;
     if (!q.trim()) {
-      message.warning('Vui lòng nhập chủ đề bạn muốn AI tổng hợp');
+      message.warning('Please enter a query or topic for AI synthesis');
       return;
     }
     setSynthesisQuery(q);
@@ -216,7 +222,7 @@ export const Documents = () => {
       navigator.clipboard.writeText(synthesisResult.synthesis);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
-      message.success('Đã sao chép bản tổng hợp');
+      message.success('Synthesis copied to clipboard');
     }
   };
 
@@ -225,14 +231,14 @@ export const Documents = () => {
       navigator.clipboard.writeText(text);
       setIsOcrCopied(true);
       setTimeout(() => setIsOcrCopied(false), 2000);
-      message.success('Đã sao chép toàn bộ nội dung văn bản');
+      message.success('OCR content copied to clipboard');
     }
   };
 
   const handleUploadSubmit = async () => {
     const values = await uploadForm.validateFields();
     if (uploadFileList.length === 0 || !uploadFileList[0].originFileObj) {
-      message.error('Vui lòng chọn 1 file hình ảnh hoặc tài liệu');
+      message.error('Please select an image or document file');
       return;
     }
     uploadMutation.mutate({
@@ -267,22 +273,22 @@ export const Documents = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* 1. Header Banner */}
-      <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-r from-[#fff7f2] via-[#fffbf9] to-[#f5fcf8] p-6 lg:p-8 shadow-[0_16px_36px_rgba(242,204,183,0.15)] backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-[24px] border border-border bg-card p-6 lg:p-8 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f97370]/15 text-[#f97370]">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Layers className="w-4 h-4" />
               </span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#b45309]">
-                {activeFamilyName ? `Gia đình: ${activeFamilyName}` : 'Kho Dữ Liệu Gia Đình'}
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {activeFamilyName ? `Workspace: ${activeFamilyName}` : 'Document Vault'}
               </span>
             </div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-[#44332d] tracking-tight">
-              Kho Lưu Trữ & Trích Xuất Tài Liệu Thông Minh
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight font-sans">
+              Smart Document Repository & OCR
             </h1>
-            <p className="mt-1 text-sm text-[#735c53]">
-              Tải lên mọi hóa đơn, sổ đỏ, phiếu khám, giấy tờ tùy thân. AI tự động đọc nội dung (OCR), phân loại và tổng hợp hồ sơ.
+            <p className="mt-1 text-sm text-muted-foreground">
+              Upload contracts, medical records, invoices, and certificates. AI automatically extracts text (OCR), categorizes documents, and synthesizes dossiers.
             </p>
           </div>
 
@@ -292,65 +298,65 @@ export const Documents = () => {
               size="large"
               icon={<UploadCloud className="w-4 h-4" />}
               onClick={() => setIsUploadModalOpen(true)}
-              className="!bg-[linear-gradient(135deg,#ff9f90,#f97370)] hover:brightness-105 border-none shadow-md shadow-[#f97370]/20 rounded-2xl h-11 px-5"
+              className="rounded-xl h-11 px-5"
             >
-              Tải tài liệu lên (AI Phân tích)
+              Upload Document (AI OCR)
             </Button>
           </div>
         </div>
       </div>
 
-      {/* 2. Trợ lý AI Tổng hợp Hồ sơ Chuyên đề (AI Synthesis Dossier) */}
-      <div className="rounded-[24px] border border-[#fbdcd0] bg-white/90 p-5 shadow-[0_12px_32px_rgba(247,163,143,0.1)] transition-all">
+      {/* 2. AI Synthesis Dossier */}
+      <div className="rounded-[24px] border border-border bg-card p-5 shadow-sm transition-all">
         <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsAiBoxExpanded(!isAiBoxExpanded)}>
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#ff9f90] to-[#f97370] text-white shadow-sm shadow-[#f97370]/30">
-              <Sparkles className="w-5 h-5 animate-pulse" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#4a3a34] flex items-center gap-2">
-                Trợ lý AI Tổng Hợp Hồ Sơ Chuyên Đề
-                <span className="text-[11px] font-semibold bg-[#ffefe9] text-[#f97370] px-2 py-0.5 rounded-full border border-[#ffd5c8]">
-                  GPT-4o Trích Xuất
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                AI Document Dossier & Synthesis
+                <span className="text-[11px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">
+                  GPT-4o Vision & OCR
                 </span>
               </h2>
-              <p className="text-xs text-[#7e6960]">
-                Hỏi bất kỳ điều gì về hồ sơ nhà đất, lịch sử đo kính, sổ tiêm chủng để nhận bản tổng hợp có dòng thời gian & bảng so sánh.
+              <p className="text-xs text-muted-foreground">
+                Query records, health chronologies, and asset documents to generate comparative summaries.
               </p>
             </div>
           </div>
-          <Button type="text" size="small" className="text-xs text-[#7e6960]">
-            {isAiBoxExpanded ? 'Thu gọn' : 'Mở rộng'}
+          <Button type="text" size="small" className="text-xs text-muted-foreground">
+            {isAiBoxExpanded ? 'Collapse' : 'Expand'}
           </Button>
         </div>
 
         {isAiBoxExpanded && (
-          <div className="mt-4 pt-4 border-t border-[#f5ded4]/80 space-y-4">
-            {/* Gợi ý chủ đề nhanh */}
+          <div className="mt-4 pt-4 border-t border-border space-y-4">
+            {/* Quick Suggestions */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-[#7e6960]">Gợi ý nhanh:</span>
+              <span className="text-xs font-medium text-muted-foreground">Quick Prompts:</span>
               {PROMPT_SUGGESTIONS.map((item, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleRunSynthesis(item.query)}
-                  className="text-xs px-3 py-1.5 rounded-xl bg-[#fff6f2] hover:bg-[#ffece4] text-[#c2410c] border border-[#fed7aa] font-medium transition-all hover:scale-[1.02] active:scale-95"
+                  className="text-xs px-3 py-1.5 rounded-xl bg-muted/60 hover:bg-muted text-foreground border border-border font-medium transition-all"
                 >
                   {item.label}
                 </button>
               ))}
             </div>
 
-            {/* Ô nhập câu hỏi tổng hợp */}
+            {/* Prompt Input Box */}
             <div className="flex gap-2">
               <Input
                 size="large"
-                placeholder="Ví dụ: Lập báo cáo tổng hợp hồ sơ nhà Mỹ Ca, hoặc tóm tắt các lần đo mắt của Mi Mi..."
+                placeholder="e.g., Generate a chronological summary of vision tests, or summarize property purchase deeds..."
                 value={synthesisQuery}
                 onChange={(e) => setSynthesisQuery(e.target.value)}
                 onPressEnter={() => handleRunSynthesis()}
-                className="rounded-2xl border-[#fcd3c1] focus:border-[#f97370]"
-                prefix={<Search className="w-4 h-4 text-[#a89085] mr-1" />}
+                className="rounded-xl border-border"
+                prefix={<Search className="w-4 h-4 text-muted-foreground mr-1" />}
                 allowClear
               />
               <Button
@@ -359,31 +365,31 @@ export const Documents = () => {
                 loading={synthesizeMutation.isPending}
                 onClick={() => handleRunSynthesis()}
                 icon={<Send className="w-4 h-4" />}
-                className="!bg-[#f97370] hover:!bg-[#e05b58] rounded-2xl px-6 h-10 border-none shrink-0"
+                className="rounded-xl px-6 h-10 shrink-0"
               >
-                Tổng hợp
+                Synthesize
               </Button>
             </div>
 
-            {/* Kết quả tổng hợp AI */}
+            {/* AI Result View */}
             {synthesizeMutation.isPending && (
-              <div className="p-8 rounded-2xl bg-[#fff9f6] border border-[#fed7aa] flex flex-col items-center justify-center text-center space-y-3">
+              <div className="p-8 rounded-2xl bg-muted/30 border border-border flex flex-col items-center justify-center text-center space-y-3">
                 <Spin size="large" />
-                <p className="text-sm font-semibold text-[#4a3a34]">
-                  Trợ lý AI đang đọc toàn bộ tài liệu liên quan và lập bản tổng hợp...
+                <p className="text-sm font-semibold text-foreground">
+                  AI is analyzing relevant repository documents...
                 </p>
-                <p className="text-xs text-[#8c746a]">
-                  Đang đối chiếu số liệu, phân tích mốc thời gian và trích xuất bảng thông số chi tiết
+                <p className="text-xs text-muted-foreground">
+                  Cross-referencing metrics, timestamps, and structured data tables
                 </p>
               </div>
             )}
 
             {synthesisResult && !synthesizeMutation.isPending && (
-              <div className="p-5 rounded-2xl bg-[#fffdfc] border border-[#fcd5c7] shadow-inner space-y-4">
-                <div className="flex items-center justify-between border-b border-[#f5ded4] pb-3">
+              <div className="p-5 rounded-2xl bg-muted/20 border border-border shadow-inner space-y-4">
+                <div className="flex items-center justify-between border-b border-border pb-3">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                    <span className="font-bold text-sm text-[#4a3a34]">Bản Tổng Hợp Hồ Sơ Từ AI</span>
+                    <span className="font-bold text-sm text-foreground">AI Dossier Synthesis Result</span>
                   </div>
                   <Button
                     size="small"
@@ -391,20 +397,20 @@ export const Documents = () => {
                     onClick={handleCopySynthesis}
                     className="text-xs rounded-xl"
                   >
-                    {isCopied ? 'Đã sao chép' : 'Sao chép'}
+                    {isCopied ? 'Copied' : 'Copy'}
                   </Button>
                 </div>
 
                 {/* Markdown view */}
-                <div className="prose prose-sm max-w-none text-[#3d2f2a] whitespace-pre-line leading-relaxed font-sans bg-white/70 p-4 rounded-xl border border-slate-100">
+                <div className="prose prose-sm max-w-none text-foreground whitespace-pre-line leading-relaxed font-sans bg-card p-4 rounded-xl border border-border">
                   {synthesisResult.synthesis}
                 </div>
 
-                {/* Nguồn tài liệu tham chiếu */}
+                {/* Source Documents */}
                 {synthesisResult.sourceDocuments && synthesisResult.sourceDocuments.length > 0 && (
-                  <div className="pt-3 border-t border-[#f5ded4]">
-                    <p className="text-xs font-semibold text-[#7e6960] mb-2 flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5" /> Tài liệu nguồn được sử dụng để tổng hợp:
+                  <div className="pt-3 border-t border-border">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5" /> Source documents referenced:
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {synthesisResult.sourceDocuments.map((doc) => (
@@ -413,7 +419,7 @@ export const Documents = () => {
                           href={doc.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-[#fed7aa] text-xs font-medium text-[#c2410c] hover:bg-[#fff6f2] hover:border-[#f97370] transition-colors shadow-sm"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors shadow-sm"
                         >
                           {doc.mimeType?.startsWith('image/') ? (
                             <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
@@ -421,7 +427,7 @@ export const Documents = () => {
                             <FileText className="w-3.5 h-3.5 text-blue-500" />
                           )}
                           <span className="max-w-[180px] truncate">{doc.title}</span>
-                          <Download className="w-3 h-3 text-slate-400" />
+                          <Download className="w-3 h-3 text-muted-foreground" />
                         </a>
                       ))}
                     </div>
@@ -433,25 +439,25 @@ export const Documents = () => {
         )}
       </div>
 
-      {/* 3. Thanh Tìm Kiếm & Bộ Lọc Danh Mục */}
+      {/* 3. Search Bar & Category Filters */}
       <div className="space-y-3">
         <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
           <div className="w-full md:max-w-md">
             <Input
               size="large"
-              placeholder="Tìm theo tiêu đề, nội dung OCR, người liên quan, số đo..."
-              prefix={<Search className="w-4 h-4 text-slate-400 mr-1" />}
+              placeholder="Search title, OCR content, tags, notes..."
+              prefix={<Search className="w-4 h-4 text-muted-foreground mr-1" />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               allowClear
-              className="rounded-2xl border-slate-200"
+              className="rounded-xl border-border"
             />
           </div>
 
           <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1">
             {availableTags.length > 0 && (
               <Select
-                placeholder="Lọc theo thẻ (Tag)"
+                placeholder="Filter by Tag"
                 allowClear
                 value={selectedTag}
                 onChange={(val) => setSelectedTag(val)}
@@ -464,8 +470,8 @@ export const Documents = () => {
               size="large"
               icon={<RefreshCw className="w-4 h-4" />}
               onClick={() => refetch()}
-              className="rounded-2xl shrink-0"
-              title="Làm mới danh sách"
+              className="rounded-xl shrink-0"
+              title="Refresh repository"
             />
           </div>
         </div>
@@ -473,7 +479,7 @@ export const Documents = () => {
         {/* Category Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {CATEGORIES.map((cat) => {
-            const count = cat === 'Tất cả' ? documents.length : (meta.categories[cat] || 0);
+            const count = cat === 'All' ? documents.length : (meta.categories[cat] || 0);
             const isSelected = selectedCategory === cat;
             return (
               <button
@@ -482,14 +488,14 @@ export const Documents = () => {
                 onClick={() => setSelectedCategory(cat)}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
                   isSelected
-                    ? 'bg-[#f97370] text-white shadow-md shadow-[#f97370]/30 scale-[1.02]'
-                    : 'bg-white/80 text-[#5c4a43] hover:bg-white hover:text-[#f97370] border border-slate-200/80'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground border border-border'
                 }`}
               >
-                {cat !== 'Tất cả' && getCategoryIcon(cat)}
+                {cat !== 'All' && getCategoryIcon(cat)}
                 <span>{cat}</span>
                 {count > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                     {count}
                   </span>
                 )}
@@ -499,30 +505,30 @@ export const Documents = () => {
         </div>
       </div>
 
-      {/* 4. Danh Sách Tài Liệu (Grid Cards) */}
+      {/* 4. Document Grid Cards */}
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-3">
           <Spin size="large" />
-          <p className="text-sm text-slate-500">Đang nạp kho tài liệu gia đình...</p>
+          <p className="text-sm text-muted-foreground">Loading documents...</p>
         </div>
       ) : documents.length === 0 ? (
-        <div className="py-16 bg-white/70 rounded-3xl border border-dashed border-slate-200 flex flex-col items-center justify-center text-center p-6 space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-[#ffefe9] flex items-center justify-center text-[#f97370]">
+        <div className="py-16 bg-card rounded-3xl border border-dashed border-border flex flex-col items-center justify-center text-center p-6 space-y-3">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
             <FolderArchive className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold text-[#4a3a34]">Chưa có tài liệu nào</h3>
-          <p className="text-xs text-[#7e6960] max-w-md">
-            {searchTerm || selectedCategory !== 'Tất cả' || selectedTag
-              ? 'Không tìm thấy tài liệu phù hợp với bộ lọc hiện tại.'
-              : 'Hãy bấm nút "Tải tài liệu lên" để lưu trữ hóa đơn, sổ đỏ, phiếu khám bệnh hoặc giấy tờ quan trọng của gia đình.'}
+          <h3 className="text-lg font-bold text-foreground">No documents found</h3>
+          <p className="text-xs text-muted-foreground max-w-md">
+            {searchTerm || selectedCategory !== 'All' || selectedTag
+              ? 'No documents match current filters.'
+              : 'Click "Upload Document" to upload and OCR receipts, certificates, or real estate contracts.'}
           </p>
           <Button
             type="primary"
             icon={<UploadCloud className="w-4 h-4" />}
             onClick={() => setIsUploadModalOpen(true)}
-            className="!bg-[#f97370] rounded-xl mt-2"
+            className="rounded-xl mt-2"
           >
-            Tải lên tài liệu đầu tiên
+            Upload First Document
           </Button>
         </div>
       ) : (
@@ -532,11 +538,11 @@ export const Documents = () => {
             return (
               <div
                 key={doc.id}
-                className="group relative flex flex-col rounded-2xl border border-slate-100 bg-white p-4 shadow-sm hover:shadow-md transition-all hover:border-[#fcd5c7]"
+                className="group relative flex flex-col rounded-2xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-all"
               >
                 {/* Thumbnail / Header */}
                 <div
-                  className="relative h-44 w-full overflow-hidden rounded-xl bg-slate-50 cursor-pointer border border-slate-100 flex items-center justify-center mb-3"
+                  className="relative h-44 w-full overflow-hidden rounded-xl bg-muted/40 cursor-pointer border border-border flex items-center justify-center mb-3"
                   onClick={() => {
                     setSelectedDoc(doc);
                     setIsViewerOpen(true);
@@ -549,16 +555,16 @@ export const Documents = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
                       <FileText className="w-14 h-14 text-rose-400 mb-2" />
-                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{doc.mimeType?.split('/')[1] || 'PDF/DOC'}</span>
-                      <span className="text-[11px] text-slate-400 mt-1 max-w-[200px] truncate">{doc.originalFileName}</span>
+                      <span className="text-xs font-semibold text-foreground uppercase tracking-wider">{doc.mimeType?.split('/')[1] || 'PDF/DOC'}</span>
+                      <span className="text-[11px] text-muted-foreground mt-1 max-w-[200px] truncate">{doc.originalFileName}</span>
                     </div>
                   )}
 
                   {/* Category Badge overlay */}
                   <div className="absolute top-2.5 left-2.5">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/95 text-xs font-semibold text-[#4a3a34] shadow-sm backdrop-blur-sm">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-background/90 text-xs font-semibold text-foreground shadow-sm backdrop-blur-sm border border-border">
                       {getCategoryIcon(doc.category)}
                       <span>{doc.category}</span>
                     </span>
@@ -575,7 +581,7 @@ export const Documents = () => {
                 {/* Body Details */}
                 <div className="flex-1 flex flex-col">
                   <h3
-                    className="font-bold text-base text-[#4a3a34] line-clamp-1 hover:text-[#f97370] cursor-pointer transition-colors"
+                    className="font-bold text-base text-foreground line-clamp-1 hover:text-primary cursor-pointer transition-colors"
                     onClick={() => {
                       setSelectedDoc(doc);
                       setIsViewerOpen(true);
@@ -585,9 +591,9 @@ export const Documents = () => {
                     {doc.title}
                   </h3>
 
-                  {/* Tóm tắt AI */}
-                  <p className="text-xs text-[#7e6960] line-clamp-2 mt-1.5 flex-1 min-h-[32px]">
-                    {doc.summary || (doc.extractedContent ? doc.extractedContent.slice(0, 120) : 'Chưa có bản tóm tắt nội dung.')}
+                  {/* AI Summary */}
+                  <p className="text-xs text-muted-foreground line-clamp-2 mt-1.5 flex-1 min-h-[32px]">
+                    {doc.summary || (doc.extractedContent ? doc.extractedContent.slice(0, 120) : 'No summary generated.')}
                   </p>
 
                   {/* Tags */}
@@ -604,20 +610,20 @@ export const Documents = () => {
                         </Tag>
                       ))}
                       {doc.tags.length > 3 && (
-                        <span className="text-[10px] text-slate-400 self-center">+{doc.tags.length - 3}</span>
+                        <span className="text-[10px] text-muted-foreground self-center">+{doc.tags.length - 3}</span>
                       )}
                     </div>
                   )}
 
                   {/* Footer Actions */}
-                  <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-[#8c746a]">
+                  <div className="mt-3.5 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      <span>{new Date(doc.createdAt).toLocaleDateString('vi-VN')}</span>
+                      <span>{new Date(doc.createdAt).toLocaleDateString('en-US')}</span>
                     </div>
 
                     <div className="flex items-center gap-1">
-                      <Tooltip title="Xem chi tiết & Nội dung trích xuất">
+                      <Tooltip title="View details & OCR extracted content">
                         <Button
                           type="text"
                           size="small"
@@ -628,12 +634,12 @@ export const Documents = () => {
                           }}
                         />
                       </Tooltip>
-                      <Tooltip title="Tải file về máy">
+                      <Tooltip title="Download file">
                         <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download>
                           <Button type="text" size="small" icon={<Download className="w-3.5 h-3.5" />} />
                         </a>
                       </Tooltip>
-                      <Tooltip title="Chỉnh sửa">
+                      <Tooltip title="Edit">
                         <Button
                           type="text"
                           size="small"
@@ -642,10 +648,10 @@ export const Documents = () => {
                         />
                       </Tooltip>
                       <Popconfirm
-                        title="Xác nhận xóa tài liệu?"
-                        description="Hành động này sẽ xóa vĩnh viễn file và dữ liệu trích xuất."
-                        okText="Xóa"
-                        cancelText="Hủy"
+                        title="Delete this document?"
+                        description="This will permanently delete the file and extracted OCR data."
+                        okText="Delete"
+                        cancelText="Cancel"
                         okButtonProps={{ danger: true }}
                         onConfirm={() => deleteMutation.mutate(doc.id)}
                       >
@@ -660,12 +666,12 @@ export const Documents = () => {
         </div>
       )}
 
-      {/* 5. Modal Tải Lên & AI Phân Tích (Upload Modal) */}
+      {/* 5. Upload & AI OCR Modal */}
       <Modal
         title={
-          <div className="flex items-center gap-2 text-base font-bold text-[#4a3a34]">
-            <Sparkles className="w-5 h-5 text-[#f97370]" />
-            <span>Tải Lên Tài Liệu & Phân Tích Tự Động Bằng AI</span>
+          <div className="flex items-center gap-2 text-base font-bold text-foreground">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <span>Upload Document & AI OCR Extraction</span>
           </div>
         }
         open={isUploadModalOpen}
@@ -682,13 +688,12 @@ export const Documents = () => {
         destroyOnClose
       >
         <div className="space-y-4 pt-2">
-          <p className="text-xs text-[#7e6960]">
-            Hỗ trợ hình ảnh (JPG, PNG, WEBP, HEIC) hoặc PDF, văn bản. AI sẽ tự động đọc chữ (OCR), nhận diện tên người, số liệu, mốc thời gian và lập tóm tắt.
+          <p className="text-xs text-muted-foreground">
+            Supports images (JPG, PNG, WEBP, HEIC), PDF, and text. AI extracts text, dates, names, amounts, and structured summaries.
           </p>
 
           <Form form={uploadForm} layout="vertical">
-            {/* File Upload Box */}
-            <Form.Item label="Chọn tệp đính kèm" required>
+            <Form.Item label="Select Attachment" required>
               <Upload.Dragger
                 fileList={uploadFileList}
                 maxCount={1}
@@ -698,71 +703,70 @@ export const Documents = () => {
                 }}
                 onRemove={() => setUploadFileList([])}
                 accept="image/*,.pdf,.doc,.docx,.txt"
-                className="!bg-[#fffbf9] !border-[#fed7aa] rounded-2xl"
+                className="rounded-2xl"
               >
                 <div className="p-4 flex flex-col items-center justify-center space-y-2 text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-[#ffefe9] flex items-center justify-center text-[#f97370]">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                     <UploadCloud className="w-6 h-6" />
                   </div>
-                  <p className="text-sm font-semibold text-[#4a3a34]">Kéo thả file vào đây hoặc bấm để duyệt</p>
-                  <p className="text-xs text-slate-400">Hình ảnh hóa đơn, sổ đỏ, phiếu khám, hợp đồng (tối đa 25MB)</p>
+                  <p className="text-sm font-semibold text-foreground">Drag and drop file here, or click to browse</p>
+                  <p className="text-xs text-muted-foreground">Receipts, certificates, contracts, and medical scans (Max 25MB)</p>
                 </div>
               </Upload.Dragger>
             </Form.Item>
 
-            <Form.Item name="title" label="Tiêu đề gợi ý (Tùy chọn - để trống AI sẽ tự đặt)">
-              <Input placeholder="Ví dụ: Phiếu khám mắt Mi Mi, Sổ hồng nhà Mỹ Ca..." size="large" />
+            <Form.Item name="title" label="Document Title (Optional — AI auto-names if empty)">
+              <Input placeholder="e.g., Annual Vision Prescription, House Deed..." size="large" />
             </Form.Item>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Form.Item name="category" label="Danh mục">
-                <Select placeholder="Chọn danh mục" size="large">
-                  {CATEGORIES.filter((c) => c !== 'Tất cả').map((c) => (
+              <Form.Item name="category" label="Category">
+                <Select placeholder="Select category" size="large">
+                  {CATEGORIES.filter((c) => c !== 'All').map((c) => (
                     <Select.Option key={c} value={c}>{c}</Select.Option>
                   ))}
                 </Select>
               </Form.Item>
 
-              <Form.Item name="tags" label="Thẻ từ khóa (Tags)">
-                <Select mode="tags" placeholder="Nhập tag rồi ấn Enter" size="large" />
+              <Form.Item name="tags" label="Tags">
+                <Select mode="tags" placeholder="Enter tags and press Enter" size="large" />
               </Form.Item>
             </div>
 
-            <Form.Item name="userNote" label="Ghi chú thêm cho AI (Tùy chọn)">
+            <Form.Item name="userNote" label="Context Notes for AI (Optional)">
               <Input.TextArea
-                placeholder="Ví dụ: Đây là đợt khám mắt định kỳ tháng 12 của bé Mi Mi..."
+                placeholder="e.g., Routine eye exam for child in December..."
                 rows={2}
               />
             </Form.Item>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex justify-end gap-2 pt-2 border-t border-border">
               <Button onClick={() => setIsUploadModalOpen(false)} disabled={uploadMutation.isPending}>
-                Hủy
+                Cancel
               </Button>
               <Button
                 type="primary"
                 loading={uploadMutation.isPending}
                 onClick={handleUploadSubmit}
                 icon={<Sparkles className="w-4 h-4" />}
-                className="!bg-[#f97370] hover:!bg-[#e05b58] border-none px-5"
               >
-                {uploadMutation.isPending ? 'Đang đọc & phân tích AI...' : 'Tải lên & Phân tích'}
+                {uploadMutation.isPending ? 'Reading & Analyzing AI...' : 'Upload & Analyze'}
               </Button>
             </div>
           </Form>
         </div>
       </Modal>
 
-      {/* 6. Modal Chi Tiết Tài Liệu & Nội Dung OCR (Viewer Modal) */}
+      {/* 6. Document Detail & OCR Viewer Modal */}
       <Modal
         title={
           selectedDoc && (
             <div className="flex items-center justify-between pr-8">
               <div className="flex items-center gap-2">
                 {getCategoryIcon(selectedDoc.category)}
-                <span className="font-bold text-base text-[#4a3a34]">{selectedDoc.title}</span>
+                <span className="font-bold text-base text-foreground">{selectedDoc.title}</span>
               </div>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                 {selectedDoc.category}
               </span>
             </div>
@@ -777,9 +781,9 @@ export const Documents = () => {
       >
         {selectedDoc && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-3 max-h-[78vh] overflow-y-auto pr-1">
-            {/* Cột Trái: Xem Trước File */}
+            {/* Left Column: Preview */}
             <div className="lg:col-span-5 space-y-3">
-              <div className="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center min-h-[280px] max-h-[460px]">
+              <div className="rounded-2xl border border-border overflow-hidden bg-muted/30 flex items-center justify-center min-h-[280px] max-h-[460px]">
                 {selectedDoc.mimeType?.startsWith('image/') ? (
                   <img
                     src={selectedDoc.fileUrl}
@@ -789,8 +793,8 @@ export const Documents = () => {
                 ) : (
                   <div className="p-8 text-center space-y-3">
                     <FileText className="w-20 h-20 text-rose-400 mx-auto" />
-                    <p className="text-sm font-semibold text-slate-700">{selectedDoc.originalFileName}</p>
-                    <p className="text-xs text-slate-400">{selectedDoc.mimeType} · {formatFileSize(selectedDoc.fileSize)}</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedDoc.originalFileName}</p>
+                    <p className="text-xs text-muted-foreground">{selectedDoc.mimeType} · {formatFileSize(selectedDoc.fileSize)}</p>
                   </div>
                 )}
               </div>
@@ -803,7 +807,7 @@ export const Documents = () => {
                   className="flex-1"
                 >
                   <Button block icon={<Eye className="w-4 h-4" />}>
-                    Mở tệp gốc
+                    Open Original
                   </Button>
                 </a>
                 <a
@@ -813,16 +817,16 @@ export const Documents = () => {
                   download
                   className="flex-1"
                 >
-                  <Button type="primary" block icon={<Download className="w-4 h-4" />} className="!bg-[#f97370]">
-                    Tải về máy
+                  <Button type="primary" block icon={<Download className="w-4 h-4" />}>
+                    Download
                   </Button>
                 </a>
               </div>
 
-              {/* Tags list */}
+              {/* Tags */}
               {selectedDoc.tags && selectedDoc.tags.length > 0 && (
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="text-xs font-semibold text-slate-600 block mb-1.5">Thẻ từ khóa:</span>
+                <div className="p-3 rounded-xl bg-muted/40 border border-border">
+                  <span className="text-xs font-semibold text-foreground block mb-1.5">Tags:</span>
                   <div className="flex flex-wrap gap-1">
                     {selectedDoc.tags.map((t, i) => (
                       <Tag key={i} color="orange">#{t}</Tag>
@@ -832,14 +836,14 @@ export const Documents = () => {
               )}
             </div>
 
-            {/* Cột Phải: Nội dung trích xuất AI, Tóm tắt & Dữ liệu có cấu trúc */}
+            {/* Right Column: AI Extraction, Summary & Structured Data */}
             <div className="lg:col-span-7 space-y-4">
-              {/* Tóm tắt AI */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-[#fff9f6] to-[#fffbf9] border border-[#fcd5c7] space-y-2">
+              {/* Summary */}
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#c2410c] uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#f97370]" />
-                    Tóm Tắt Nội Dung (AI)
+                  <span className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4" />
+                    AI Summary
                   </span>
                   <Button
                     size="small"
@@ -847,29 +851,29 @@ export const Documents = () => {
                     loading={reanalyzeMutation.isPending}
                     icon={<RefreshCw className="w-3.5 h-3.5" />}
                     onClick={() => reanalyzeMutation.mutate(selectedDoc.id)}
-                    className="text-xs text-[#c2410c]"
+                    className="text-xs text-primary"
                   >
-                    Phân tích lại
+                    Re-analyze
                   </Button>
                 </div>
-                <p className="text-sm text-[#44332d] leading-relaxed">
-                  {selectedDoc.summary || 'Chưa có tóm tắt.'}
+                <p className="text-sm text-foreground leading-relaxed">
+                  {selectedDoc.summary || 'No summary available.'}
                 </p>
               </div>
 
-              {/* Dữ liệu có cấu trúc (Structured Data) */}
+              {/* Structured Data */}
               {selectedDoc.structuredData && Object.keys(selectedDoc.structuredData).length > 0 && (
-                <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2">
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                    Thông số & Dữ liệu trích xuất quan trọng:
+                <div className="p-4 rounded-2xl bg-card border border-border space-y-2">
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wider block">
+                    Extracted Metrics & Structured Data:
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     {Object.entries(selectedDoc.structuredData).map(([k, v]) => {
                       if (v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0)) return null;
                       return (
-                        <div key={k} className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                          <span className="text-slate-400 block text-[11px] capitalize">{k.replace(/([A-Z])/g, ' $1')}</span>
-                          <span className="font-semibold text-slate-800">
+                        <div key={k} className="p-2 rounded-lg bg-muted/40 border border-border">
+                          <span className="text-muted-foreground block text-[11px] capitalize">{k.replace(/([A-Z])/g, ' $1')}</span>
+                          <span className="font-semibold text-foreground">
                             {typeof v === 'object' ? JSON.stringify(v) : String(v)}
                           </span>
                         </div>
@@ -879,12 +883,12 @@ export const Documents = () => {
                 </div>
               )}
 
-              {/* Toàn bộ văn bản OCR Trích xuất */}
-              <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2">
+              {/* Extracted OCR Text */}
+              <div className="p-4 rounded-2xl bg-card border border-border space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <FileText className="w-4 h-4 text-blue-500" />
-                    Toàn Bộ Văn Bản Đọc Được (OCR)
+                    Extracted OCR Text
                   </span>
                   <Button
                     size="small"
@@ -893,19 +897,19 @@ export const Documents = () => {
                     onClick={() => handleCopyOcr(selectedDoc.extractedContent)}
                     className="text-xs"
                   >
-                    {isOcrCopied ? 'Đã sao chép' : 'Sao chép chữ'}
+                    {isOcrCopied ? 'Copied' : 'Copy Text'}
                   </Button>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 max-h-56 overflow-y-auto font-mono text-xs text-slate-800 whitespace-pre-wrap leading-relaxed">
-                  {selectedDoc.extractedContent || 'Không tìm thấy nội dung văn bản trích xuất.'}
+                <div className="p-3 rounded-xl bg-muted/40 border border-border max-h-56 overflow-y-auto font-mono text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                  {selectedDoc.extractedContent || 'No text extracted from document.'}
                 </div>
               </div>
 
-              {/* Thông tin Meta */}
-              <div className="text-[11px] text-slate-600 flex justify-between items-center px-1">
-                <span>Ngày tạo: {new Date(selectedDoc.createdAt).toLocaleString('vi-VN')}</span>
+              {/* Meta */}
+              <div className="text-[11px] text-muted-foreground flex justify-between items-center px-1">
+                <span>Created: {new Date(selectedDoc.createdAt).toLocaleString('en-US')}</span>
                 <Button type="link" size="small" onClick={() => handleOpenEdit(selectedDoc)}>
-                  Chỉnh sửa thông tin
+                  Edit Metadata
                 </Button>
               </div>
             </div>
@@ -913,9 +917,9 @@ export const Documents = () => {
         )}
       </Modal>
 
-      {/* 7. Modal Chỉnh Sửa Thông Tin Tài Liệu */}
+      {/* 7. Edit Modal */}
       <Modal
-        title="Chỉnh sửa thông tin tài liệu"
+        title="Edit Document Details"
         open={isEditModalOpen}
         onCancel={() => setIsEditModalOpen(false)}
         footer={null}
@@ -923,34 +927,34 @@ export const Documents = () => {
         destroyOnClose
       >
         <Form form={editForm} layout="vertical" onFinish={handleEditSubmit} className="pt-2">
-          <Form.Item name="title" label="Tiêu đề tài liệu" rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}>
+          <Form.Item name="title" label="Document Title" rules={[{ required: true, message: 'Please enter title' }]}>
             <Input size="large" />
           </Form.Item>
 
-          <Form.Item name="category" label="Danh mục">
+          <Form.Item name="category" label="Category">
             <Select size="large">
-              {CATEGORIES.filter((c) => c !== 'Tất cả').map((c) => (
+              {CATEGORIES.filter((c) => c !== 'All').map((c) => (
                 <Select.Option key={c} value={c}>{c}</Select.Option>
               ))}
             </Select>
           </Form.Item>
 
-          <Form.Item name="tags" label="Thẻ từ khóa (Tags)">
+          <Form.Item name="tags" label="Tags">
             <Select mode="tags" size="large" />
           </Form.Item>
 
-          <Form.Item name="summary" label="Bản tóm tắt">
+          <Form.Item name="summary" label="Summary">
             <Input.TextArea rows={3} />
           </Form.Item>
 
-          <Form.Item name="userNote" label="Ghi chú">
+          <Form.Item name="userNote" label="Context Notes">
             <Input.TextArea rows={2} />
           </Form.Item>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-            <Button onClick={() => setIsEditModalOpen(false)}>Hủy</Button>
-            <Button type="primary" htmlType="submit" loading={updateMutation.isPending} className="!bg-[#f97370]">
-              Lưu thay đổi
+          <div className="flex justify-end gap-2 pt-2 border-t border-border">
+            <Button onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+            <Button type="primary" htmlType="submit" loading={updateMutation.isPending}>
+              Save Changes
             </Button>
           </div>
         </Form>

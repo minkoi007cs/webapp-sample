@@ -23,7 +23,7 @@ export const MobileHeader = ({ onMenuClick }: MobileHeaderProps) => {
                     className="w-7 h-7 rounded-md shrink-0"
                 />
                 <div className="min-w-0">
-                    <h1 className="font-semibold text-sm leading-tight text-foreground tracking-tight">Tài sản Gia đình</h1>
+                    <h1 className="font-semibold text-sm leading-tight text-foreground tracking-tight">Family Assets</h1>
                     {activeFamilyName && (
                         <p className="truncate text-xs leading-tight text-muted-foreground">{activeFamilyName}</p>
                     )}
@@ -33,11 +33,12 @@ export const MobileHeader = ({ onMenuClick }: MobileHeaderProps) => {
             <button
                 onClick={onMenuClick}
                 className="p-1.5 hover:bg-accent rounded-md transition-colors text-foreground border border-border shadow-xs"
-                aria-label="Mở menu"
+                aria-label="Open menu"
             >
                 <Menu size={20} />
             </button>
         </header>
     );
 };
+
 

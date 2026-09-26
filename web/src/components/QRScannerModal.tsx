@@ -58,7 +58,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ visible, onCance
 
     return (
         <Modal
-            title="Quét mã QR"
+            title="Scan QR Code"
             open={visible}
             onCancel={onCancel}
             footer={[
@@ -66,8 +66,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ visible, onCance
                     key="cancel"
                     type="text"
                     icon={<X size={18} />}
-                    title="Đóng"
-                    aria-label="Đóng"
+                    title="Close"
+                    aria-label="Close"
                     onClick={onCancel}
                 />,
             ]}
@@ -81,12 +81,13 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ visible, onCance
                     width: '100%',
                     overflow: 'hidden',
                     borderRadius: '8px',
-                    border: '1px solid #e2e8f0'
+                    border: '1px solid hsl(var(--border))'
                 }}
             ></div>
-            <div style={{ marginTop: 12, textAlign: 'center', color: '#64748b' }}>
-                Đưa mã QR vào khung hình để tự động quét
+            <div style={{ marginTop: 12, textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                Position the QR code within the frame to scan automatically
             </div>
         </Modal>
     );
 };
+

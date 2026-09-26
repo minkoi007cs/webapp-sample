@@ -93,10 +93,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       queryClient.invalidateQueries({
         predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] !== 'session',
       });
-      message.success(`Đã chuyển sang gia đình ${session.user.memberships.find((item) => item.familyId === session.user.familyId)?.familyName || ''}`.trim());
+      message.success(`Switched to workspace ${session.user.memberships.find((item) => item.familyId === session.user.familyId)?.familyName || ''}`.trim());
     },
     onError: () => {
-      message.error('Không thể chuyển gia đình đang làm việc');
+      message.error('Failed to switch workspace');
     },
   });
 
@@ -110,10 +110,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       queryClient.invalidateQueries({
         predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] !== 'session',
       });
-      message.success(`Đã tạo và kích hoạt gia đình mới thành công!`);
+      message.success(`Workspace created and activated successfully!`);
     },
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Không thể tạo gia đình mới');
+      message.error(error?.response?.data?.message || 'Could not create workspace');
     },
   });
 

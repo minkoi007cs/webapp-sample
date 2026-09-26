@@ -8,9 +8,9 @@ export interface Asset {
   category?: { id?: string; name: string };
   purchasePrice: number;
   currentValue: number;
-  /** Tổng chi (EXPENSE) gắn tài sản — do API tính, dùng hiển thị công thức giá hiện tại */
+  /** Total linked expenses (EXPENSE) - computed by API */
   linkedExpenseTotal?: number;
-  /** Tổng thu (INCOME) gắn tài sản — do API tính */
+  /** Total linked income (INCOME) - computed by API */
   linkedIncomeTotal?: number;
   status: string;
   purchaseDate?: string;

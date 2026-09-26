@@ -35,10 +35,10 @@ const PIE_COLORS = ['#f58a7a', '#f3b665', '#7cb7ef', '#7fc7aa', '#f5a6c1', '#b8a
 
 const formatCompactVnd = (val: number) => {
     const abs = Math.abs(val);
-    if (abs >= 1_000_000_000) return `${(val / 1_000_000_000).toFixed(1)} tỷ`;
-    if (abs >= 1_000_000) return `${(val / 1_000_000).toFixed(1)} tr`;
-    if (abs >= 1_000) return `${Math.round(val / 1_000)}k`;
-    return `${val}`;
+    if (abs >= 1_000_000_000) return `$${(val / 1_000_000_000).toFixed(1)}B`;
+    if (abs >= 1_000_000) return `$${(val / 1_000_000).toFixed(1)}M`;
+    if (abs >= 1_000) return `$${Math.round(val / 1_000)}k`;
+    return `$${val}`;
 };
 
 const formatPercentDelta = (current: number, previous: number) => {
@@ -47,10 +47,10 @@ const formatPercentDelta = (current: number, previous: number) => {
 };
 
 const eventTypeMeta: Record<string, { label: string; color: string }> = {
-    PAYMENT: { label: 'Thanh toán', color: 'orange' },
-    MAINTENANCE: { label: 'Bảo dưỡng', color: 'blue' },
-    REMINDER: { label: 'Nhắc nhở', color: 'purple' },
-    EVENT: { label: 'Sự kiện', color: 'green' },
+    PAYMENT: { label: 'Payment', color: 'orange' },
+    MAINTENANCE: { label: 'Maintenance', color: 'blue' },
+    REMINDER: { label: 'Reminder', color: 'purple' },
+    EVENT: { label: 'Event', color: 'green' },
 };
 
 export const Dashboard = () => {
@@ -85,12 +85,12 @@ export const Dashboard = () => {
     }, [periodMode, selectedMonth, selectedYear, breakdownDateRange]);
 
     const periodLabel = useMemo(() => {
-        if (periodMode === 'month' && selectedMonth) return `Tháng ${dayjs(selectedMonth).format('MM/YYYY')}`;
-        if (periodMode === 'year' && selectedYear) return `Năm ${dayjs(selectedYear).format('YYYY')}`;
+        if (periodMode === 'month' && selectedMonth) return `Month of ${dayjs(selectedMonth).format('MMMM YYYY')}`;
+        if (periodMode === 'year' && selectedYear) return `Year of ${dayjs(selectedYear).format('YYYY')}`;
         if (periodMode === 'custom' && breakdownDateRange?.[0] && breakdownDateRange?.[1]) {
-            return `${dayjs(breakdownDateRange[0]).format('DD/MM/YYYY')} – ${dayjs(breakdownDateRange[1]).format('DD/MM/YYYY')}`;
+            return `${dayjs(breakdownDateRange[0]).format('YYYY-MM-DD')} – ${dayjs(breakdownDateRange[1]).format('YYYY-MM-DD')}`;
         }
-        return 'Tháng này';
+        return 'This Month';
     }, [periodMode, selectedMonth, selectedYear, breakdownDateRange]);
 
     const { data: stats, isLoading, isError } = useQuery({
@@ -142,32 +142,32 @@ export const Dashboard = () => {
     if (!canViewDashboard) {
         return (
             <div className="glass-card p-6 lg:p-8">
-                <h1 className="text-2xl font-bold text-slate-900 font-display">Tổng quan hệ thống</h1>
-                <p className="mt-2 text-sm text-slate-600">
+                <h1 className="text-2xl font-bold text-foreground font-sans">System Overview</h1>
+                <p className="mt-2 text-sm text-muted-foreground">
                     {systemRole === 'APP_ADMIN'
-                        ? 'Tài khoản quản trị ứng dụng chưa tham gia gia đình nào. Hãy chấp nhận lời mời hoặc được thêm vào gia đình để xem tổng quan.'
-                        : 'Bạn không có quyền xem tổng quan. Vui lòng liên hệ quản trị viên gia đình.'}
+                        ? 'App administrator account is not part of any family workspace yet. Accept an invite or create a workspace to view dashboard.'
+                        : 'You do not have permission to view the dashboard. Please contact your workspace administrator.'}
                 </p>
             </div>
         );
     }
 
-    if (isLoading) return <div className="p-8 text-center text-slate-700 font-medium">Đang tải dữ liệu...</div>;
-    if (isError) return <div className="p-8 text-center text-red-500 font-medium">Không thể tải dữ liệu tổng quan cho gia đình đang chọn.</div>;
+    if (isLoading) return <div className="p-8 text-center text-muted-foreground font-medium">Loading dashboard data...</div>;
+    if (isError) return <div className="p-8 text-center text-destructive font-medium">Could not load dashboard data for the selected workspace.</div>;
 
     const incomeDelta = formatPercentDelta(stats?.monthlyIncome || 0, stats?.prevMonthIncome || 0);
     const expensesDelta = formatPercentDelta(stats?.monthlyExpenses || 0, stats?.prevMonthExpenses || 0);
 
     const trendData = (stats?.monthlyTrend || []).map((row: any) => ({
         ...row,
-        monthLabel: dayjs(row.month + '-01').format('MM/YY'),
+        monthLabel: dayjs(row.month + '-01').format('MMM YY'),
     }));
 
     const breakdownTotal = filteredBreakdown.reduce((sum, row) => sum + row.amount, 0);
 
     const entryTypeLabels: Record<EntryTypeFilter, string> = {
-        INCOME: 'Thu nhập',
-        EXPENSE: 'Chi tiêu',
+        INCOME: 'Income',
+        EXPENSE: 'Expenses',
     };
 
     const entryTypeColors: Record<EntryTypeFilter, string> = {
@@ -176,44 +176,44 @@ export const Dashboard = () => {
     };
 
     return (
-        <div className="space-y-4 lg:space-y-5 animate-in fade-in duration-700">
+        <div className="space-y-4 lg:space-y-5 animate-in fade-in duration-500">
             <header>
-                <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight font-display">Tổng quan gia đình</h1>
-                <p className="text-slate-700 mt-1 text-sm lg:text-base">
-                    {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight font-sans">Family Dashboard</h1>
+                <p className="text-muted-foreground mt-1 text-sm lg:text-base">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
             </header>
 
             {/* Go US F4 Portal Banner */}
             <Link
                 to="/gous"
-                className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#1e293b] via-[#1e3a8a] to-[#2563eb] p-4 lg:p-5 text-white shadow-md hover:shadow-lg transition-all border border-blue-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 block"
+                className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 p-4 lg:p-5 text-white shadow-sm hover:shadow-md transition-all border border-zinc-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 block"
             >
                 <div className="flex items-center gap-3.5">
-                    <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-amber-300 shrink-0 border border-white/15 group-hover:scale-105 transition-transform">
-                        <PlaneTakeoff size={22} />
+                    <div className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center text-primary-foreground shrink-0 border border-white/15 group-hover:scale-105 transition-transform">
+                        <PlaneTakeoff size={20} />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/30 text-rose-200 border border-rose-400/30">
-                                Định cư Mỹ F4
+                            <span className="text-[12px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/20">
+                                US Immigration
                             </span>
-                            <span className="text-xs text-blue-200 hidden sm:inline">
-                                • Luật sư & Chuyên viên đồng hành
+                            <span className="text-xs text-zinc-400 hidden sm:inline">
+                                • Case Management & Tracking
                             </span>
                         </div>
                         <h2 className="text-base lg:text-lg font-bold text-white mt-0.5 tracking-tight">
-                            Cổng Quản Lý Định Cư Hoa Kỳ (/gous)
+                            US Immigration Portal (/gous)
                         </h2>
-                        <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
-                            Kiểm soát tiến trình 11 bước NVC, giấy tờ, tính tuổi CSPA cho con, lịch phỏng vấn & dự toán chi phí.
+                        <p className="text-xs text-zinc-400 mt-0.5 line-clamp-1">
+                            Track 11-step NVC progress, documents, CSPA age calculation, interview schedules & estimated costs.
                         </p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300 group-hover:text-amber-200 shrink-0 bg-white/10 px-3.5 py-2 rounded-xl border border-white/15 backdrop-blur-sm self-start sm:self-auto">
-                    <span>Vào Cổng Định Cư Mỹ</span>
-                    <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-white group-hover:text-zinc-200 shrink-0 bg-white/10 px-3.5 py-2 rounded-lg border border-white/15 backdrop-blur-sm self-start sm:self-auto">
+                    <span>Open Portal</span>
+                    <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
             </Link>
 
@@ -222,34 +222,34 @@ export const Dashboard = () => {
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                 <KpiCard
-                    label="Tài sản ròng"
+                    label="Net Worth"
                     primary={formatVndAmount(stats?.netWorth || 0)}
-                    secondary={`${stats?.totalAssetCount || 0} tài sản đang theo dõi`}
+                    secondary={`${stats?.totalAssetCount || 0} tracked assets`}
                     icon={Wallet}
                     accent="blue"
                 />
                 <KpiCard
-                    label="Thu nhập tháng này"
+                    label="Monthly Income"
                     primary={formatVndAmount(stats?.monthlyIncome || 0)}
                     secondary={incomeDelta !== null
                         ? <DeltaText pct={incomeDelta} positiveIsGood />
-                        : 'Chưa có dữ liệu tháng trước'}
+                        : 'No prior month data'}
                     icon={ArrowDownRight}
                     accent="green"
                 />
                 <KpiCard
-                    label="Chi tiêu tháng này"
+                    label="Monthly Expenses"
                     primary={formatVndAmount(stats?.monthlyExpenses || 0)}
                     secondary={expensesDelta !== null
                         ? <DeltaText pct={expensesDelta} positiveIsGood={false} />
-                        : 'Chưa có dữ liệu tháng trước'}
+                        : 'No prior month data'}
                     icon={ArrowUpRight}
                     accent="red"
                 />
                 <KpiCard
-                    label="Số dư tháng này"
+                    label="Monthly Net"
                     primary={formatVndAmount(stats?.monthlyNet || 0)}
-                    secondary={`Tỷ lệ tiết kiệm ${stats?.savingsRate || 0}%`}
+                    secondary={`Savings rate ${stats?.savingsRate || 0}%`}
                     icon={PiggyBank}
                     accent={(stats?.monthlyNet || 0) >= 0 ? 'mint' : 'amber'}
                 />
@@ -258,28 +258,28 @@ export const Dashboard = () => {
             {/* 6-month trend */}
             <div className="glass-card p-4 lg:p-5">
                 <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <h2 className="font-bold text-lg lg:text-xl text-[#4a3a34] font-display">Thu chi 6 tháng gần đây</h2>
-                    <span className="text-xs text-[#5c4437]">Cột: thu nhập / chi tiêu • Đường: số dư</span>
+                    <h2 className="font-bold text-lg lg:text-xl text-foreground font-sans">Cash Flow (Last 6 Months)</h2>
+                    <span className="text-xs text-muted-foreground">Bars: Income / Expenses • Line: Net Balance</span>
                 </div>
                 <div className="h-[260px] lg:h-[300px]">
                     {trendData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart data={trendData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f0e3d8" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                                 <XAxis dataKey="monthLabel" tick={{ fontSize: 13 }} />
                                 <YAxis tickFormatter={(val) => formatCompactVnd(val)} tick={{ fontSize: 13 }} />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '14px', border: '1px solid #f4d6c7' }}
+                                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }}
                                     formatter={(val: any) => formatVndAmount(val || 0)}
                                 />
                                 <Legend />
-                                <Bar dataKey="income" name="Thu nhập" fill="#7fc7aa" radius={[8, 8, 0, 0]} />
-                                <Bar dataKey="expenses" name="Chi tiêu" fill="#f58a7a" radius={[8, 8, 0, 0]} />
-                                <Line type="monotone" dataKey="net" name="Số dư" stroke="#5f87c2" strokeWidth={2.5} dot={{ r: 4 }} />
+                                <Bar dataKey="income" name="Income" fill="#10b981" radius={[6, 6, 0, 0]} />
+                                <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[6, 6, 0, 0]} />
+                                <Line type="monotone" dataKey="net" name="Net" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 4 }} />
                             </ComposedChart>
                         </ResponsiveContainer>
                     ) : (
-                        <EmptyState icon={Receipt} message="Chưa có dữ liệu thu chi" />
+                        <EmptyState icon={Receipt} message="No cash flow data available" />
                     )}
                 </div>
             </div>
@@ -289,9 +289,9 @@ export const Dashboard = () => {
                 <div className="flex flex-col gap-3 mb-4">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                         <div>
-                            <h2 className="font-bold text-lg lg:text-xl text-[#4a3a34] font-display">Phân tích thu chi theo danh mục</h2>
-                            <p className="text-xs text-[#5c4437] mt-0.5">
-                                Đang xem: <span className="font-semibold text-[#4a3a34]">{periodLabel}</span>
+                            <h2 className="font-bold text-lg lg:text-xl text-foreground font-sans">Category Breakdown</h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Viewing: <span className="font-semibold text-foreground">{periodLabel}</span>
                             </p>
                         </div>
                         <Radio.Group
@@ -300,8 +300,8 @@ export const Dashboard = () => {
                             buttonStyle="solid"
                             size="small"
                         >
-                            <Radio.Button value="INCOME">Thu</Radio.Button>
-                            <Radio.Button value="EXPENSE">Chi</Radio.Button>
+                            <Radio.Button value="INCOME">Income</Radio.Button>
+                            <Radio.Button value="EXPENSE">Expenses</Radio.Button>
                         </Radio.Group>
                     </div>
                     <div className="flex gap-2 items-center flex-wrap">
@@ -310,9 +310,9 @@ export const Dashboard = () => {
                             onChange={(e) => setPeriodMode(e.target.value)}
                             size="small"
                         >
-                            <Radio.Button value="month">Tháng</Radio.Button>
-                            <Radio.Button value="year">Năm</Radio.Button>
-                            <Radio.Button value="custom">Tùy chọn</Radio.Button>
+                            <Radio.Button value="month">Month</Radio.Button>
+                            <Radio.Button value="year">Year</Radio.Button>
+                            <Radio.Button value="custom">Custom</Radio.Button>
                         </Radio.Group>
                         {periodMode === 'month' && (
                             <DatePicker
@@ -321,7 +321,7 @@ export const Dashboard = () => {
                                 value={selectedMonth}
                                 onChange={(val) => setSelectedMonth(val)}
                                 format="MM/YYYY"
-                                placeholder="Chọn tháng"
+                                placeholder="Select month"
                                 allowClear={false}
                             />
                         )}
@@ -332,7 +332,7 @@ export const Dashboard = () => {
                                 value={selectedYear}
                                 onChange={(val) => setSelectedYear(val)}
                                 format="YYYY"
-                                placeholder="Chọn năm"
+                                placeholder="Select year"
                                 allowClear={false}
                             />
                         )}
@@ -341,7 +341,7 @@ export const Dashboard = () => {
                                 size="small"
                                 value={breakdownDateRange as any}
                                 onChange={(val) => setBreakdownDateRange(val as any)}
-                                placeholder={['Từ', 'Đến']}
+                                placeholder={['Start', 'End']}
                             />
                         )}
                     </div>
@@ -365,7 +365,7 @@ export const Dashboard = () => {
                                         label={({ percent }) => `${((percent || 0) * 100).toFixed(0)}%`}
                                     >
                                         {filteredBreakdown.map((_: any, index: number) => (
-                                            <Cell key={`bd-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} className="stroke-white stroke-2" />
+                                             <Cell key={`bd-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} className="stroke-background stroke-2" />
                                         ))}
                                     </Pie>
                                     <Tooltip formatter={(val: any) => formatVndAmount(val || 0)} />
@@ -373,7 +373,7 @@ export const Dashboard = () => {
                                 </PieChart>
                             </ResponsiveContainer>
                         ) : (
-                            <EmptyState icon={Receipt} message={`Chưa có dữ liệu ${entryTypeLabels[breakdownEntryType].toLowerCase()}`} />
+                            <EmptyState icon={Receipt} message={`No ${entryTypeLabels[breakdownEntryType].toLowerCase()} data`} />
                         )}
                     </div>
 
@@ -381,8 +381,8 @@ export const Dashboard = () => {
                     <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
                         {filteredBreakdown.length > 0 ? (
                             <>
-                                <div className="flex justify-between items-center text-xs text-[#5c4437] px-1 pb-1 border-b border-[rgba(242,214,197,0.7)]">
-                                    <span>Tổng cộng</span>
+                                <div className="flex justify-between items-center text-xs text-muted-foreground px-1 pb-1 border-b border-border">
+                                    <span>Total</span>
                                     <span className={cn('font-bold', entryTypeColors[breakdownEntryType])}>
                                         {formatVndAmount(breakdownTotal)}
                                     </span>
@@ -390,14 +390,14 @@ export const Dashboard = () => {
                                 {filteredBreakdown.map((row, idx) => {
                                     const pct = breakdownTotal > 0 ? (row.amount / breakdownTotal) * 100 : 0;
                                     return (
-                                        <div key={row.categoryId} className="p-2.5 rounded-xl bg-white/85 border border-[rgba(242,214,197,0.6)]">
+                                        <div key={row.categoryId} className="p-2.5 rounded-xl bg-card border border-border">
                                             <div className="flex items-center justify-between gap-2 mb-1">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span
                                                         className="w-2.5 h-2.5 rounded-full shrink-0"
                                                         style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
                                                     />
-                                                    <p className="font-semibold text-[#4a3a34] text-sm truncate">
+                                                    <p className="font-semibold text-foreground text-sm truncate">
                                                         {row.parentName ? `${row.parentName} / ` : ''}{row.categoryName}
                                                     </p>
                                                 </div>
@@ -405,22 +405,22 @@ export const Dashboard = () => {
                                                     {formatVndAmount(row.amount)}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center justify-between gap-2 text-[13px] text-[#5c4437]">
-                                                <div className="flex-1 h-1.5 rounded-full bg-[#f3e6db] overflow-hidden">
+                                            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                                                <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
                                                     <div
                                                         className="h-full rounded-full"
                                                         style={{ width: `${pct}%`, backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
                                                     />
                                                 </div>
-                                                <span className="shrink-0">{pct.toFixed(1)}% • {row.count} giao dịch</span>
+                                                <span className="shrink-0">{pct.toFixed(1)}% • {row.count} transactions</span>
                                             </div>
                                         </div>
                                     );
                                 })}
                             </>
                         ) : (
-                            <div className="h-full flex items-center justify-center text-slate-600 text-sm">
-                                Chưa có giao dịch trong khoảng này
+                            <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                                No transactions found for this period
                             </div>
                         )}
                     </div>
@@ -428,25 +428,25 @@ export const Dashboard = () => {
 
                 {/* Summary table — all entry types per category */}
                 {pivotedBreakdown.length > 0 && (
-                    <div className="mt-5 pt-4 border-t border-[rgba(242,214,197,0.7)]">
-                        <h3 className="font-bold text-sm text-[#4a3a34] mb-3">Tổng hợp các danh mục</h3>
+                    <div className="mt-5 pt-4 border-t border-border">
+                        <h3 className="font-bold text-sm text-foreground mb-3">All Categories Summary</h3>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="text-xs text-[#5c4437] border-b border-[rgba(242,214,197,0.7)]">
-                                        <th className="text-left py-2 px-2 font-semibold">Danh mục</th>
-                                        <th className="text-right py-2 px-2 font-semibold text-emerald-600">Thu</th>
-                                        <th className="text-right py-2 px-2 font-semibold text-rose-600">Chi</th>
-                                        <th className="text-right py-2 px-2 font-semibold">Số dư</th>
+                                    <tr className="text-xs text-muted-foreground border-b border-border">
+                                        <th className="text-left py-2 px-2 font-semibold">Category</th>
+                                        <th className="text-right py-2 px-2 font-semibold text-emerald-600">Income</th>
+                                        <th className="text-right py-2 px-2 font-semibold text-rose-600">Expenses</th>
+                                        <th className="text-right py-2 px-2 font-semibold">Net</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {pivotedBreakdown.map((row) => (
-                                        <tr key={row.categoryId} className="border-b border-[rgba(242,214,197,0.4)] hover:bg-white/60 transition-colors">
-                                            <td className="py-2 px-2 text-[#4a3a34]">
+                                        <tr key={row.categoryId} className="border-b border-border/50 hover:bg-muted/40 transition-colors">
+                                            <td className="py-2 px-2 text-foreground">
                                                 <div className="font-medium">{row.name}</div>
                                                 {row.parentName && (
-                                                    <div className="text-[13px] text-[#5c4437]">{row.parentName}</div>
+                                                    <div className="text-xs text-muted-foreground">{row.parentName}</div>
                                                 )}
                                             </td>
                                             <td className="py-2 px-2 text-right text-emerald-600">
@@ -470,8 +470,8 @@ export const Dashboard = () => {
             {/* Asset distribution */}
             <div className="glass-card p-4 lg:p-5 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-bold text-lg lg:text-xl text-[#4a3a34] font-display">Phân bổ tài sản</h2>
-                    <span className="text-xs text-[#5c4437]">{formatVndAmount(stats?.totalAssetValue || 0)}</span>
+                    <h2 className="font-bold text-lg lg:text-xl text-foreground font-sans">Asset Allocation</h2>
+                    <span className="text-xs text-muted-foreground font-medium">{formatVndAmount(stats?.totalAssetValue || 0)}</span>
                 </div>
                 <div className="h-[260px]">
                     {stats?.assetsByCategory?.length > 0 ? (
@@ -489,7 +489,7 @@ export const Dashboard = () => {
                                     label={({ percent }) => `${((percent || 0) * 100).toFixed(0)}%`}
                                 >
                                     {stats.assetsByCategory.map((_: any, index: number) => (
-                                        <Cell key={`ac-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} className="stroke-white stroke-2" />
+                                        <Cell key={`ac-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} className="stroke-background stroke-2" />
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(val: any) => formatVndAmount(val || 0)} />
@@ -497,7 +497,7 @@ export const Dashboard = () => {
                             </PieChart>
                         </ResponsiveContainer>
                     ) : (
-                        <EmptyState icon={Package} message="Chưa có dữ liệu tài sản" />
+                        <EmptyState icon={Package} message="No asset data available" />
                     )}
                 </div>
             </div>
@@ -505,17 +505,17 @@ export const Dashboard = () => {
             {/* Top expenses & expiring warranty */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
                 <div className="glass-card p-4 lg:p-5">
-                    <h2 className="font-bold text-lg lg:text-xl mb-3 text-[#4a3a34] font-display">Giao dịch lớn nhất tháng</h2>
+                    <h2 className="font-bold text-lg lg:text-xl mb-3 text-foreground font-sans">Top Expenses (This Month)</h2>
                     {stats?.topExpenses?.length > 0 ? (
                         <div className="space-y-2.5">
                             {stats.topExpenses.map((exp: any) => (
-                                <div key={exp.id} className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/85 border border-[rgba(242,214,197,0.7)]">
+                                <div key={exp.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border">
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-bold text-[#4a3a34] text-sm truncate">
-                                            {exp.note?.trim() || exp.category?.name || 'Giao dịch'}
+                                        <p className="font-bold text-foreground text-sm truncate">
+                                            {exp.note?.trim() || exp.category?.name || 'Transaction'}
                                         </p>
-                                        <p className="text-xs text-[#5c4437] truncate">
-                                            {exp.category?.name || '—'} • {dayjs(exp.expenseDate).format('DD/MM/YYYY')}
+                                        <p className="text-xs text-muted-foreground truncate">
+                                            {exp.category?.name || '—'} • {dayjs(exp.expenseDate).format('YYYY-MM-DD')}
                                         </p>
                                     </div>
                                     <span className={getMoneyBadgeClassName(exp.amount, 'text-sm font-bold whitespace-nowrap')}>
@@ -525,26 +525,26 @@ export const Dashboard = () => {
                             ))}
                         </div>
                     ) : (
-                        <EmptyState icon={Receipt} message="Chưa có giao dịch tháng này" compact />
+                        <EmptyState icon={Receipt} message="No transactions this month" compact />
                     )}
                 </div>
 
                 <div className="glass-card p-4 lg:p-5">
-                    <h2 className="font-bold text-lg lg:text-xl mb-3 text-[#4a3a34] font-display">Bảo hành sắp hết hạn</h2>
+                    <h2 className="font-bold text-lg lg:text-xl mb-3 text-foreground font-sans">Expiring Warranties</h2>
                     {stats?.expiringAssets?.length > 0 ? (
                         <div className="space-y-2.5">
                             {stats.expiringAssets.map((asset: any) => (
-                                <div key={asset.id} className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/85 border border-[rgba(242,214,197,0.7)] hover:border-[#f1c49c] transition-colors">
+                                <div key={asset.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border hover:border-border/80 transition-colors">
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-8 h-8 rounded-xl bg-[#fff3cf] flex items-center justify-center text-[#c58c2e] shrink-0">
+                                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0 border border-amber-500/20">
                                             <AlertTriangle size={18} />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="font-bold text-[#4a3a34] text-sm truncate">{asset.name}</p>
-                                            <p className="text-xs text-[#5c4437]">
-                                                Hết hạn:
+                                            <p className="font-bold text-foreground text-sm truncate">{asset.name}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Expires:
                                                 <span className={getDateBadgeClassName(asset.warrantyExpiredAt, 'ml-1')}>
-                                                    {asset.warrantyExpiredAt ? new Date(asset.warrantyExpiredAt).toLocaleDateString('vi-VN') : '—'}
+                                                    {asset.warrantyExpiredAt ? dayjs(asset.warrantyExpiredAt).format('YYYY-MM-DD') : '—'}
                                                 </span>
                                             </p>
                                         </div>
@@ -553,7 +553,7 @@ export const Dashboard = () => {
                             ))}
                         </div>
                     ) : (
-                        <EmptyState icon={Package} message="Tất cả tài sản còn bảo hành" compact />
+                        <EmptyState icon={Package} message="All asset warranties are in good standing" compact />
                     )}
                 </div>
             </div>
@@ -561,21 +561,21 @@ export const Dashboard = () => {
             {/* Maintenance & events */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
                 <div className="glass-card p-4 lg:p-5">
-                    <h2 className="font-bold text-lg lg:text-xl mb-3 text-[#4a3a34] font-display">Bảo dưỡng sắp tới</h2>
+                    <h2 className="font-bold text-lg lg:text-xl mb-3 text-foreground font-sans">Upcoming Maintenance</h2>
                     {stats?.upcomingMaintenance?.length > 0 ? (
                         <div className="space-y-2.5">
                             {stats.upcomingMaintenance.map((asset: any) => (
-                                <div key={asset.id} className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/85 border border-[rgba(242,214,197,0.7)]">
+                                <div key={asset.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border">
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-8 h-8 rounded-xl bg-[#dff1ff] flex items-center justify-center text-[#5f87c2] shrink-0">
+                                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0 border border-blue-500/20">
                                             <Wrench size={18} />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="font-bold text-[#4a3a34] text-sm truncate">{asset.name}</p>
-                                            <p className="text-xs text-[#5c4437]">
-                                                Bảo dưỡng:
+                                            <p className="font-bold text-foreground text-sm truncate">{asset.name}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Service Date:
                                                 <span className={getDateBadgeClassName(asset.nextMaintenanceDate, 'ml-1')}>
-                                                    {new Date(asset.nextMaintenanceDate).toLocaleDateString('vi-VN')}
+                                                    {dayjs(asset.nextMaintenanceDate).format('YYYY-MM-DD')}
                                                 </span>
                                             </p>
                                         </div>
@@ -584,26 +584,26 @@ export const Dashboard = () => {
                             ))}
                         </div>
                     ) : (
-                        <EmptyState icon={Wrench} message="Chưa có lịch bảo dưỡng" compact />
+                        <EmptyState icon={Wrench} message="No upcoming maintenance scheduled" compact />
                     )}
                 </div>
 
                 <div className="glass-card p-4 lg:p-5">
-                    <h2 className="font-bold text-lg lg:text-xl mb-3 text-[#4a3a34] font-display">Sự kiện 7 ngày tới</h2>
+                    <h2 className="font-bold text-lg lg:text-xl mb-3 text-foreground font-sans">Events in Next 7 Days</h2>
                     {stats?.upcomingEvents?.length > 0 ? (
                         <div className="space-y-2.5">
                             {stats.upcomingEvents.map((event: any) => {
                                 const meta = eventTypeMeta[event.type] || eventTypeMeta.EVENT;
                                 return (
-                                    <div key={event.id} className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/85 border border-[rgba(242,214,197,0.7)]">
+                                    <div key={event.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border">
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-8 h-8 rounded-xl bg-[#eef9f4] flex items-center justify-center text-[#6fb3a2] shrink-0">
+                                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-500/20">
                                                 <CalendarDays size={18} />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="font-bold text-[#4a3a34] text-sm truncate">{event.title}</p>
-                                                <p className="text-xs text-[#5c4437] truncate">
-                                                    {dayjs(event.startDate).format('HH:mm DD/MM')}
+                                                <p className="font-bold text-foreground text-sm truncate">{event.title}</p>
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    {dayjs(event.startDate).format('MMM DD, HH:mm')}
                                                     {event.location ? ` • ${event.location}` : ''}
                                                 </p>
                                             </div>
@@ -614,7 +614,7 @@ export const Dashboard = () => {
                             })}
                         </div>
                     ) : (
-                        <EmptyState icon={CalendarDays} message="Không có sự kiện sắp tới" compact />
+                        <EmptyState icon={CalendarDays} message="No upcoming events" compact />
                     )}
                 </div>
             </div>
@@ -634,23 +634,23 @@ interface KpiCardProps {
 
 const KpiCard = ({ label, primary, secondary, icon: Icon, accent }: KpiCardProps) => {
     const colors: Record<string, { color: string; bg: string }> = {
-        blue: { color: 'text-[#5f87c2]', bg: 'bg-[#edf6ff]' },
-        green: { color: 'text-[#6fb3a2]', bg: 'bg-[#eef9f4]' },
-        red: { color: 'text-[#d56f63]', bg: 'bg-[#fff0ea]' },
-        mint: { color: 'text-[#7fc7aa]', bg: 'bg-[#eaf7f0]' },
-        amber: { color: 'text-[#c58c2e]', bg: 'bg-[#fff8df]' },
+        blue: { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
+        green: { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+        red: { color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20' },
+        mint: { color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-500/10 border-teal-500/20' },
+        amber: { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
     };
     const c = colors[accent];
     return (
-        <div className="glass-card p-3.5 lg:p-4 transition-all hover:shadow-lg hover:-translate-y-1">
+        <div className="glass-card p-3.5 lg:p-4 transition-all hover:shadow-md">
             <div className="flex items-start gap-3">
-                <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm shrink-0', c.bg, c.color)}>
+                <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border', c.bg, c.color)}>
                     <Icon size={20} />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <p className="text-xs lg:text-sm font-semibold text-[#5c4437] truncate">{label}</p>
-                    <p className="text-base lg:text-xl font-bold text-[#473934] tracking-tight truncate">{primary}</p>
-                    <div className="text-[13px] lg:text-xs text-[#5c4437] mt-0.5 truncate">{secondary}</div>
+                    <p className="text-xs lg:text-sm font-semibold text-muted-foreground truncate">{label}</p>
+                    <p className="text-base lg:text-xl font-bold text-foreground tracking-tight truncate">{primary}</p>
+                    <div className="text-xs text-muted-foreground mt-0.5 truncate">{secondary}</div>
                 </div>
             </div>
         </div>
@@ -659,7 +659,7 @@ const KpiCard = ({ label, primary, secondary, icon: Icon, accent }: KpiCardProps
 
 const DeltaText = ({ pct, positiveIsGood }: { pct: number; positiveIsGood: boolean }) => {
     if (pct === 0) {
-        return <span className="text-slate-700">Bằng tháng trước</span>;
+        return <span className="text-muted-foreground">Same as last month</span>;
     }
     const isPositive = pct > 0;
     const isGood = positiveIsGood ? isPositive : !isPositive;
@@ -667,7 +667,7 @@ const DeltaText = ({ pct, positiveIsGood }: { pct: number; positiveIsGood: boole
     return (
         <span className={cn('inline-flex items-center gap-1 font-medium', isGood ? 'text-emerald-600' : 'text-rose-600')}>
             <Arrow size={12} />
-            {Math.abs(pct)}% so với tháng trước
+            {Math.abs(pct)}% vs last month
         </span>
     );
 };
@@ -677,8 +677,8 @@ const EmptyState = ({ icon: Icon, message, compact }: {
     message: string;
     compact?: boolean;
 }) => (
-    <div className={cn('flex flex-col items-center justify-center text-slate-600', compact ? 'h-[180px]' : 'h-full')}>
-        <Icon size={compact ? 36 : 48} className="mb-2 opacity-25" />
+    <div className={cn('flex flex-col items-center justify-center text-muted-foreground', compact ? 'h-[180px]' : 'h-full')}>
+        <Icon size={compact ? 36 : 48} className="mb-2 opacity-30" />
         <p className="text-sm">{message}</p>
     </div>
 );

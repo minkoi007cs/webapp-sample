@@ -27,19 +27,19 @@ import { asArray } from '../api/client';
 import { formatVndAmount } from '../utils/currency';
 
 const typeLabels: Record<AssetMaintenanceType, string> = {
-  maintenance: 'Bảo trì',
-  operation: 'Khai thác',
-  liability: 'Nợ',
+  maintenance: 'Maintenance',
+  operation: 'Operation',
+  liability: 'Liability',
 };
 
 const statusLabels: Record<MaintenanceStatus, string> = {
-  open: 'Đang chờ',
-  completed: 'Đã ghi nhận',
-  skipped: 'Đã bỏ qua',
+  open: 'Pending',
+  completed: 'Recorded',
+  skipped: 'Skipped',
 };
 
 const getAmountLabel = (type: AssetMaintenanceType) =>
-  type === 'operation' ? 'Thu nhập' : 'Chi phí';
+  type === 'operation' ? 'Income' : 'Cost';
 
 export const MaintenanceList = () => {
   const queryClient = useQueryClient();
@@ -90,7 +90,7 @@ export const MaintenanceList = () => {
   const createMutation = useMutation({
     mutationFn: (payload: Parameters<typeof maintenanceApi.create>[0]) => maintenanceApi.create(payload),
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Không thể tạo bản ghi');
+      message.error(error?.response?.data?.message || 'Failed to create record');
     },
   });
 
@@ -103,7 +103,7 @@ export const MaintenanceList = () => {
       payload: Parameters<typeof maintenanceApi.update>[1];
     }) => maintenanceApi.update(id, payload),
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Không thể cập nhật bản ghi');
+      message.error(error?.response?.data?.message || 'Failed to update record');
     },
   });
 
@@ -116,7 +116,7 @@ export const MaintenanceList = () => {
       payload: { content: string; cost: number; categoryId: string };
     }) => maintenanceApi.complete(id, payload),
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Không thể ghi nhận giao dịch');
+      message.error(error?.response?.data?.message || 'Failed to record transaction');
     },
   });
 
@@ -124,13 +124,13 @@ export const MaintenanceList = () => {
     mutationFn: (id: string) => maintenanceApi.remove(id),
     onSuccess: () => {
       invalidateRelated();
-      message.success('Đã xóa bản ghi');
+      message.success('Record deleted successfully');
       setIsModalOpen(false);
       setEditingRow(null);
       form.resetFields();
     },
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Không thể xóa bản ghi');
+      message.error(error?.response?.data?.message || 'Failed to delete record');
     },
   });
 
@@ -173,7 +173,7 @@ export const MaintenanceList = () => {
   const submitForm = async (values: any) => {
     const scheduledDate = values.scheduledDate?.format('YYYY-MM-DD');
     if (!scheduledDate) {
-      message.warning('Chọn ngày thực hiện');
+      message.warning('Please select a scheduled date');
       return;
     }
 
@@ -200,9 +200,9 @@ export const MaintenanceList = () => {
             categoryId: values.categoryId,
           },
         });
-        message.success('Đã tạo và ghi nhận giao dịch');
+        message.success('Created and recorded transaction');
       } else {
-        message.success('Đã tạo bản ghi mới');
+        message.success('New record created');
       }
 
       invalidateRelated();
@@ -211,7 +211,7 @@ export const MaintenanceList = () => {
     }
 
     if (editingRow.status === 'completed') {
-      message.warning('Bản ghi đã ghi nhận xong, chỉ có thể xóa nếu cần làm lại');
+      message.warning('This record is already completed.');
       return;
     }
 
@@ -234,7 +234,7 @@ export const MaintenanceList = () => {
           categoryId: values.categoryId,
         },
       });
-      message.success('Đã ghi nhận hoàn tất');
+      message.success('Completed and transaction recorded');
     } else {
       await updateMutation.mutateAsync({
         id: editingRow.id,
@@ -246,7 +246,7 @@ export const MaintenanceList = () => {
           reminderDaysBefore: values.reminderDaysBefore ?? null,
         },
       });
-      message.success('Đã cập nhật bản ghi');
+      message.success('Record updated successfully');
     }
 
     invalidateRelated();
@@ -255,12 +255,12 @@ export const MaintenanceList = () => {
 
   const columns = [
     {
-      title: 'Tài sản',
+      title: 'Asset',
       key: 'asset',
       render: (_: unknown, row: AssetMaintenance) => row.asset?.name || row.assetId,
     },
     {
-      title: 'Loại',
+      title: 'Type',
       dataIndex: 'type',
       key: 'type',
       render: (type: AssetMaintenanceType) => {
@@ -269,13 +269,13 @@ export const MaintenanceList = () => {
       },
     },
     {
-      title: 'Ngày thực hiện',
+      title: 'Scheduled Date',
       dataIndex: 'scheduledDate',
       key: 'scheduledDate',
-      render: (date: string) => dayjs(date).format('DD/MM/YYYY'),
+      render: (date: string) => dayjs(date).format('YYYY-MM-DD'),
     },
     {
-      title: 'Trạng thái',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       render: (status: MaintenanceStatus) => {
@@ -284,22 +284,22 @@ export const MaintenanceList = () => {
       },
     },
     {
-      title: 'Giá trị',
+      title: 'Value',
       dataIndex: 'cost',
       key: 'cost',
       render: (cost: number | null, row: AssetMaintenance) => (
-        cost != null ? formatVndAmount(cost) : (row.status === 'completed' ? '0 đồng' : '—')
+        cost != null ? formatVndAmount(cost) : (row.status === 'completed' ? '$0' : '—')
       ),
     },
     {
-      title: 'Nội dung',
+      title: 'Content',
       dataIndex: 'content',
       key: 'content',
       ellipsis: true,
       render: (content: string | null) => content || '—',
     },
     {
-      title: 'Xóa',
+      title: 'Delete',
       key: 'delete',
       width: 70,
       render: (_: unknown, row: AssetMaintenance) => (
@@ -310,8 +310,8 @@ export const MaintenanceList = () => {
           onClick={(event) => {
             event.stopPropagation();
             Modal.confirm({
-              title: 'Xóa bản ghi này?',
-              content: 'Thao tác này không hoàn tác được.',
+              title: 'Delete this record?',
+              content: 'This action cannot be undone.',
               onOk: () => deleteMutation.mutate(row.id),
             });
           }}
@@ -324,14 +324,14 @@ export const MaintenanceList = () => {
     <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl lg:text-2xl font-bold text-slate-900 font-display flex items-center gap-2">
-            <Wrench className="text-amber-600" size={28} />
-            Bảo trì khai thác và nợ
+          <h1 className="text-xl lg:text-2xl font-bold text-foreground font-sans flex items-center gap-2">
+            <Wrench className="text-amber-600 dark:text-amber-400" size={24} />
+            Asset Maintenance & Operations
           </h1>
-          <p className="text-sm text-slate-700">Theo dõi các hoạt động phát sinh chi phí hoặc thu nhập gắn với tài sản</p>
+          <p className="text-sm text-muted-foreground">Track scheduled maintenance, operational revenue, and asset liabilities</p>
         </div>
         <Button type="primary" icon={<Plus size={18} />} onClick={openCreate}>
-          Thêm bản ghi
+          Add Record
         </Button>
       </div>
 
@@ -339,7 +339,7 @@ export const MaintenanceList = () => {
         <div className="mb-4 flex flex-col sm:flex-row gap-3 flex-wrap">
           <Select
             allowClear
-            placeholder="Lọc theo tài sản"
+            placeholder="Filter by asset"
             className="w-full sm:w-56"
             options={assetOptions}
             value={filters.assetId}
@@ -347,19 +347,19 @@ export const MaintenanceList = () => {
           />
           <Select
             allowClear
-            placeholder="Loại bản ghi"
+            placeholder="Record type"
             className="w-full sm:w-44"
             options={[
-              { value: 'maintenance', label: 'Bảo trì' },
-              { value: 'operation', label: 'Khai thác' },
-              { value: 'liability', label: 'Nợ' },
+              { value: 'maintenance', label: 'Maintenance' },
+              { value: 'operation', label: 'Operation' },
+              { value: 'liability', label: 'Liability' },
             ]}
             value={filters.type}
             onChange={(value) => setFilters({ ...filters, type: value || undefined })}
           />
           <Select
             allowClear
-            placeholder="Trạng thái"
+            placeholder="Status"
             className="w-full sm:w-44"
             options={[
               { value: 'open', label: statusLabels.open },
@@ -378,7 +378,7 @@ export const MaintenanceList = () => {
           columns={columns}
           onRow={(row) => ({
             onClick: () => openEdit(row),
-            className: 'cursor-pointer hover:bg-slate-50 transition-colors',
+            className: 'cursor-pointer hover:bg-muted/40 transition-colors',
           })}
           pagination={{ pageSize: 12, showSizeChanger: false }}
           scroll={{ x: 860 }}
@@ -387,7 +387,7 @@ export const MaintenanceList = () => {
       </div>
 
       <Modal
-        title={editingRow ? 'Cập nhật bản ghi' : 'Tạo bản ghi mới'}
+        title={editingRow ? 'Edit Record' : 'Create New Record'}
         open={isModalOpen}
         onCancel={closeModal}
         onOk={() => form.submit()}
@@ -400,17 +400,17 @@ export const MaintenanceList = () => {
               danger
               onClick={() => {
                 Modal.confirm({
-                  title: 'Xóa bản ghi này?',
-                  content: 'Thao tác này không hoàn tác được.',
+                  title: 'Delete this record?',
+                  content: 'This action cannot be undone.',
                   onOk: () => deleteMutation.mutate(editingRow.id),
                 });
               }}
             >
-              Xóa
+              Delete
             </Button>
           ) : null,
           <Button key="cancel" onClick={closeModal}>
-            Hủy
+            Cancel
           </Button>,
           <Button
             key="submit"
@@ -418,35 +418,35 @@ export const MaintenanceList = () => {
             onClick={() => form.submit()}
             loading={createMutation.isPending || updateMutation.isPending || completeMutation.isPending}
           >
-            {watchedStatus === 'completed' ? 'Lưu và ghi nhận' : 'Lưu'}
+            {watchedStatus === 'completed' ? 'Save and Record' : 'Save'}
           </Button>,
         ]}
       >
         <Form form={form} layout="vertical" onFinish={submitForm} className="mt-4">
-          <Form.Item label="Loại nghiệp vụ" name="type" rules={[{ required: true }]}>
+          <Form.Item label="Operation Type" name="type" rules={[{ required: true }]}>
             <Radio.Group className="w-full">
-              <Radio.Button value="maintenance" className="w-1/3 text-center">Bảo trì</Radio.Button>
-              <Radio.Button value="operation" className="w-1/3 text-center">Khai thác</Radio.Button>
-              <Radio.Button value="liability" className="w-1/3 text-center">Nợ</Radio.Button>
+              <Radio.Button value="maintenance" className="w-1/3 text-center">Maintenance</Radio.Button>
+              <Radio.Button value="operation" className="w-1/3 text-center">Operation</Radio.Button>
+              <Radio.Button value="liability" className="w-1/3 text-center">Liability</Radio.Button>
             </Radio.Group>
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="assetId" label="Tài sản" rules={[{ required: true }]} className="col-span-2">
+            <Form.Item name="assetId" label="Asset" rules={[{ required: true }]} className="col-span-2">
               <Select
                 disabled={Boolean(editingRow)}
                 showSearch
                 optionFilterProp="label"
                 options={assetOptions}
-                placeholder="Chọn tài sản"
+                placeholder="Select asset"
               />
             </Form.Item>
 
-            <Form.Item name="scheduledDate" label="Ngày thực hiện" rules={[{ required: true }]}>
-              <DatePicker className="w-full" format="DD/MM/YYYY" />
+            <Form.Item name="scheduledDate" label="Scheduled Date" rules={[{ required: true }]}>
+              <DatePicker className="w-full" format="YYYY-MM-DD" />
             </Form.Item>
 
-            <Form.Item name="status" label="Trạng thái" rules={[{ required: true }]}>
+            <Form.Item name="status" label="Status" rules={[{ required: true }]}>
               <Select
                 disabled={editingRow?.status === 'completed'}
                 options={[
@@ -457,15 +457,15 @@ export const MaintenanceList = () => {
               />
             </Form.Item>
 
-            <Form.Item name="reminderDaysBefore" label="Nhắc trước (ngày)">
+            <Form.Item name="reminderDaysBefore" label="Remind in advance (days)">
               <InputNumber min={0} max={365} className="w-full" />
             </Form.Item>
 
             {watchedStatus === 'completed' ? (
               <Form.Item
                 name="amount"
-                label={`${getAmountLabel(watchedType)} (đồng)`}
-                rules={[{ required: true, message: `Nhập ${getAmountLabel(watchedType).toLowerCase()}` }]}
+                label={`${getAmountLabel(watchedType)} Amount`}
+                rules={[{ required: true, message: `Enter ${getAmountLabel(watchedType).toLowerCase()} amount` }]}
               >
                 <InputNumber min={0} className="w-full" />
               </Form.Item>
@@ -473,29 +473,29 @@ export const MaintenanceList = () => {
               <div />
             )}
 
-            <Form.Item name="content" label="Nội dung" className="col-span-2" rules={[{ required: true }]}>
+            <Form.Item name="content" label="Notes & Details" className="col-span-2" rules={[{ required: true }]}>
               <Input.TextArea
                 rows={3}
                 placeholder={watchedType === 'operation'
-                  ? 'Ví dụ: Cho thuê xe, khai thác nhà kho...'
+                  ? 'e.g., Vehicle rental revenue, storage lease...'
                   : watchedType === 'liability'
-                    ? 'Ví dụ: Trả lãi, xử lý khoản nợ liên quan tài sản...'
-                    : 'Ví dụ: Thay dầu, sửa máy, vệ sinh định kỳ...'}
+                    ? 'e.g., Loan interest payment, asset liability settlement...'
+                    : 'e.g., Oil change, hardware repair, routine servicing...'}
               />
             </Form.Item>
 
             {watchedStatus === 'completed' ? (
               <Form.Item
                 name="categoryId"
-                label={watchedType === 'operation' ? 'Danh mục thu nhập' : 'Danh mục chi phí'}
+                label={watchedType === 'operation' ? 'Income Category' : 'Expense Category'}
                 className="col-span-2"
-                rules={[{ required: true, message: 'Chọn danh mục tài chính' }]}
+                rules={[{ required: true, message: 'Select financial category' }]}
               >
                 <Select
                   showSearch
                   optionFilterProp="label"
                   options={categoryOptions}
-                  placeholder={watchedType === 'operation' ? 'Chọn danh mục thu nhập' : 'Chọn danh mục chi phí'}
+                  placeholder={watchedType === 'operation' ? 'Select income category' : 'Select expense category'}
                 />
               </Form.Item>
             ) : null}

@@ -86,14 +86,14 @@ export const confirmDuplicateWarning = ({
     title,
     summary,
     detailLines,
-    okText = 'Vẫn tiếp tục',
+    okText = 'Continue Anyway',
 }: DuplicateWarningOptions) => new Promise<boolean>((resolve) => {
     Modal.confirm({
         title,
         content: (
-            <div className="space-y-2 text-sm text-slate-600">
+            <div className="space-y-2 text-sm text-muted-foreground">
                 <p>{summary}</p>
-                <div className="rounded-xl bg-amber-50 px-3 py-2 text-slate-700">
+                <div className="rounded-lg bg-secondary p-3 text-foreground font-medium text-xs">
                     {detailLines.map((line) => (
                         <div key={line}>{line}</div>
                     ))}
@@ -101,16 +101,17 @@ export const confirmDuplicateWarning = ({
             </div>
         ),
         okText,
-        cancelText: 'Quay lại kiểm tra',
+        cancelText: 'Back to Review',
         onOk: () => resolve(true),
         onCancel: () => resolve(false),
     });
 });
 
 export const getCategoryLabel = (categories: Category[], categoryId?: string | null) => (
-    categories.find((category) => category.id === categoryId)?.name || 'Không rõ danh mục'
+    categories.find((category) => category.id === categoryId)?.name || 'Unknown Category'
 );
 
 export const getAssetLabel = (assets: Asset[], assetId?: string | null) => (
-    assets.find((asset) => asset.id === assetId)?.name || 'Không gắn tài sản'
+    assets.find((asset) => asset.id === assetId)?.name || 'Unassigned Asset'
 );
+

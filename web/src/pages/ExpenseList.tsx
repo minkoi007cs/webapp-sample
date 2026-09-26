@@ -92,7 +92,7 @@ export const ExpenseList = () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      message.success('Giao dịch đã được ghi nhận');
+      message.success('Transaction recorded successfully');
       setIsModalOpen(false);
       setCopyMode(false);
       form.resetFields();
@@ -105,7 +105,7 @@ export const ExpenseList = () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      message.success('Đã cập nhật giao dịch');
+      message.success('Transaction updated successfully');
       setIsModalOpen(false);
       setCopyMode(false);
       setEditingExpense(null);
@@ -119,7 +119,7 @@ export const ExpenseList = () => {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      message.success('Đã thêm danh mục mới');
+      message.success('New category added');
       setNewCategoryName('');
     },
   });
@@ -130,7 +130,7 @@ export const ExpenseList = () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      message.success('Đã xóa bản ghi');
+      message.success('Transaction deleted');
     },
   });
 
@@ -145,7 +145,7 @@ export const ExpenseList = () => {
       link.click();
       link.remove();
     } catch {
-      message.error('Lỗi khi xuất dữ liệu');
+      message.error('Failed to export transaction data');
     }
   };
 
@@ -215,14 +215,14 @@ export const ExpenseList = () => {
 
   const columns = [
     {
-      title: 'Ngày',
+      title: 'Date',
       dataIndex: 'expenseDate',
       key: 'expenseDate',
       render: (date: string) => renderDateBadge(date),
       sorter: (a: Expense, b: Expense) => dayjs(a.expenseDate).valueOf() - dayjs(b.expenseDate).valueOf(),
     },
     {
-      title: 'Số tiền',
+      title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
       render: (val: number, record: Expense) => {
@@ -232,19 +232,19 @@ export const ExpenseList = () => {
       sorter: (a: Expense, b: Expense) => Number(a.amount || 0) - Number(b.amount || 0),
     },
     {
-      title: 'Danh mục',
+      title: 'Category',
       dataIndex: ['category', 'name'],
       key: 'category',
       render: (name: string, record: Expense) => (
         <Space size={4} wrap>
           <Tag color={record.entryType === 'INCOME' ? 'green' : 'orange'}>{name}</Tag>
-          {record.isTransfer ? <Tag color="blue">Chuyển nội bộ</Tag> : null}
+          {record.isTransfer ? <Tag color="blue">Internal Transfer</Tag> : null}
         </Space>
       ),
       sorter: (a: Expense, b: Expense) => (a.category?.name || '').localeCompare(b.category?.name || ''),
     },
     {
-      title: 'Loại giao dịch',
+      title: 'Type',
       dataIndex: 'entryType',
       key: 'entryType',
       render: (entryType: ExpenseEntryType) => (
@@ -255,22 +255,22 @@ export const ExpenseList = () => {
       sorter: (a: Expense, b: Expense) => (a.entryType || '').localeCompare(b.entryType || ''),
     },
     {
-      title: 'Tài sản',
+      title: 'Linked Asset',
       dataIndex: ['asset', 'name'],
       key: 'asset',
       render: (name: string) => name || '-',
       sorter: (a: Expense, b: Expense) => (a.asset?.name || '').localeCompare(b.asset?.name || ''),
     },
     {
-      title: 'Thao tác',
+      title: 'Actions',
       key: 'action',
       render: (_: unknown, record: Expense) => (
         <Space onClick={(e) => e.stopPropagation()}>
           <Button
             type="text"
             icon={<Copy size={16} />}
-            title="Sao chép"
-            aria-label="Sao chép"
+            title="Duplicate"
+            aria-label="Duplicate"
             onClick={(e) => openExpenseCopyModal(record, e)}
           />
         </Space>
@@ -304,20 +304,19 @@ export const ExpenseList = () => {
     if (!duplicate) return true;
 
     return confirmDuplicateWarning({
-      title: 'Phát hiện giao dịch trùng',
-      summary: 'Đã có giao dịch cùng số tiền, danh mục, ngày thực hiện và tài sản. Bạn vẫn có thể tiếp tục nếu đây là bản ghi hợp lệ.',
+      title: 'Duplicate Transaction Detected',
+      summary: 'A transaction with the same amount, category, date, and asset already exists. You can proceed if this is intentional.',
       detailLines: [
-        `Số tiền: ${formatVndAmount(data.amount)}`,
-        `Danh mục: ${getCategoryLabel(categories ?? [], data.categoryId)}`,
-        `Ngày: ${dayjs(data.expenseDate).format('DD/MM/YYYY')}`,
-        `Tài sản: ${getAssetLabel(assets ?? [], data.assetId)}`,
+        `Amount: ${formatVndAmount(data.amount)}`,
+        `Category: ${getCategoryLabel(categories ?? [], data.categoryId)}`,
+        `Date: ${dayjs(data.expenseDate).format('YYYY-MM-DD')}`,
+        `Asset: ${getAssetLabel(assets ?? [], data.assetId)}`,
       ],
     });
   };
 
   const buildExpensePayload = (values: any) => ({
     ...values,
-    // Theo ngày lịch người dùng chọn; tránh toISOString() làm lệch ngày khi sang UTC.
     expenseDate: values.expenseDate ? dayjs(values.expenseDate).format('YYYY-MM-DD') : undefined,
     entryType: transactionType,
     isTransfer: Boolean(values.isTransfer),
@@ -327,8 +326,8 @@ export const ExpenseList = () => {
     <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl lg:text-2xl font-bold text-slate-900 font-display">
-            Quản lý tài chính
+          <h1 className="text-xl lg:text-2xl font-bold text-foreground font-sans">
+            Transactions & Expenses
           </h1>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
@@ -336,8 +335,8 @@ export const ExpenseList = () => {
             icon={<Download size={18} />}
             onClick={handleExport}
             className="flex-1 sm:flex-none"
-            title="Xuất CSV"
-            aria-label="Xuất CSV"
+            title="Export CSV"
+            aria-label="Export CSV"
           />
           <Button
             type="primary"
@@ -350,8 +349,8 @@ export const ExpenseList = () => {
               setIsModalOpen(true);
             }}
             className="flex-1 sm:flex-none"
-            title="Ghi nhận giao dịch"
-            aria-label="Ghi nhận giao dịch"
+            title="Record Transaction"
+            aria-label="Record Transaction"
           />
         </div>
       </div>
@@ -359,7 +358,7 @@ export const ExpenseList = () => {
       <div className="glass-card p-4 lg:p-6 overflow-hidden">
         <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <Select
-            placeholder="Loại giao dịch"
+            placeholder="Transaction Type"
             allowClear
             value={filters.direction}
             onChange={(val) => setFilters({
@@ -368,26 +367,26 @@ export const ExpenseList = () => {
               categoryId: undefined,
             })}
             options={[
-              { value: 'EXPENSE', label: 'Chi phí' },
-              { value: 'INCOME', label: 'Thu nhập' },
+              { value: 'EXPENSE', label: 'Expenses' },
+              { value: 'INCOME', label: 'Income' },
             ]}
           />
           <Select
-            placeholder="Danh mục"
+            placeholder="Category"
             allowClear
             value={filters.categoryId}
             onChange={(val) => setFilters({ ...filters, categoryId: val })}
             options={categoryFilterOptions}
           />
           <Select
-            placeholder="Tài sản liên quan"
+            placeholder="Linked Asset"
             allowClear
             value={filters.assetId}
             onChange={(val) => setFilters({ ...filters, assetId: val })}
             options={assets?.map((asset) => ({ value: asset.id, label: asset.name }))}
           />
           <Select
-            placeholder="Người ghi nhận"
+            placeholder="Created By"
             allowClear
             value={filters.createdBy}
             onChange={(val) => setFilters({ ...filters, createdBy: val })}
@@ -395,19 +394,18 @@ export const ExpenseList = () => {
           />
           <InputNumber
             className="w-full"
-            placeholder="Số tiền"
+            placeholder="Amount"
             value={filters.amount}
             onChange={(value) => setFilters({ ...filters, amount: value ?? undefined })}
             formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
             parser={(value) => value?.replace(/\$\s?|(,*)/g, '') || ''}
-            addonAfter="đồng"
           />
         </div>
 
         <div className="mb-6 flex flex-1 flex-col sm:flex-row gap-3">
           <DatePicker.RangePicker
             className="flex-1"
-            placeholder={['Từ ngày', 'Đến ngày']}
+            placeholder={['Start Date', 'End Date']}
             onChange={(dates) => {
               setFilters({
                 ...filters,
@@ -420,12 +418,12 @@ export const ExpenseList = () => {
             icon={<FilterX size={18} />}
             onClick={() => setFilters({})}
             className="w-full sm:w-auto"
-            title="Xóa bộ lọc"
-            aria-label="Xóa bộ lọc"
+            title="Reset filters"
+            aria-label="Reset filters"
           />
         </div>
 
-        {isError && <div className="mb-3 p-3 rounded-lg bg-red-50 text-red-600 text-sm">Không thể tải danh sách giao dịch. Vui lòng thử lại.</div>}
+        {isError && <div className="mb-3 p-3 rounded-lg bg-rose-50 text-rose-600 text-sm">Failed to load transactions. Please retry.</div>}
         <div className="overflow-x-auto">
           <Table
             columns={columns}
@@ -434,7 +432,7 @@ export const ExpenseList = () => {
             rowKey="id"
             onRow={(record) => ({
               onClick: () => handleEdit(record),
-              className: 'cursor-pointer hover:bg-slate-50 transition-colors',
+              className: 'cursor-pointer hover:bg-muted/40 transition-colors',
             })}
             pagination={false}
             onScroll={onExpenseTableScroll}
@@ -452,10 +450,10 @@ export const ExpenseList = () => {
       <Modal
         title={
           editingExpense
-            ? 'Sửa giao dịch'
+            ? 'Edit Transaction'
             : copyMode
-              ? 'Sao chép giao dịch'
-              : (transactionType === 'INCOME' ? 'Ghi nhận khoản thu' : 'Ghi nhận chi phí')
+              ? 'Duplicate Transaction'
+              : (transactionType === 'INCOME' ? 'Record Income' : 'Record Expense')
         }
         open={isModalOpen}
         forceRender
@@ -470,14 +468,13 @@ export const ExpenseList = () => {
         width={window.innerWidth < 480 ? '100%' : 500}
         style={window.innerWidth < 480 ? { top: 12 } : undefined}
         bodyStyle={window.innerWidth < 480 ? { padding: 12, maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' } : undefined}
-        className={transactionType === 'INCOME' ? 'rounded-2xl transaction-modal-income' : 'rounded-2xl transaction-modal-expense'}
         footer={[
-          <div key="metadata" className="flex flex-col items-start text-[12px] text-slate-600 mb-4 px-4 w-full">
+          <div key="metadata" className="flex flex-col items-start text-[12px] text-muted-foreground mb-4 px-4 w-full">
             {editingExpense?.createdAt && (
-              <span>Tạo bởi {editingExpense.creator?.fullName || editingExpense.creator?.email || 'Hệ thống'} lúc {dayjs(editingExpense.createdAt).format('HH:mm DD/MM/YYYY')}</span>
+              <span>Created by {editingExpense.creator?.fullName || editingExpense.creator?.email || 'System'} at {dayjs(editingExpense.createdAt).format('HH:mm YYYY-MM-DD')}</span>
             )}
             {editingExpense?.updatedAt && editingExpense.updatedBy && (
-              <span>Cập nhật cuối bởi {editingExpense.updater?.fullName || editingExpense.updater?.email || '-'} lúc {dayjs(editingExpense.updatedAt).format('HH:mm DD/MM/YYYY')}</span>
+              <span>Last updated by {editingExpense.updater?.fullName || editingExpense.updater?.email || '-'} at {dayjs(editingExpense.updatedAt).format('HH:mm YYYY-MM-DD')}</span>
             )}
           </div>,
           editingExpense ? (
@@ -485,13 +482,13 @@ export const ExpenseList = () => {
               key="delete"
               danger
               icon={<Trash2 size={18} />}
-              title="Xóa giao dịch"
-              aria-label="Xóa giao dịch"
+              title="Delete Transaction"
+              aria-label="Delete Transaction"
               loading={deleteMutation.isPending}
               onClick={() => {
                 Modal.confirm({
-                  title: 'Xác nhận xóa',
-                  content: 'Bản ghi này sẽ bị xóa vĩnh viễn',
+                  title: 'Confirm Deletion',
+                  content: 'This transaction record will be permanently deleted.',
                   onOk: () => {
                     deleteMutation.mutate(editingExpense.id, {
                       onSuccess: () => {
@@ -510,16 +507,16 @@ export const ExpenseList = () => {
             key="cancel"
             type="text"
             icon={<X size={18} />}
-            title="Hủy"
-            aria-label="Hủy"
+            title="Cancel"
+            aria-label="Cancel"
             onClick={() => { setIsModalOpen(false); setCopyMode(false); setEditingExpense(null); setTransactionType('EXPENSE'); form.resetFields(); }}
           />,
           <Button
             key="submit"
             type="primary"
             icon={<Check size={18} />}
-            title={editingExpense ? 'Cập nhật' : 'Ghi nhận'}
-            aria-label={editingExpense ? 'Cập nhật' : 'Ghi nhận'}
+            title={editingExpense ? 'Update' : 'Save'}
+            aria-label={editingExpense ? 'Update' : 'Save'}
             onClick={() => form.submit()}
             loading={createMutation.isPending || updateMutation.isPending}
           />,
@@ -541,7 +538,7 @@ export const ExpenseList = () => {
           }}
           className="mt-4"
         >
-          <Form.Item label="Loại giao dịch" className="mb-4">
+          <Form.Item label="Transaction Type" className="mb-4">
             <Radio.Group
               value={transactionType}
               onChange={(e) => {
@@ -551,25 +548,18 @@ export const ExpenseList = () => {
               buttonStyle="solid"
               className="w-full"
             >
-              <Radio.Button value="EXPENSE" className="w-1/3 text-center">Chi phí</Radio.Button>
-              <Radio.Button value="INCOME" className="w-1/3 text-center">Thu nhập</Radio.Button>
+              <Radio.Button value="EXPENSE" className="w-1/2 text-center">Expense</Radio.Button>
+              <Radio.Button value="INCOME" className="w-1/2 text-center">Income</Radio.Button>
             </Radio.Group>
           </Form.Item>
 
           <Row gutter={window.innerWidth < 480 ? 8 : 16}>
             <Col xs={24} sm={12}>
-              <Form.Item name="categoryId" label="Danh mục" rules={[{ required: true }]}>
+              <Form.Item name="categoryId" label="Category" rules={[{ required: true }]}>
                 <Select
                   size={window.innerWidth < 480 ? 'middle' : 'large'}
-                  placeholder={isTransfer ? 'Chọn danh mục tài sản hoặc công nợ' : 'Chọn danh mục'}
+                  placeholder={isTransfer ? 'Select asset or liability category' : 'Select category'}
                   options={categorySelectOptions}
-                  notFoundContent={
-                    isTransfer
-                      ? 'Chưa có danh mục chuyển nội bộ phù hợp'
-                      : transactionType === 'INCOME'
-                        ? 'Chưa có danh mục thu — nhập tên phía dưới và bấm Thêm'
-                        : 'Chưa có danh mục — nhập tên phía dưới và bấm Thêm'
-                  }
                   dropdownRender={(menu) => (
                     <>
                       {menu}
@@ -577,7 +567,7 @@ export const ExpenseList = () => {
                       <Space style={{ padding: '0 8px 4px' }}>
                         <Input
                           size="middle"
-                          placeholder="Thêm mới..."
+                          placeholder="New category..."
                           ref={inputRef}
                           value={newCategoryName}
                           onChange={onNameChange}
@@ -588,8 +578,8 @@ export const ExpenseList = () => {
                           icon={<PlusCircle size={16} />}
                           onClick={addItem}
                           loading={addCategoryMutation.isPending}
-                          title="Thêm danh mục"
-                          aria-label="Thêm danh mục"
+                          title="Add Category"
+                          aria-label="Add Category"
                         />
                       </Space>
                     </>
@@ -598,24 +588,23 @@ export const ExpenseList = () => {
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item name="expenseDate" label="Ngày thực hiện" initialValue={dayjs()}>
+              <Form.Item name="expenseDate" label="Date" initialValue={dayjs()}>
                 <DatePicker className="w-full" size={window.innerWidth < 480 ? 'middle' : 'large'} />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name="amount" label="Số tiền" rules={[{ required: true }]}>
+          <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
             <InputNumber
               size={window.innerWidth < 480 ? 'middle' : 'large'}
               className={window.innerWidth < 480 ? 'w-full' : 'w-full h-12 text-lg font-bold'}
               formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               parser={(val) => val!.replace(/\$\s?|(,*)/g, '')}
-              prefix={<Wallet size={18} className="text-slate-600 mr-2" />}
-              addonAfter="đồng"
+              prefix={<Wallet size={18} className="text-muted-foreground mr-2" />}
             />
           </Form.Item>
 
-          <Form.Item name="assetId" label="Tài sản liên quan (Tùy chọn)">
+          <Form.Item name="assetId" label="Linked Asset (Optional)">
             <Select
               allowClear
               size={window.innerWidth < 480 ? 'middle' : 'large'}
@@ -623,13 +612,13 @@ export const ExpenseList = () => {
             />
           </Form.Item>
 
-          <Form.Item name="note" label="Ghi chú">
-            <Input.TextArea rows={2} placeholder="Nhập ghi chú thêm..." />
+          <Form.Item name="note" label="Notes">
+            <Input.TextArea rows={2} placeholder="Add transaction notes..." />
           </Form.Item>
 
-          <div className="bg-slate-50 p-3 rounded-xl mb-4">
+          <div className="bg-muted/40 p-3 rounded-xl mb-4">
             <div className="flex items-center justify-between gap-3">
-              <div className="text-sm font-medium text-slate-700">Chuyển khoản nội bộ</div>
+              <div className="text-sm font-medium text-foreground">Internal Account Transfer</div>
               <Form.Item name="isTransfer" valuePropName="checked" className="mb-0">
                 <Switch size="small" onChange={() => form.setFieldValue('categoryId', undefined)} />
               </Form.Item>

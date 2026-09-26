@@ -98,14 +98,14 @@ export const CategoryList = () => {
     mutationFn: (data: Partial<Category>) => categoryApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      message.success('Danh mục đã được tạo');
+      message.success('Category created successfully');
       setIsModalOpen(false);
       setCopyMode(false);
       setEditingCategory(null);
       form.resetFields();
     },
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Không thể tạo danh mục');
+      message.error(error?.response?.data?.message || 'Failed to create category');
     },
   });
 
@@ -113,14 +113,14 @@ export const CategoryList = () => {
     mutationFn: (data: Partial<Category>) => categoryApi.update(editingCategory!.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      message.success('Đã cập nhật danh mục');
+      message.success('Category updated successfully');
       setIsModalOpen(false);
       setCopyMode(false);
       setEditingCategory(null);
       form.resetFields();
     },
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Không thể cập nhật danh mục');
+      message.error(error?.response?.data?.message || 'Failed to update category');
     },
   });
 
@@ -132,7 +132,7 @@ export const CategoryList = () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      message.success('Đã xóa danh mục');
+      message.success('Category deleted successfully');
       setReassignOpen(false);
       setUsageSummary(null);
       setReassignTargetId(undefined);
@@ -142,7 +142,7 @@ export const CategoryList = () => {
       form.resetFields();
     },
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Không thể xóa danh mục');
+      message.error(error?.response?.data?.message || 'Failed to delete category');
     },
   });
 
@@ -163,14 +163,14 @@ export const CategoryList = () => {
       const usage = await categoryApi.getUsageBeforeDelete(editingCategory.id);
       if (usage.childCategoryCount > 0) {
         message.error(
-          `Không thể xóa: danh mục còn ${usage.childCategoryCount} danh mục con. Hãy xóa hoặc gom các danh mục con trước.`,
+          `Cannot delete: category still has ${usage.childCategoryCount} subcategories. Please reassign or delete subcategories first.`,
         );
         return;
       }
       if (usage.assetCount + usage.expenseCount === 0) {
         Modal.confirm({
-          title: 'Xác nhận xóa',
-          content: `Bạn có chắc muốn xóa danh mục "${editingCategory.name}"?`,
+          title: 'Confirm Deletion',
+          content: `Are you sure you want to delete category "${editingCategory.name}"?`,
           onOk: () => deleteMutation.mutateAsync({ id: editingCategory.id }),
         });
         return;
@@ -179,7 +179,7 @@ export const CategoryList = () => {
       setReassignTargetId(undefined);
       setReassignOpen(true);
     } catch (error: any) {
-      message.error(error?.response?.data?.message || 'Không tải được thông tin để xóa');
+      message.error(error?.response?.data?.message || 'Failed to check category usage');
     } finally {
       setUsageLoading(false);
     }
@@ -190,11 +190,11 @@ export const CategoryList = () => {
       return Promise.reject();
     }
     if (reassignCategoryOptions.length === 0) {
-      message.warning('Chưa có danh mục nào khác để chuyển. Hãy tạo thêm danh mục rồi thử lại.');
+      message.warning('No available categories to reassign to. Please create one first.');
       return Promise.reject();
     }
     if (!reassignTargetId) {
-      message.warning('Vui lòng chọn danh mục đích để chuyển tài sản và giao dịch');
+      message.warning('Please select a target category to reassign assets and transactions');
       return Promise.reject();
     }
     await deleteMutation.mutateAsync({ id: editingCategory.id, reassignTo: reassignTargetId });
@@ -214,7 +214,7 @@ export const CategoryList = () => {
     e.stopPropagation();
     setEditingCategory(null);
     setCopyMode(true);
-    const suggestedName = `${record.name} (bản sao)`;
+    const suggestedName = `${record.name} (Copy)`;
     form.setFieldsValue({
       name: suggestedName,
       parentId: record.parentId ?? undefined,
@@ -224,19 +224,19 @@ export const CategoryList = () => {
 
   const columns = [
     {
-      title: 'Tên danh mục',
+      title: 'Category Name',
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: Category) => (
         <Space>
-          <FolderTree size={16} className={!record.parentId ? 'text-slate-700' : 'text-slate-600'} />
-          <span className={!record.parentId ? 'font-semibold text-slate-800' : 'text-slate-700'}>{text}</span>
+          <FolderTree size={16} className={!record.parentId ? 'text-foreground' : 'text-muted-foreground'} />
+          <span className={!record.parentId ? 'font-semibold text-foreground' : 'text-muted-foreground'}>{text}</span>
         </Space>
       ),
       sorter: (a: Category, b: Category) => (a.name || '').localeCompare(b.name || ''),
     },
     {
-      title: 'Thao tác',
+      title: 'Actions',
       key: 'action',
       width: 80,
       render: (_: unknown, record: Category) => (
@@ -244,8 +244,8 @@ export const CategoryList = () => {
           <Button
             type="text"
             icon={<Copy size={16} />}
-            title="Sao chép"
-            aria-label="Sao chép"
+            title="Duplicate"
+            aria-label="Duplicate"
             onClick={(e) => openCategoryCopyModal(record, e)}
           />
         </Space>
@@ -259,7 +259,7 @@ export const CategoryList = () => {
     <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl lg:text-2xl font-bold text-slate-900 font-display">Danh mục</h1>
+          <h1 className="text-xl lg:text-2xl font-bold text-foreground font-sans">Categories</h1>
         </div>
         <Button
           type="primary"
@@ -275,13 +275,13 @@ export const CategoryList = () => {
             setIsModalOpen(true);
           }}
           className="w-full sm:w-auto"
-          title="Thêm danh mục"
-          aria-label="Thêm danh mục"
+          title="Add Category"
+          aria-label="Add Category"
         />
       </div>
 
       <div className="glass-card p-4 lg:p-6 overflow-hidden">
-        {isError && <div className="mb-3 p-3 rounded-lg bg-red-50 text-red-600 text-sm">Không thể tải danh sách danh mục. Vui lòng thử lại.</div>}
+        {isError && <div className="mb-3 p-3 rounded-lg bg-rose-50 text-rose-600 text-sm">Failed to load categories. Please retry.</div>}
         <div className="overflow-x-auto">
           <Table
             columns={columns}
@@ -303,10 +303,10 @@ export const CategoryList = () => {
       <Modal
         title={
           editingCategory
-            ? 'Cập nhật danh mục'
+            ? 'Edit Category'
             : copyMode
-              ? 'Sao chép danh mục'
-              : 'Thêm danh mục mới'
+              ? 'Duplicate Category'
+              : 'Add New Category'
         }
         open={isModalOpen}
         forceRender
@@ -326,8 +326,8 @@ export const CategoryList = () => {
               key="delete"
               danger
               icon={<Trash2 size={18} />}
-              title="Xóa danh mục"
-              aria-label="Xóa danh mục"
+              title="Delete Category"
+              aria-label="Delete Category"
               loading={deleteMutation.isPending || usageLoading}
               onClick={openDeleteCategoryFlow}
             />
@@ -336,8 +336,8 @@ export const CategoryList = () => {
             key="cancel"
             type="text"
             icon={<X size={18} />}
-            title="Hủy"
-            aria-label="Hủy"
+            title="Cancel"
+            aria-label="Cancel"
             onClick={() => {
               setIsModalOpen(false);
               setCopyMode(false);
@@ -352,8 +352,8 @@ export const CategoryList = () => {
             key="submit"
             type="primary"
             icon={<Check size={18} />}
-            title={editingCategory ? 'Cập nhật' : 'Thêm'}
-            aria-label={editingCategory ? 'Cập nhật' : 'Thêm'}
+            title={editingCategory ? 'Update' : 'Save'}
+            aria-label={editingCategory ? 'Update' : 'Save'}
             loading={createMutation.isPending || updateMutation.isPending}
             onClick={() => form.submit()}
           />,
@@ -377,24 +377,24 @@ export const CategoryList = () => {
         >
           <Form.Item
             name="name"
-            label="Tên danh mục"
-            rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}
+            label="Category Name"
+            rules={[{ required: true, message: 'Please enter category name' }]}
           >
-            <Input placeholder="Ví dụ: Đầu tư, Ăn uống, Lương..." />
+            <Input placeholder="e.g., Investments, Food & Dining, Salary..." />
           </Form.Item>
           <Form.Item
             name="parentId"
-            label="Nhóm cha"
+            label="Parent Group"
             extra={
               isEditingGroup
-                ? 'Danh mục này có con, không thể thêm nhóm cha.'
-                : 'Để trống để tạo nhóm cha. Chọn nhóm cha để tạo danh mục lá.'
+                ? 'This category has subcategories and cannot have a parent.'
+                : 'Leave empty for root group. Select a parent to create a subcategory.'
             }
           >
             <Select
               allowClear
               disabled={isEditingGroup}
-              placeholder={isEditingGroup ? 'Nhóm — không có cha' : 'Chọn nhóm cha (tùy chọn)'}
+              placeholder={isEditingGroup ? 'Root group — cannot have parent' : 'Select parent group (optional)'}
               options={parentOptions}
             />
           </Form.Item>
@@ -402,7 +402,7 @@ export const CategoryList = () => {
       </Modal>
 
       <Modal
-        title="Chuyển dữ liệu rồi xóa danh mục"
+        title="Reassign Data and Delete Category"
         open={reassignOpen}
         onCancel={() => {
           setReassignOpen(false);
@@ -414,8 +414,8 @@ export const CategoryList = () => {
             key="cancel"
             type="text"
             icon={<X size={18} />}
-            title="Hủy"
-            aria-label="Hủy"
+            title="Cancel"
+            aria-label="Cancel"
             onClick={() => {
               setReassignOpen(false);
               setUsageSummary(null);
@@ -427,8 +427,8 @@ export const CategoryList = () => {
             type="primary"
             danger
             icon={<Check size={18} />}
-            title="Chuyển dữ liệu và xóa"
-            aria-label="Chuyển dữ liệu và xóa"
+            title="Reassign and Delete"
+            aria-label="Reassign and Delete"
             loading={deleteMutation.isPending}
             onClick={() => void confirmDeleteWithReassign()}
           />,
@@ -437,22 +437,21 @@ export const CategoryList = () => {
       >
         {usageSummary && editingCategory ? (
           <div className="space-y-4">
-            <p className="text-sm text-slate-700">
-              Danh mục <strong>{editingCategory.name}</strong> đang có{' '}
-              <strong>{usageSummary.assetCount}</strong> tài sản và{' '}
-              <strong>{usageSummary.expenseCount}</strong> giao dịch. Chọn danh mục khác để chuyển
-              toàn bộ sang, sau đó hệ thống sẽ xóa danh mục hiện tại.
+            <p className="text-sm text-foreground">
+              Category <strong>{editingCategory.name}</strong> has{' '}
+              <strong>{usageSummary.assetCount}</strong> assets and{' '}
+              <strong>{usageSummary.expenseCount}</strong> transactions. Select a target category to transfer all items to before deletion.
             </p>
             {reassignCategoryOptions.length === 0 ? (
-              <p className="text-sm text-amber-700">
-                Chưa có danh mục nào khác. Hãy tạo thêm ít nhất một danh mục rồi thử lại.
+              <p className="text-sm text-amber-600">
+                No alternative categories exist. Please create at least one other category first.
               </p>
             ) : (
               <div>
-                <div className="mb-2 text-sm font-medium text-slate-800">Danh mục đích</div>
+                <div className="mb-2 text-sm font-medium text-foreground">Target Category</div>
                 <Select
                   className="w-full"
-                  placeholder="Chọn danh mục"
+                  placeholder="Select destination category"
                   options={reassignCategoryOptions}
                   value={reassignTargetId}
                   onChange={(v) => setReassignTargetId(v)}

@@ -37,14 +37,14 @@ export const NaturalInputBox: React.FC = () => {
             const rec = new SpeechRecognition();
             rec.continuous = false;
             rec.interimResults = false;
-            rec.lang = 'vi-VN';
+            rec.lang = 'en-US';
 
             rec.onstart = () => setIsListening(true);
             rec.onend = () => setIsListening(false);
             rec.onerror = (event: any) => {
                 console.error('Speech recognition error', event.error);
                 setIsListening(false);
-                message.error('Lỗi khi nhận diện giọng nói: ' + event.error);
+                message.error('Speech recognition error: ' + event.error);
             };
             rec.onresult = (event: any) => {
                 const transcript = event.results[0][0].transcript;
@@ -80,7 +80,7 @@ export const NaturalInputBox: React.FC = () => {
 
     const handleParse = async () => {
         if (!inputValue.trim()) {
-            message.warning('Vui lòng nhập nội dung');
+            message.warning('Please enter a command or prompt');
             return;
         }
 
@@ -91,28 +91,28 @@ export const NaturalInputBox: React.FC = () => {
             const d = response.data;
             if (!d.success) {
                 if (d.reason === 'openai_api_key_missing') {
-                    message.error('Chưa cấu hình OPENAI_API_KEY trên máy chủ.');
+                    message.error('Server OPENAI_API_KEY is not configured.');
                 } else {
                     const extra = d.details || d.reason;
                     message.error(
                         extra
-                            ? `Không thể nhận diện ý định: ${extra}`
-                            : 'Không thể nhận diện ý định. Vui lòng thử lại.'
+                            ? `Could not recognize intent: ${extra}`
+                            : 'Could not recognize intent. Please try again.'
                     );
                 }
             } else if (d.intent === 'unknown') {
-                message.info(d.clarification || 'AI không chắc chắn về yêu cầu của bạn. Vui lòng thử lại với cách diễn đạt khác.');
+                message.info(d.clarification || 'AI is unsure about your request. Please try phrasing differently.');
             } else {
                 setParsedResult({
                     ...d,
                     originalText: inputValue
                 });
                 setShowModal(true);
-                message.success('Đã phân tích xong!');
+                message.success('Analysis complete!');
             }
         } catch (error) {
             console.error('Parsing error:', error);
-            message.error('Lỗi khi kết nối với máy chủ');
+            message.error('Error connecting to server');
         } finally {
             setLoading(false);
         }
@@ -121,13 +121,13 @@ export const NaturalInputBox: React.FC = () => {
     const handleReuse = (text: string) => {
         setInputValue(text);
         setShowHistory(false);
-        message.info('Đã tải lại tin nhắn!');
+        message.info('Loaded text from history!');
     };
 
     const handleQRResult = (result: string) => {
         setInputValue((prev) => (prev ? `${prev} ${result}` : result));
         setShowQRScanner(false);
-        message.success('Đã quét xong mã QR!');
+        message.success('QR Code scanned successfully!');
     };
 
     const historyContent = (
@@ -138,7 +138,7 @@ export const NaturalInputBox: React.FC = () => {
                 renderItem={(item) => (
                     <List.Item
                         actions={[
-                            <Tooltip title="Dùng lại">
+                            <Tooltip title="Reuse">
                                 <Button
                                     type="text"
                                     icon={<RedoOutlined />}
@@ -151,22 +151,22 @@ export const NaturalInputBox: React.FC = () => {
                             title={
                                 <Space>
                                     <Tag color={item.confidence > 0.8 ? 'green' : 'orange'}>
-                                        {Math.round(item.confidence * 100)}% khớp
+                                        {Math.round(item.confidence * 100)}% match
                                     </Tag>
-                                    <span style={{ fontSize: '13px', color: '#475569' }}>
-                                        {dayjs(item.createdAt).format('DD/MM HH:mm')}
+                                    <span style={{ fontSize: '13px', color: '#64748b' }}>
+                                        {dayjs(item.createdAt).format('MM/DD HH:mm')}
                                     </span>
                                 </Space>
                             }
                             description={
-                                <div style={{ color: '#1e293b', fontWeight: 500 }}>
+                                <div style={{ color: 'inherit', fontWeight: 500 }}>
                                     {item.inputMessage}
                                 </div>
                             }
                         />
                     </List.Item>
                 )}
-                locale={{ emptyText: 'Chưa có lịch sử nhập liệu' }}
+                locale={{ emptyText: 'No input history recorded' }}
             />
         </div>
     );
@@ -181,19 +181,19 @@ export const NaturalInputBox: React.FC = () => {
                 case 'create_income': endpoint = '/expenses'; break;
                 case 'create_asset': endpoint = '/assets'; break;
                 case 'create_event': endpoint = '/calendar'; break;
-                default: message.error('Hành động chưa được hỗ trợ lưu tự động.'); return;
+                default: message.error('Action is not supported for auto-saving.'); return;
             }
 
             console.log(`[NaturalInput] Saving to ${endpoint}:`, finalData.data);
             await api.post(endpoint, finalData.data);
 
-            message.success('Đã lưu thành công!');
+            message.success('Successfully saved!');
             setShowModal(false);
             setInputValue('');
-            fetchHistory(); // Refresh history after successful save
+            fetchHistory();
         } catch (error) {
             console.error('Save error:', error);
-            message.error('Lỗi khi lưu dữ liệu vào hệ thống');
+            message.error('Failed to save data to system');
         } finally {
             setLoading(false);
         }
@@ -206,14 +206,14 @@ export const NaturalInputBox: React.FC = () => {
         >
             <div className="flex items-center gap-2 mb-3">
                 <SendOutlined className="text-primary text-sm" />
-                <span className="font-semibold text-sm text-foreground">Trợ lý Nhập liệu Thông minh</span>
-                <Tag color="default" className="text-xs font-medium">Hỗ trợ AI</Tag>
+                <span className="font-semibold text-sm text-foreground">AI Smart Assistant</span>
+                <Tag color="default" className="text-xs font-medium">AI Powered</Tag>
             </div>
             <div>
                 <TextArea
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Bạn muốn thực hiện việc gì? Ví dụ: 'Nhận lương 25 triệu', 'HSBC 4 triệu cho chồng'..."
+                    placeholder="What would you like to record? e.g. 'Received $1,200 salary', 'Bought groceries for $85'..."
                     autoSize={{ minRows: 2, maxRows: 6 }}
                     className="mb-3 rounded-md"
                 />
@@ -225,17 +225,17 @@ export const NaturalInputBox: React.FC = () => {
                             shape="circle"
                             icon={isListening ? <MutedOutlined /> : <AudioOutlined />}
                             onClick={toggleListening}
-                            title={isListening ? 'Dừng nói' : 'Nhập bằng giọng nói'}
+                            title={isListening ? 'Stop listening' : 'Voice input'}
                         />
                         <Button
                             shape="circle"
                             icon={<QrcodeOutlined />}
                             onClick={() => { setHasOpenedScanner(true); setShowQRScanner(true); }}
-                            title="Quét mã QR"
+                            title="Scan QR Code"
                         />
                         <Popover
                             content={historyContent}
-                            title={<span className="font-semibold text-xs">Lịch sử nhập liệu</span>}
+                            title={<span className="font-semibold text-xs">Input History</span>}
                             trigger="click"
                             open={showHistory}
                             onOpenChange={setShowHistory}
@@ -244,7 +244,7 @@ export const NaturalInputBox: React.FC = () => {
                             <Button
                                 shape="circle"
                                 icon={<HistoryOutlined />}
-                                title="Xem lịch sử"
+                                title="View History"
                             />
                         </Popover>
                     </Space>
@@ -255,8 +255,8 @@ export const NaturalInputBox: React.FC = () => {
                         icon={<SendOutlined />}
                         loading={loading}
                         onClick={handleParse}
-                        title="Gửi AI phân tích"
-                        aria-label="Gửi AI phân tích"
+                        title="Send for AI Analysis"
+                        aria-label="Send for AI Analysis"
                     />
                 </div>
             </div>

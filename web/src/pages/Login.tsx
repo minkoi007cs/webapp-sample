@@ -19,11 +19,11 @@ export const Login = () => {
             });
 
             if (error) {
-                message.error(`Đăng nhập thất bại: ${error.message}`);
+                message.error(`Login failed: ${error.message}`);
                 setLoading(false);
             }
         } catch (err: any) {
-            message.error(err.message || 'Có lỗi xảy ra khi kết nối xác thực Google');
+            message.error(err.message || 'Error connecting to Google authentication');
             setLoading(false);
         }
     };
@@ -37,10 +37,10 @@ export const Login = () => {
                             <Shield className="h-6 w-6" />
                         </div>
                         <h1 className="text-2xl font-bold tracking-tight text-foreground font-sans">
-                            Tài sản Gia đình
+                            Family Assets
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Đăng nhập tài khoản Google để tiếp tục vào hệ thống
+                            Sign in with your Google account to access your workspace
                         </p>
                     </div>
 
@@ -52,8 +52,8 @@ export const Login = () => {
                             loading={loading}
                             onClick={handleGoogleLogin}
                             className="h-11 rounded-md !border-input hover:!bg-accent hover:!text-accent-foreground flex items-center justify-center text-sm font-medium font-sans shadow-xs"
-                            title="Đăng nhập với Google"
-                            aria-label="Đăng nhập với Google"
+                            title="Sign in with Google"
+                            aria-label="Sign in with Google"
                             icon={!loading && (
                                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                                     <path
@@ -75,12 +75,12 @@ export const Login = () => {
                                 </svg>
                             )}
                         >
-                            {loading ? 'Đang kết nối...' : 'Tiếp tục với Google'}
+                            {loading ? 'Connecting...' : 'Continue with Google'}
                         </Button>
                     </div>
 
                     <div className="mt-8 text-center text-xs text-muted-foreground">
-                        Bảo mật và đồng bộ dữ liệu thời gian thực
+                        Secure & real-time encrypted data synchronization
                     </div>
                 </div>
             </div>
