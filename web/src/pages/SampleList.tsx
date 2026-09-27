@@ -18,8 +18,8 @@ const statusConfig: Record<SampleStatus, { label: string; color: string }> = {
 export const SampleList = () => {
   const queryClient = useQueryClient();
   const { canAccess } = useSession();
-  const canEdit = canAccess('ASSET', 'update') || canAccess('ASSET', 'create');
-  const canDelete = canAccess('ASSET', 'delete');
+  const canEdit = canAccess('SAMPLE', 'update') || canAccess('SAMPLE', 'create') || canAccess('ASSET', 'update') || canAccess('ASSET', 'create');
+  const canDelete = canAccess('SAMPLE', 'delete') || canAccess('ASSET', 'delete');
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
