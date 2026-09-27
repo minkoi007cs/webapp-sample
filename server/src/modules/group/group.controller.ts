@@ -29,7 +29,7 @@ export class GroupController {
   @RequirePermission(AppModule.GROUP, PermissionAction.VIEW)
   @ApiOperation({ summary: 'Lấy thông tin nhóm hiện tại' })
   getCurrent(@GetUser() user: User) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId || (user as any).familyId;
     return this.groupService.findOne(groupId);
   }
 
@@ -40,7 +40,7 @@ export class GroupController {
     @GetUser() user: User,
     @Body() body: { name?: string; description?: string; settings?: Record<string, any> },
   ) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId || (user as any).familyId;
     return this.groupService.update(groupId, body);
   }
 }

@@ -3,7 +3,7 @@ import { BaseEntity } from './base.entity';
 import { GoUsCase } from './gous-case.entity';
 import { ExpenseCategory, ExpensePaymentStatus } from '../enums/gous.enums';
 
-@Entity('gous_expenses')
+@Entity('sm_gous_expenses')
 export class GoUsExpense extends BaseEntity {
   @Column({ type: 'uuid' })
   caseId: string;

@@ -20,7 +20,7 @@ export class CategoryController {
   @RequirePermission(AppModule.CATEGORY, PermissionAction.VIEW)
   @ApiOperation({ summary: 'Lấy danh sách danh mục mẫu' })
   findAll(@GetUser() user: User) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.categoryService.findAll(groupId);
   }
 
@@ -28,7 +28,7 @@ export class CategoryController {
   @RequirePermission(AppModule.CATEGORY, PermissionAction.VIEW)
   @ApiOperation({ summary: 'Lấy chi tiết danh mục' })
   findOne(@GetUser() user: User, @Param('id') id: string) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.categoryService.findOne(id, groupId);
   }
 
@@ -36,7 +36,7 @@ export class CategoryController {
   @RequirePermission(AppModule.CATEGORY, PermissionAction.CREATE)
   @ApiOperation({ summary: 'Tạo danh mục mới' })
   create(@GetUser() user: User, @Body() body: { name: string; parentId?: string | null }) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.categoryService.create(groupId, body);
   }
 
@@ -48,7 +48,7 @@ export class CategoryController {
     @Param('id') id: string,
     @Body() body: { name?: string; parentId?: string | null },
   ) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.categoryService.update(id, groupId, body);
   }
 
@@ -56,7 +56,7 @@ export class CategoryController {
   @RequirePermission(AppModule.CATEGORY, PermissionAction.DELETE)
   @ApiOperation({ summary: 'Xóa danh mục' })
   remove(@GetUser() user: User, @Param('id') id: string) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.categoryService.remove(id, groupId);
   }
 }

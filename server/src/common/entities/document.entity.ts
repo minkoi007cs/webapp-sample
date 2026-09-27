@@ -10,7 +10,7 @@ export enum DocumentStatus {
   FAILED = 'FAILED',
 }
 
-@Entity('documents')
+@Entity('sm_documents')
 export class Document extends BaseEntity {
   @Column({ type: 'uuid' })
   @Index()

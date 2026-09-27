@@ -10,7 +10,7 @@ export enum CalendarEventType {
   MEETING = 'MEETING',
 }
 
-@Entity('calendar_events')
+@Entity('sm_calendar_events')
 export class CalendarEvent extends BaseEntity {
   @Column({ type: 'uuid' })
   groupId: string;
@@ -66,7 +66,7 @@ export class CalendarEvent extends BaseEntity {
 
   @ManyToMany(() => User)
   @JoinTable({
-    name: 'calendar_event_participants',
+    name: 'sm_calendar_event_participants',
     joinColumn: { name: 'calendarEventId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' }
   })

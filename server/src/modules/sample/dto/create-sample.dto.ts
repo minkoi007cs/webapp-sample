@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { SampleStatus } from '../../../common/entities/sample.entity';
 
 export class CreateSampleDto {
@@ -19,16 +19,14 @@ export class CreateSampleDto {
   type?: string;
 
   @IsOptional()
-  @IsEnum(SampleStatus)
   status?: SampleStatus;
 
   @IsOptional()
-  @IsUUID('4')
-  categoryId?: string;
+  categoryId?: string | null;
 
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  imageUrl?: string | null;
 
   @IsOptional()
   metadata?: Record<string, any>;

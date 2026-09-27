@@ -9,7 +9,7 @@ export enum SampleStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
-@Entity('samples')
+@Entity('sm_samples')
 export class Sample extends BaseEntity {
   @Column({ length: 255 })
   name: string;

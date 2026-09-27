@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, Repository, In } from 'typeorm';
 import { Sample, SampleStatus } from '../../common/entities/sample.entity';
 import { CalendarEvent } from '../../common/entities/calendar-event.entity';
 import { Document } from '../../common/entities/document.entity';
@@ -45,7 +45,12 @@ export class DashboardService {
         take: 10,
       }),
       this.sampleRepository.count({ where: { groupId } }),
-      this.sampleRepository.count({ where: { groupId, status: SampleStatus.ACTIVE } }),
+      this.sampleRepository.count({
+        where: {
+          groupId,
+          status: SampleStatus.ACTIVE,
+        },
+      }),
       this.documentRepository.find({
         where: { groupId },
         order: { createdAt: 'DESC' },
@@ -81,7 +86,15 @@ export class DashboardService {
       activeSampleCount,
       totalDocumentCount: documentCount,
       groupMembersCount: membersCount,
-      recentSamples: samples,
+      recentSamples: samples.map((s) => ({
+        id: s.id,
+        name: s.name,
+        code: s.code,
+        status: s.status,
+        type: s.type,
+        category: s.category ? { id: s.category.id, name: s.category.name } : null,
+        createdAt: s.createdAt,
+      })),
       samplesByCategory,
       assetsByCategory: samplesByCategory, // Compatibility
       recentDocuments,

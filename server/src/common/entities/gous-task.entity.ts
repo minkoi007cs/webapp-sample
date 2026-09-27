@@ -5,7 +5,7 @@ import { GoUsStage, TaskPriority, TaskStatus } from '../enums/gous.enums';
 
 export { TaskPriority, TaskStatus };
 
-@Entity('gous_tasks')
+@Entity('sm_gous_tasks')
 export class GoUsTask extends BaseEntity {
   @Column()
   caseId: string;

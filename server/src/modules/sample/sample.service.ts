@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Sample, SampleStatus } from '../../common/entities/sample.entity';
 import { CreateSampleDto } from './dto/create-sample.dto';
 import { UpdateSampleDto } from './dto/update-sample.dto';
@@ -13,8 +13,19 @@ export class SampleService {
   ) {}
 
   async create(groupId: string, userId: string, dto: CreateSampleDto): Promise<Sample> {
+    const categoryId = dto.categoryId && typeof dto.categoryId === 'string' && dto.categoryId.trim() !== ''
+      ? dto.categoryId.trim()
+      : undefined;
+
     const sample = this.sampleRepository.create({
-      ...dto,
+      name: dto.name.trim(),
+      code: dto.code?.trim() || undefined,
+      description: dto.description?.trim() || undefined,
+      type: dto.type?.trim() || undefined,
+      status: dto.status || SampleStatus.ACTIVE,
+      categoryId,
+      imageUrl: dto.imageUrl?.trim() || undefined,
+      metadata: dto.metadata || undefined,
       groupId,
       createdByUserId: userId,
     });
@@ -37,11 +48,11 @@ export class SampleService {
       .leftJoinAndSelect('sample.category', 'category')
       .where('sample.groupId = :groupId', { groupId });
 
-    if (status) {
+    if (status && status !== 'ALL') {
       qb.andWhere('sample.status = :status', { status });
     }
 
-    if (categoryId) {
+    if (categoryId && categoryId !== 'ALL') {
       qb.andWhere('sample.categoryId = :categoryId', { categoryId });
     }
 
@@ -88,7 +99,19 @@ export class SampleService {
 
   async update(groupId: string, id: string, dto: UpdateSampleDto): Promise<Sample> {
     const sample = await this.findOne(groupId, id);
-    Object.assign(sample, dto);
+    if (dto.name !== undefined) sample.name = dto.name.trim();
+    if (dto.code !== undefined) sample.code = dto.code ? dto.code.trim() : undefined;
+    if (dto.description !== undefined) sample.description = dto.description ? dto.description.trim() : undefined;
+    if (dto.type !== undefined) sample.type = dto.type ? dto.type.trim() : undefined;
+    if (dto.status !== undefined) sample.status = dto.status;
+    if (dto.categoryId !== undefined) {
+      sample.categoryId = dto.categoryId && typeof dto.categoryId === 'string' && dto.categoryId.trim() !== ''
+        ? dto.categoryId.trim()
+        : (null as any);
+    }
+    if (dto.imageUrl !== undefined) sample.imageUrl = dto.imageUrl ? dto.imageUrl.trim() : undefined;
+    if (dto.metadata !== undefined) sample.metadata = dto.metadata;
+
     return this.sampleRepository.save(sample);
   }
 

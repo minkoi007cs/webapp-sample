@@ -3,7 +3,7 @@ import { BaseEntity } from '../../../common/entities/base.entity';
 import { Group } from '../../../common/entities/group.entity';
 import { User } from '../../../common/entities/user.entity';
 
-@Entity('natural_input_history')
+@Entity('sm_natural_input_history')
 export class NaturalInputHistory extends BaseEntity {
   @Column({ type: 'uuid' })
   groupId: string;

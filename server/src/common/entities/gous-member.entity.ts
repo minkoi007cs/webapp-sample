@@ -5,7 +5,7 @@ import { MemberRoleInCase, ProcessStatus } from '../enums/gous.enums';
 
 export { MemberRoleInCase, ProcessStatus };
 
-@Entity('gous_members')
+@Entity('sm_gous_members')
 export class GoUsMember extends BaseEntity {
   @Column()
   caseId: string;

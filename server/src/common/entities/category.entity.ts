@@ -2,7 +2,7 @@ import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Group } from './group.entity';
 
-@Entity('categories')
+@Entity('sm_categories')
 export class Category extends BaseEntity {
   @Column({ type: 'uuid' })
   groupId: string;

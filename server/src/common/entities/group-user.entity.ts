@@ -10,7 +10,7 @@ export enum GroupUserStatus {
   REMOVED = 'REMOVED',
 }
 
-@Entity('group_users')
+@Entity('sm_group_users')
 @Unique(['groupId', 'userId'])
 export class GroupUser extends BaseEntity {
   @Column({ type: 'uuid' })

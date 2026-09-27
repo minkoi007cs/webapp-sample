@@ -21,7 +21,7 @@ export class UserController {
   @RequirePermission(AppModule.USER, PermissionAction.VIEW)
   @ApiOperation({ summary: 'Lấy danh sách thành viên trong nhóm' })
   findAll(@GetUser() user: User, @Query() query: any) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId || (user as any).familyId;
     return this.userService.findAll(groupId, query);
   }
 
@@ -29,7 +29,7 @@ export class UserController {
   @RequirePermission(AppModule.USER, PermissionAction.VIEW)
   @ApiOperation({ summary: 'Lấy chi tiết thành viên' })
   findOne(@GetUser() user: User, @Param('id') id: string) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId || (user as any).familyId;
     return this.userService.findOne(id, groupId);
   }
 
@@ -40,7 +40,7 @@ export class UserController {
     @GetUser() user: User,
     @Body() body: { email: string; fullName?: string; role: UserRole },
   ) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId || (user as any).familyId;
     return this.userService.invite(groupId, user.id, body);
   }
 
@@ -52,7 +52,7 @@ export class UserController {
     @Param('id') id: string,
     @Body('role') newRole: UserRole,
   ) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId || (user as any).familyId;
     return this.userService.updateRole(groupId, id, newRole);
   }
 
@@ -64,7 +64,7 @@ export class UserController {
     @Param('id') id: string,
     @Body() body: Partial<User>,
   ) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId || (user as any).familyId;
     return this.userService.update(groupId, id, body);
   }
 
@@ -72,7 +72,7 @@ export class UserController {
   @RequirePermission(AppModule.USER, PermissionAction.DELETE)
   @ApiOperation({ summary: 'Xóa thành viên khỏi nhóm' })
   remove(@GetUser() user: User, @Param('id') id: string) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId || (user as any).familyId;
     return this.userService.remove(groupId, id);
   }
 }

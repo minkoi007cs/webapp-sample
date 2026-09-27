@@ -9,7 +9,7 @@ import { GoUsStage } from '../enums/gous.enums';
 
 export { GoUsStage };
 
-@Entity('gous_cases')
+@Entity('sm_gous_cases')
 export class GoUsCase extends BaseEntity {
   @Index({ unique: true })
   @Column({ type: 'uuid' })

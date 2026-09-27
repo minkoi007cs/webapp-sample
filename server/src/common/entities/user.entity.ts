@@ -14,7 +14,7 @@ export enum SystemRole {
   APP_ADMIN = 'APP_ADMIN',
 }
 
-@Entity('users')
+@Entity('sm_users')
 export class User extends BaseEntity {
   @Column({ unique: true })
   email: string;

@@ -68,7 +68,6 @@ export class AuthService {
     let avatarUrl: string | null = null;
     let googleId = '';
 
-    // 1. First attempt instant JWT decoding (0ms network latency)
     try {
       const decoded: any = this.jwtService.decode(token);
       if (decoded && typeof decoded === 'object') {
@@ -82,7 +81,6 @@ export class AuthService {
       this.logger.warn(`Could not decode token locally: ${decodeErr?.message}`);
     }
 
-    // 2. Fallback to Supabase remote verification if local decode didn't yield an email
     if (!email) {
       try {
         const supabase = this.getSupabase();
@@ -123,15 +121,17 @@ export class AuthService {
   }
 
   async validateOAuthUser(profile: OAuthProfile) {
-    this.logger.log(`Validating user ${profile.email}`);
+    const normalizedEmail = profile.email.trim().toLowerCase();
+    this.logger.log(`Validating user ${normalizedEmail}`);
+
     let user = await this.userRepository.findOne({
-      where: { email: profile.email },
+      where: { email: normalizedEmail },
     });
 
     if (!user) {
-      this.logger.log(`User ${profile.email} not found, creating new user`);
+      this.logger.log(`User ${normalizedEmail} not found, creating new user`);
       user = await this.userRepository.save(this.userRepository.create({
-        email: profile.email,
+        email: normalizedEmail,
         fullName: profile.fullName,
         googleId: profile.googleId,
         avatarUrl: profile.avatarUrl ?? undefined,
@@ -147,7 +147,21 @@ export class AuthService {
       }
     }
 
+    // Auto-apply any pending invites sent to this email
+    const pendingInvites = await this.inviteRepository.find({
+      where: { email: normalizedEmail, status: InviteStatus.PENDING },
+      relations: ['role', 'group'],
+    });
 
+    let appliedInviteGroupId: string | null = null;
+    for (const pendingInvite of pendingInvites) {
+      if (pendingInvite.expiresAt.getTime() >= Date.now()) {
+        await this.applyInvite(user, pendingInvite);
+        appliedInviteGroupId = pendingInvite.groupId;
+      }
+    }
+
+    // Refresh active memberships
     let memberships = await this.groupUserRepository.find({
       where: { userId: user.id, status: GroupUserStatus.ACTIVE },
       relations: ['role', 'group'],
@@ -155,17 +169,7 @@ export class AuthService {
     });
 
     if (memberships.length === 0 && user.systemRole !== SystemRole.APP_ADMIN) {
-      const pendingInvite = await this.inviteRepository.findOne({
-        where: { email: profile.email.toLowerCase(), status: InviteStatus.PENDING },
-        relations: ['role', 'group'],
-      });
-
-      if (pendingInvite && pendingInvite.expiresAt.getTime() >= Date.now()) {
-        await this.applyInvite(user, pendingInvite);
-      } else {
-        await this.createDefaultGroupForUser(user);
-      }
-
+      await this.createDefaultGroupForUser(user);
       memberships = await this.groupUserRepository.find({
         where: { userId: user.id, status: GroupUserStatus.ACTIVE },
         relations: ['role', 'group'],
@@ -173,7 +177,8 @@ export class AuthService {
       });
     }
 
-    const activeGroupId = this.pickActiveGroupId(memberships, user.lastActiveGroupId);
+    const preferredGroupId = appliedInviteGroupId || user.lastActiveGroupId;
+    const activeGroupId = this.pickActiveGroupId(memberships, preferredGroupId);
 
     if (activeGroupId !== user.lastActiveGroupId) {
       user.lastActiveGroupId = activeGroupId;
@@ -264,7 +269,7 @@ export class AuthService {
       throw new NotFoundException('Không tìm thấy lời mời');
     }
 
-    if (invite.email.toLowerCase() !== user.email.toLowerCase()) {
+    if (invite.email.trim().toLowerCase() !== user.email.trim().toLowerCase()) {
       throw new UnauthorizedException('Email nhận lời mời không khớp với tài khoản hiện tại');
     }
 

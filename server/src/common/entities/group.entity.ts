@@ -8,7 +8,7 @@ export enum GroupStatus {
   INACTIVE = 'INACTIVE',
 }
 
-@Entity('groups')
+@Entity('sm_groups')
 export class Group extends BaseEntity {
   @Column({ length: 255 })
   name: string;

@@ -2,7 +2,7 @@ import { Entity, ManyToOne, JoinColumn, Column, PrimaryGeneratedColumn, Index } 
 import { Role } from './role.entity';
 import { Permission } from './permission.entity';
 
-@Entity('fml_role_permissions')
+@Entity('sm_role_permissions')
 @Index(['roleId', 'permissionId'], { unique: true })
 export class RolePermission {
   @PrimaryGeneratedColumn('uuid')

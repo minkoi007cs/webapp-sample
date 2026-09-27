@@ -13,7 +13,6 @@ export class CategoryService {
   async findAll(groupId: string): Promise<Category[]> {
     return this.categoryRepository.find({
       where: { groupId },
-      relations: ['children', 'parent'],
       order: { name: 'ASC' },
     });
   }
@@ -21,7 +20,6 @@ export class CategoryService {
   async findOne(id: string, groupId: string): Promise<Category> {
     const category = await this.categoryRepository.findOne({
       where: { id, groupId },
-      relations: ['children', 'parent'],
     });
     if (!category) {
       throw new NotFoundException('Không tìm thấy danh mục này');
@@ -31,17 +29,17 @@ export class CategoryService {
 
   async create(groupId: string, data: { name: string; parentId?: string | null }): Promise<Category> {
     const category = this.categoryRepository.create({
-      name: data.name,
+      name: data.name?.trim(),
       groupId,
-      parentId: data.parentId || null,
+      parentId: data.parentId ? data.parentId : null,
     });
     return this.categoryRepository.save(category);
   }
 
   async update(id: string, groupId: string, data: { name?: string; parentId?: string | null }): Promise<Category> {
     const category = await this.findOne(id, groupId);
-    if (data.name !== undefined) category.name = data.name;
-    if (data.parentId !== undefined) category.parentId = data.parentId;
+    if (data.name !== undefined) category.name = data.name.trim();
+    if (data.parentId !== undefined) category.parentId = data.parentId ? data.parentId : null;
     return this.categoryRepository.save(category);
   }
 

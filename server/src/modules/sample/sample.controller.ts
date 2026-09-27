@@ -24,7 +24,7 @@ import { User } from '../../common/entities/user.entity';
 @ApiTags('Samples')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, ActiveGroupGuard, PermissionGuard)
-@Controller(['samples', 'assets'])
+@Controller('samples')
 export class SampleController {
   constructor(private readonly sampleService: SampleService) {}
 
@@ -35,7 +35,7 @@ export class SampleController {
     @GetUser() user: User,
     @Body() createSampleDto: CreateSampleDto,
   ) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.sampleService.create(groupId, user.id, createSampleDto);
   }
 
@@ -43,7 +43,7 @@ export class SampleController {
   @RequirePermission(AppModule.SAMPLE, PermissionAction.VIEW)
   @ApiOperation({ summary: 'Lấy danh sách mẫu' })
   findAll(@GetUser() user: User, @Query() query: any) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.sampleService.findAll(groupId, query);
   }
 
@@ -51,7 +51,7 @@ export class SampleController {
   @RequirePermission(AppModule.SAMPLE, PermissionAction.VIEW)
   @ApiOperation({ summary: 'Lấy chi tiết mẫu' })
   findOne(@GetUser() user: User, @Param('id') id: string) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.sampleService.findOne(groupId, id);
   }
 
@@ -63,7 +63,7 @@ export class SampleController {
     @Param('id') id: string,
     @Body() updateSampleDto: UpdateSampleDto,
   ) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.sampleService.update(groupId, id, updateSampleDto);
   }
 
@@ -71,7 +71,7 @@ export class SampleController {
   @RequirePermission(AppModule.SAMPLE, PermissionAction.DELETE)
   @ApiOperation({ summary: 'Xóa mẫu' })
   remove(@GetUser() user: User, @Param('id') id: string) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.sampleService.remove(groupId, id);
   }
 }

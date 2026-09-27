@@ -25,7 +25,7 @@ export class DashboardController {
     @Query('endDate') endDate?: string,
     @Query('categoryId') categoryId?: string,
   ) {
-    const groupId = user.lastActiveGroupId || (user as any).familyId;
+    const groupId = (user as any).groupId || user.lastActiveGroupId!;
     return this.dashboardService.getStats(groupId, { startDate, endDate, categoryId });
   }
 }

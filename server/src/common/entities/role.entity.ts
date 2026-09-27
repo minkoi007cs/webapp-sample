@@ -8,7 +8,7 @@ export enum RoleScope {
   GROUP = 'GROUP',
 }
 
-@Entity('roles')
+@Entity('sm_roles')
 @Index(['code'], { unique: true })
 export class Role {
   @PrimaryGeneratedColumn('uuid')

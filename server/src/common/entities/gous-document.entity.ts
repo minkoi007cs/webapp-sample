@@ -6,7 +6,7 @@ import { DocumentCategory, DocumentStatus } from '../enums/gous.enums';
 
 export { DocumentCategory, DocumentStatus };
 
-@Entity('gous_documents')
+@Entity('sm_gous_documents')
 export class GoUsDocument extends BaseEntity {
   @Column()
   caseId: string;
